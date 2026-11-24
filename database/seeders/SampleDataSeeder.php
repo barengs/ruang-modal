@@ -119,8 +119,32 @@ class SampleDataSeeder extends Seeder
             ],
         ];
 
+        $adminName = User::where('id', $adminId)->value('name') ?? 'Admin Pengelola';
+
         foreach ($modals as $m) {
-            ModalApplication::create($m);
+            $created = ModalApplication::create($m);
+            $createdAt = isset($m['created_at']) ? Carbon::parse($m['created_at']) : now();
+
+            $created->histories()->create([
+                'status_seleksi' => 'Menunggu Seleksi',
+                'catatan' => 'Pengajuan Ruang Modal dikirim oleh pemohon.',
+                'actor_type' => 'pemohon',
+                'actor_name' => $created->nama,
+                'created_at' => $createdAt,
+                'updated_at' => $createdAt,
+            ]);
+
+            if ($created->status_seleksi !== 'Menunggu Seleksi' || ! empty($created->catatan_admin)) {
+                $reviewAt = $createdAt->copy()->addDays(2);
+                $created->histories()->create([
+                    'status_seleksi' => $created->status_seleksi,
+                    'catatan' => $created->catatan_admin ?: 'Status seleksi diperbarui oleh pengelola.',
+                    'actor_type' => 'admin',
+                    'actor_name' => $adminName,
+                    'created_at' => $reviewAt,
+                    'updated_at' => $reviewAt,
+                ]);
+            }
         }
 
         $tumbuhs = [
@@ -195,6 +219,7 @@ class SampleDataSeeder extends Seeder
                 'sekolah' => 'SMAN 1 Tuban',
                 'nama_produk' => 'Dapur Rina — Nastar Wisman & Roti Sobek Premium',
                 'kategori' => 'Kuliner',
+                'thumbnail' => '/images/etalase/kuliner.webp',
                 'deskripsi' => 'Kue kering nastar butter wisman dan roti sobek lembut tanpa pengawet. Cocok untuk hantaran, rapat kantor, dan camilan keluarga. Tersedia kemasan toples 500gr dan box isi 12.',
                 'harga' => 'Mulai Rp45.000',
                 'kontak_link' => '081234567801',
@@ -211,6 +236,7 @@ class SampleDataSeeder extends Seeder
                 'sekolah' => 'SMAN 1 Lamongan',
                 'nama_produk' => 'Nura Atelier — Jahit Custom & Kemeja Linen Kasual',
                 'kategori' => 'Fashion',
+                'thumbnail' => '/images/etalase/fashion.webp',
                 'deskripsi' => 'Menerima jahit seragam komunitas, kebaya wisuda, serta ready stock kemeja linen breathable ukuran S–XXL dengan jahitan butik rapi.',
                 'harga' => 'Rp125.000 – Rp275.000',
                 'kontak_link' => '081234567803',
@@ -227,6 +253,7 @@ class SampleDataSeeder extends Seeder
                 'sekolah' => 'SMAN 1 Ngawi',
                 'nama_produk' => 'Pratama Visual — Jasa Foto Produk UMKM & Desain Feed',
                 'kategori' => 'Jasa kreatif',
+                'thumbnail' => '/images/etalase/jasa-kreatif.webp',
                 'deskripsi' => 'Paket foto katalog produk makanan/fashion (15 foto edited high-res) dan desain 12 konten Instagram/TikTok untuk menaikkan daya tarik toko online Anda.',
                 'harga' => 'Mulai Rp150.000 / paket',
                 'kontak_link' => '081234567804',
@@ -243,6 +270,7 @@ class SampleDataSeeder extends Seeder
                 'sekolah' => 'SMAN 1 Pacitan',
                 'nama_produk' => 'Glow by Dewi — Jasa Makeup Wisuda & Lamaran',
                 'kategori' => 'Kecantikan',
+                'thumbnail' => '/images/etalase/kecantikan.webp',
                 'deskripsi' => 'Layanan makeup flawless tahan lama untuk wisuda, lamaran, bridesmaid, dan photoshoot. Bisa home service area Pacitan kota.',
                 'harga' => 'Mulai Rp200.000',
                 'kontak_link' => '081234567805',
@@ -259,6 +287,7 @@ class SampleDataSeeder extends Seeder
                 'sekolah' => 'SMAN 1 Trenggalek',
                 'nama_produk' => 'Wijaya Craft — Hampers Anyaman Bambu & Souvenir',
                 'kategori' => 'Kerajinan',
+                'thumbnail' => '/images/etalase/kerajinan.webp',
                 'deskripsi' => 'Kerajinan besek hampers premium, tatakan gelas, dan souvenir pernikahan ramah lingkungan berbahan bambu lokal Trenggalek.',
                 'harga' => 'Mulai Rp35.000',
                 'kontak_link' => '081234567806',
@@ -275,6 +304,7 @@ class SampleDataSeeder extends Seeder
                 'sekolah' => 'SMAN 1 Magetan',
                 'nama_produk' => 'Fajar Tech — Servis Laptop & Pembuatan Landing Page UMKM',
                 'kategori' => 'Teknologi',
+                'thumbnail' => '/images/etalase/teknologi.webp',
                 'deskripsi' => 'Upgrade SSD/RAM, instalasi software legal, serta pembuatan website profil usaha dan katalog online responsif untuk UMKM.',
                 'harga' => 'Mulai Rp100.000',
                 'kontak_link' => '081234567807',

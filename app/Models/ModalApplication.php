@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class ModalApplication extends Model
@@ -42,5 +43,10 @@ class ModalApplication extends Model
     public function reviewer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by');
+    }
+
+    public function histories(): HasMany
+    {
+        return $this->hasMany(ModalApplicationHistory::class)->oldest();
     }
 }

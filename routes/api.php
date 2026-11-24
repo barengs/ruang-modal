@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Admin\DashboardController;
+use App\Http\Controllers\Api\Admin\MasterOptionController;
 use App\Http\Controllers\Api\Admin\ModalController;
 use App\Http\Controllers\Api\Admin\MonitoringController;
 use App\Http\Controllers\Api\Admin\PasarController;
@@ -13,7 +14,11 @@ use Illuminate\Support\Facades\Route;
 // Public endpoints (no authentication required for alumni submissions & showcase)
 Route::prefix('public')->group(function () {
     Route::get('/stats', [PublicController::class, 'stats']);
+    Route::get('/master-options', [PublicController::class, 'masterOptions']);
     Route::get('/pasar', [PublicController::class, 'pasar']);
+    Route::get('/pasar-submissions', [PublicController::class, 'pasarList']);
+    Route::get('/modal', [PublicController::class, 'modalList']);
+    Route::get('/tumbuh', [PublicController::class, 'tumbuhList']);
     Route::post('/modal', [PublicController::class, 'submitModal']);
     Route::post('/tumbuh', [PublicController::class, 'submitTumbuh']);
     Route::post('/pasar', [PublicController::class, 'submitPasar']);
@@ -69,6 +74,16 @@ Route::prefix('admin')->middleware('auth:api')->group(function () {
     Route::delete('/monitoring/{monitoring}', [MonitoringController::class, 'destroy'])
         ->middleware('permission:monitoring.delete');
 
+    // Master Data Options
+    Route::get('/master-options', [MasterOptionController::class, 'index'])
+        ->middleware('permission:master.manage');
+    Route::post('/master-options', [MasterOptionController::class, 'store'])
+        ->middleware('permission:master.manage');
+    Route::patch('/master-options/{masterOption}', [MasterOptionController::class, 'update'])
+        ->middleware('permission:master.manage');
+    Route::delete('/master-options/{masterOption}', [MasterOptionController::class, 'destroy'])
+        ->middleware('permission:master.manage');
+
     // User & Role Management (Spatie Permission)
     Route::get('/users', [RoleUserController::class, 'users'])
         ->middleware('permission:users.manage');
@@ -81,6 +96,10 @@ Route::prefix('admin')->middleware('auth:api')->group(function () {
 
     Route::get('/roles', [RoleUserController::class, 'roles'])
         ->middleware('permission:roles.manage');
+    Route::post('/roles', [RoleUserController::class, 'storeRole'])
+        ->middleware('permission:roles.manage');
     Route::patch('/roles/{role}/permissions', [RoleUserController::class, 'updateRolePermissions'])
+        ->middleware('permission:roles.manage');
+    Route::delete('/roles/{role}', [RoleUserController::class, 'deleteRole'])
         ->middleware('permission:roles.manage');
 });

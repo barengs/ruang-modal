@@ -11,7 +11,7 @@ class ModalController extends Controller
 {
     public function index(): JsonResponse
     {
-        $items = ModalApplication::with('reviewer:id,name')
+        $items = ModalApplication::with(['reviewer:id,name', 'histories'])
             ->latest()
             ->get();
 
@@ -27,13 +27,24 @@ class ModalController extends Controller
             'catatan_admin' => ['nullable', 'string', 'max:2000'],
         ]);
 
+        $user = auth('api')->user();
+
         $modal->update([
             ...$validated,
-            'reviewed_by' => auth('api')->id(),
+            'reviewed_by' => $user?->id,
+        ]);
+
+        $modal->histories()->create([
+            'status_seleksi' => $validated['status_seleksi'],
+            'catatan' => ! empty($validated['catatan_admin'])
+                ? $validated['catatan_admin']
+                : 'Status seleksi diperbarui menjadi '.$validated['status_seleksi'].'.',
+            'actor_type' => 'admin',
+            'actor_name' => $user?->name ?? 'Admin Pengelola',
         ]);
 
         return response()->json([
-            'data' => $modal->load('reviewer:id,name'),
+            'data' => $modal->load(['reviewer:id,name', 'histories']),
             'message' => 'Status pengajuan Ruang Modal berhasil diperbarui.',
         ]);
     }

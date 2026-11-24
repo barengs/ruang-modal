@@ -23,7 +23,14 @@ class RoleUserController extends Controller
             'created_at' => $u->created_at?->toISOString(),
         ]);
 
-        return response()->json(['data' => $users]);
+        $availableRoles = Role::where('guard_name', 'api')
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        return response()->json([
+            'data' => $users,
+            'available_roles' => $availableRoles,
+        ]);
     }
 
     public function storeUser(Request $request): JsonResponse
@@ -114,10 +121,50 @@ class RoleUserController extends Controller
         ]);
     }
 
+    public function storeRole(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => [
+                'required',
+                'string',
+                'max:100',
+                Rule::unique('roles', 'name')->where('guard_name', 'api'),
+            ],
+            'permissions' => ['nullable', 'array'],
+            'permissions.*' => ['string', Rule::exists('permissions', 'name')->where('guard_name', 'api')],
+        ]);
+
+        $roleName = strtolower(trim(preg_replace('/\s+/', '-', $validated['name'])));
+
+        if (Role::where('guard_name', 'api')->where('name', $roleName)->exists()) {
+            return response()->json([
+                'message' => "Role '{$roleName}' sudah terdaftar.",
+            ], 422);
+        }
+
+        $role = Role::create([
+            'name' => $roleName,
+            'guard_name' => 'api',
+        ]);
+
+        if (! empty($validated['permissions'])) {
+            $role->syncPermissions($validated['permissions']);
+        }
+
+        return response()->json([
+            'data' => [
+                'id' => $role->id,
+                'name' => $role->name,
+                'permissions' => $role->permissions()->pluck('name')->values()->all(),
+            ],
+            'message' => "Role baru '{$role->name}' berhasil ditambahkan.",
+        ], 201);
+    }
+
     public function updateRolePermissions(Request $request, Role $role): JsonResponse
     {
         $validated = $request->validate([
-            'permissions' => ['required', 'array'],
+            'permissions' => ['present', 'array'],
             'permissions.*' => ['string', Rule::exists('permissions', 'name')->where('guard_name', 'api')],
         ]);
 
@@ -130,6 +177,21 @@ class RoleUserController extends Controller
                 'permissions' => $role->permissions()->pluck('name')->values()->all(),
             ],
             'message' => "Permission untuk role {$role->name} berhasil diperbarui.",
+        ]);
+    }
+
+    public function deleteRole(Role $role): JsonResponse
+    {
+        if ($role->name === 'super-admin') {
+            return response()->json([
+                'message' => 'Role super-admin tidak dapat dihapus.',
+            ], 422);
+        }
+
+        $role->delete();
+
+        return response()->json([
+            'message' => "Role '{$role->name}' berhasil dihapus.",
         ]);
     }
 }

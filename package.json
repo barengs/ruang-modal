@@ -8,6 +8,7 @@
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",
+        "@vitejs/plugin-react": "^6.3.0",
         "concurrently": "^10.0.3",
         "laravel-vite-plugin": "^3.1",
         "tailwindcss": "^4.0.0",
@@ -15,5 +16,16 @@
     },
     "optionalDependencies": {
         "@laravel/multiplex": "^0.4.1"
+    },
+    "dependencies": {
+        "@reduxjs/toolkit": "^2.15.0",
+        "@tanstack/react-table": "^8.21.3",
+        "axios": "^1.21.1",
+        "lucide-react": "^0.469.0",
+        "react": "^18.3.1",
+        "react-charts": "^3.0.0-beta.57",
+        "react-dom": "^18.3.1",
+        "react-redux": "^9.3.1",
+        "react-router-dom": "^6.30.6"
     }
 }

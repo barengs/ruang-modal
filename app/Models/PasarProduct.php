@@ -16,6 +16,7 @@ class PasarProduct extends Model
         'sekolah',
         'nama_produk',
         'kategori',
+        'thumbnail',
         'deskripsi',
         'harga',
         'kontak_link',

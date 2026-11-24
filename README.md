@@ -1,58 +1,72 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Ekosistem Alumni SMA Double Track — Laravel + React (Hybrid Monolith)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplikasi web **Ekosistem Alumni SMA Double Track** (**Ruang Modal**, **Ruang Tumbuh**, **Ruang Pasar**, dan **Monitoring**) yang telah dimigrasi dari Google Apps Script ke arsitektur **Hybrid Monolith** berbasis **Laravel + React.js + Vite**.
 
-## About Laravel
+> File Google Apps Script lama tetap disimpan sebagai arsip di folder `legacy-gas/`.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Teknologi yang Digunakan
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- **Backend:** Laravel 13 (PHP 8.3+), REST API (`/api/*`)
+- **Autentikasi:** JWT Auth (`php-open-source-saver/jwt-auth`)
+- **Otorisasi (RBAC):** Spatie Laravel Permission (`spatie/laravel-permission`)
+- **Frontend:** React.js 18 + React Router 6 di dalam `resources/js/` (Hybrid Monolith via Blade + Vite)
+- **State Management:** Redux Toolkit (`@reduxjs/toolkit`, `react-redux`)
+- **Tabel Data:** TanStack Table (`@tanstack/react-table`) — pencarian global, sorting, filter status, dan paginasi
+- **Grafik Analitik:** TanStack Chart (`react-charts`) — tren pengajuan bulanan & distribusi kategori/status
+- **UI Styling:** Tailwind CSS v4 dengan komponen & sistem grid bergaya **Bootstrap** (`.bs-container`, `.bs-row`, `.bs-card`, `.bs-btn-*`, `.bs-form-control`, `.bs-table`, `.bs-badge`, `.bs-modal-*`)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Fitur Utama
 
-## Learning Laravel
+### Portal Publik (Tanpa Login)
+1. **Beranda:** Ringkasan statistik, kartu layanan, dan etalase produk/jasa alumni dengan pencarian & filter kategori.
+2. **Ruang Modal:** Formulir pengajuan bantuan alat kerja/modal usaha lengkap dengan nomor resi otomatis (`RM-...`).
+3. **Ruang Tumbuh:** Formulir permintaan mentoring & pendampingan (`RT-...`).
+4. **Ruang Pasar:** Etalase produk/jasa alumni berstatus `Tayang` dan formulir pendaftaran produk/jasa baru (`RP-...`).
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### Panel Pengelola (JWT Auth + Spatie Permission)
+1. **Dashboard Analitik:** Kartu KPI + grafik interaktif **TanStack Chart** (tren 6 bulan terakhir, distribusi status Ruang Modal, distribusi kategori Ruang Pasar).
+2. **Manajemen Ruang Modal, Ruang Tumbuh, Ruang Pasar:** Tabel **TanStack Table** dengan modal proses verifikasi/moderasi dan catatan admin.
+3. **Monitoring:** Pencatatan perkembangan produktivitas & omzet alumni lintas modul.
+4. **Manajemen User & Role (Super Admin):** Pembuatan akun pengelola, penetapan role, dan pengaturan matriks permission secara dinamis.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Akun Demo (Hasil Seeder)
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+| Role | Email | Password |
+| :--- | :--- | :--- |
+| `super-admin` | `superadmin@doubletrack.sch.id` | `password123` |
+| `admin` | `admin@doubletrack.sch.id` | `password123` |
+| `petugas-monitoring` | `petugas@doubletrack.sch.id` | `password123` |
 
-## Agentic Development
+## Cara Menjalankan Proyek
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+1. **Install dependensi backend & frontend:**
+   ```bash
+   composer install
+   npm install
+   ```
+2. **Siapkan environment & database (default SQLite sudah siap pakai):**
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   php artisan jwt:secret
+   php artisan migrate:fresh --seed
+   ```
+   *(Jika ingin menggunakan MySQL/PostgreSQL, sesuaikan variabel `DB_*` di `.env` sebelum menjalankan migrasi.)*
 
-```bash
-composer require laravel/boost --dev
+3. **Jalankan mode pengembangan (Laravel + Vite):**
+   ```bash
+   php artisan serve
+   # di terminal terpisah:
+   npm run dev
+   ```
+   Atau build untuk produksi dan jalankan langsung via Laravel:
+   ```bash
+   npm run build
+   php artisan serve
+   ```
+   Buka `http://127.0.0.1:8000` di browser.
 
-php artisan boost:install
-```
-
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+4. **Jalankan pengujian otomatis:**
+   ```bash
+   php artisan test
+   ```

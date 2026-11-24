@@ -41,7 +41,7 @@ class MonitoringController extends Controller
             ...$validated,
             'kode' => Monitoring::generateKode(),
             'pendapatan_nominal' => $nominal,
-            'petugas' => $validated['petugas'] ?: auth('api')->user()?->name,
+            'petugas' => ($validated['petugas'] ?? null) ?: auth('api')->user()?->name,
             'created_by' => auth('api')->id(),
         ]);
 

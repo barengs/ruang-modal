@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Analisa Performa Terhadap Ekosistem Ruang Modal berbasis Web — Sistemasi (SINTA 3)</title>
+<style>
+  @page { size: A4; margin: 2.2cm 2.2cm 2.2cm 2.2cm; }
+  body {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 11pt;
+    line-height: 1.35;
+    color: #111;
+    max-width: 210mm;
+    margin: 0 auto;
+    padding: 20px 32px;
+    background: #fff;
+  }
+  .journal-header {
+    display: flex;
+    justify-content: space-between;
+    font-family: Arial, sans-serif;
+    font-size: 9pt;
+    color: #2c6aa0;
+    border-bottom: 1.5px solid #2c6aa0;
+    padding-bottom: 4px;
+    margin-bottom: 18px;
+  }
+  .journal-header .left { font-style: italic; }
+  .journal-header .right { text-align: right; }
+  h1.title-id {
+    font-size: 16pt;
+    font-weight: bold;
+    text-align: center;
+    margin: 10px 0 6px;
+    line-height: 1.25;
+  }
+  h2.title-en {
+    font-size: 13pt;
+    font-weight: bold;
+    font-style: italic;
+    text-align: center;
+    margin: 0 0 14px;
+    line-height: 1.25;
+  }
+  .authors {
+    text-align: center;
+    font-size: 10.5pt;
+    margin-bottom: 10px;
+  }
+  .authors .names { font-weight: bold; }
+  .authors .email { font-style: italic; color: #1b4f8a; }
+  .dates {
+    text-align: center;
+    font-size: 9.5pt;
+    font-weight: bold;
+    margin-bottom: 16px;
+  }
+  .abstract-title {
+    text-align: center;
+    font-weight: bold;
+    font-size: 11pt;
+    margin: 12px 0 4px;
+  }
+  .abstract-title.en { font-style: italic; }
+  .abstract-body {
+    text-align: justify;
+    margin: 0 0 8px;
+    font-size: 10.5pt;
+  }
+  .abstract-body.en { font-style: italic; }
+  .keywords {
+    font-size: 10pt;
+    margin: 0 0 12px;
+    text-align: justify;
+  }
+  .keywords.en { font-style: italic; }
+  h2.section {
+    font-size: 11.5pt;
+    font-weight: bold;
+    margin: 18px 0 8px;
+  }
+  h3.subsection {
+    font-size: 11pt;
+    font-weight: bold;
+    margin: 12px 0 6px;
+  }
+  p {
+    text-align: justify;
+    text-indent: 0.75cm;
+    margin: 0 0 8px;
+  }
+  p.no-indent { text-indent: 0; }
+  ol.body-list {
+    margin: 4px 0 10px 0.75cm;
+    padding-left: 16px;
+    text-align: justify;
+  }
+  ol.body-list li { margin-bottom: 5px; }
+  .table-caption {
+    text-align: center;
+    font-weight: bold;
+    font-size: 10pt;
+    margin: 14px 0 5px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9.5pt;
+    margin-bottom: 14px;
+  }
+  table thead th {
+    border-top: 2px solid #000;
+    border-bottom: 1px solid #000;
+    padding: 5px 6px;
+    text-align: left;
+    font-weight: bold;
+  }
+  table tbody td {
+    padding: 4px 6px;
+    vertical-align: top;
+  }
+  table tbody tr:last-child td {
+    border-bottom: 2px solid #000;
+  }
+  .num { text-align: center; }
+  .figure-box {
+    text-align: center;
+    margin: 14px 0;
+  }
+  .figure-caption {
+    font-weight: bold;
+    font-size: 10pt;
+    margin-top: 6px;
+  }
+  .refs {
+    font-size: 10pt;
+    line-height: 1.3;
+  }
+  .refs p {
+    text-indent: -0.75cm;
+    padding-left: 0.75cm;
+    margin-bottom: 5px;
+  }
+  .journal-footer {
+    margin-top: 24px;
+    border-top: 1px solid #2c6aa0;
+    padding-top: 4px;
+    font-family: Arial, sans-serif;
+    font-size: 8.5pt;
+    color: #2c6aa0;
+    text-align: right;
+    font-style: italic;
+  }
+  @media print {
+    body { padding: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="journal-header">
+  <div class="left">
+    <strong>Sistemasi: Jurnal Sistem Informasi</strong><br>
+    Volume XX, Nomor X, 2026: 1–12
+  </div>
+  <div class="right">
+    ISSN: 2302-8149<br>
+    e-ISSN: 2540-9719
+  </div>
+</div>
+
+<h1 class="title-id">Analisa Performa Terhadap Ekosistem Ruang Modal berbasis Web</h1>
+<h2 class="title-en">Performance Analysis of Web-Based Ruang Modal Ecosystem</h2>
+
+<div class="authors">
+  <div class="names">¹[Nama Penulis Pertama]*, ²[Nama Penulis Kedua], ³Rofiuddin</div>
+  <div>¹˒²˒³Program Studi Teknik Informatika / Sistem Informasi, Fakultas Teknik, Universitas Islam Madura</div>
+  <div>Jl. Pondok Pesantren Miftahul Ulum Bettet, Kec. Pamekasan, Kab. Pamekasan, Jawa Timur, Indonesia</div>
+  <div class="email">*e-mail: [email.penulis@uim.ac.id]</div>
+</div>
+
+<div class="dates">(received: [DD Month YYYY], revised: [DD Month YYYY], accepted: [DD Month YYYY])</div>
+
+<div class="abstract-title">Abstrak</div>
+<div class="abstract-body">
+  Transformasi digital pemberdayaan alumni SMA Double Track melalui platform <em>Ekosistem Ruang Modal</em>—yang mengintegrasikan layanan Ruang Modal, Ruang Tumbuh, Ruang Pasar, dan Monitoring—menuntut arsitektur web yang andal, aman, dan responsif. Migrasi sistem dari layanan berbasis skrip spreadsheet ke arsitektur <em>Hybrid Monolith</em> menggunakan Laravel 13, React.js 18, Vite 8, Redux Toolkit, TanStack Table, TanStack Chart, autentikasi <em>JSON Web Token</em> (JWT), serta otorisasi <em>Role-Based Access Control</em> (RBAC) Spatie Permission menghadirkan kompleksitas baru pada sisi <em>frontend</em> maupun <em>backend</em>. Penelitian ini bertujuan menganalisis performa Ekosistem Ruang Modal berbasis web secara menyeluruh (<em>end-to-end</em>) mencakup efisiensi <em>bundle</em> frontend, profil eksekusi <em>query</em> SQL dan memori server, serta ketahanan beban konkuren HTTP. Metode yang digunakan adalah deskriptif kuantitatif eksperimental melalui tiga lapis pengujian: (1) audit <em>build</em> produksi Vite 8, (2) <em>profiling</em> langsung pada kernel Laravel untuk 13 <em>endpoint</em> utama, serta (3) uji beban dan konkurensi HTTP sebanyak 1.200 permintaan pada tingkat konkurensi 1 hingga 20. Kontribusi penelitian ini mengisi kesenjangan studi sebelumnya yang hanya mengevaluasi performa <em>Client-Side Rendering</em> (CSR) sisi klien tanpa membedah <em>bottleneck</em> query ORM, autentikasi JWT–RBAC, dan konkurensi API. Hasil pengujian menunjukkan sistem mencapai tingkat kegagalan 0,00%, puncak memori server 30 MB, waktu <em>build</em> Vite 263 ms, <em>throughput</em> publik 269,43–281,52 RPS, serta <em>throughput</em> admin JWT 125,92–164,58 RPS dengan latensi p95 di bawah 85 ms. Analisis mendalam juga mengidentifikasi tiga titik optimasi krusial: 39 <em>query</em> SQL pada dashboard analitik, <em>N+1 query</em> (8 <em>query</em>) pada daftar pengguna RBAC, serta ukuran <em>bundle</em> JavaScript tunggal 507,57 kB (151,72 kB gzip) yang memerlukan <em>code splitting</em>.
+</div>
+<div class="keywords"><strong>Kata kunci:</strong> <em>hybrid monolith</em>, <em>jwt</em>, <em>laravel</em>, performa web, <em>react.js</em>, <em>ruang modal</em>.</div>
+
+<div class="abstract-title en">Abstract</div>
+<div class="abstract-body en">
+  The digital transformation of SMA Double Track alumni empowerment through the Ruang Modal Ecosystem—integrating Ruang Modal, Ruang Tumbuh, Ruang Pasar, and Monitoring—demands a reliable, secure, and responsive web architecture. Migrating the platform from a spreadsheet-based script to a Hybrid Monolith built with Laravel 13, React.js 18, Vite 8, Redux Toolkit, TanStack Table, TanStack Chart, JSON Web Token (JWT) authentication, and Spatie Role-Based Access Control (RBAC) introduces new performance challenges across frontend and backend layers. This study conducts an end-to-end performance analysis covering frontend bundle efficiency, server-side SQL query and memory profiling, and HTTP concurrency load resilience. Using a quantitative descriptive experimental approach across three layers—(1) Vite 8 build inspection, (2) Laravel kernel profiling across 13 core endpoints, and (3) live HTTP load testing of 1,200 requests at concurrency levels 1–20—this research addresses the gap left by prior client-side rendering (CSR) studies that overlooked ORM bottlenecks, JWT–RBAC overhead, and concurrent API throughput. Results confirm a 0.00% error rate, 30 MB peak memory, 263 ms Vite build time, 269.43–281.52 RPS public throughput, and 125.92–164.58 RPS JWT-authenticated admin throughput with p95 latency under 85 ms. Three optimization targets were identified: 39 SQL queries in the analytics dashboard, an N+1 query pattern in RBAC user listing, and a 507.57 kB monolithic JavaScript bundle requiring route-based code splitting.
+</div>
+<div class="keywords en"><strong>Keywords:</strong> hybrid monolith, jwt, laravel, react.js, ruang modal, web performance.</div>
+
+<h2 class="section">1 Pendahuluan</h2>
+<p>Program SMA Double Track merupakan inisiatif strategis pendidikan menengah di Indonesia yang membekali peserta didik dengan keterampilan vokasional dan kewirausahaan guna menekan potensi pengangguran lulusan sekolah menengah [1], [2]. Keberhasilan penumbuhan jiwa kewirausahaan tersebut menuntut ekosistem berkelanjutan pasca-kelulusan yang mencakup pendampingan, fasilitasi permodalan, serta akses pemasaran produk alumni [3], [4]. Menjawab kebutuhan tersebut, dikembangkan <strong>Ekosistem Alumni SMA Double Track</strong> berbasis web yang mengintegrasikan empat layanan utama: <em>Ruang Modal</em>, <em>Ruang Tumbuh</em>, <em>Ruang Pasar</em>, dan <em>Monitoring</em>.</p>
+<p>Migrasi sistem dari arsitektur awal berbasis <em>Google Apps Script</em> dan spreadsheet menuju arsitektur <em>Hybrid Monolith</em> (Laravel 13 + React.js 18 + Vite 8 + Redux Toolkit + TanStack Table/Chart + JWT Auth + Spatie Permission) secara signifikan meningkatkan keamanan, keteraturan data relasional, dan kekayaan antarmuka. Namun, penggabungan pustaka modern dan lapisan keamanan tersebut berpotensi memengaruhi ukuran <em>bundle</em> klien, efisiensi kueri basis data, serta kapasitas layanan saat diakses bersamaan [5], [6], [10].</p>
+<p>Penelitian terdahulu oleh Cahyono et al. [5] telah mengevaluasi performa <em>Client-Side Rendering</em> (CSR) pada <em>Hybrid LMS</em> menggunakan metrik <em>Core Web Vitals</em> (Google Lighthouse) pada variasi jaringan 4G dan 5G. Studi lain [6]–[8] turut membandingkan performa rendering berbasis Lighthouse dan GTmetrix, sedangkan [10]–[12] mengevaluasi <em>throughput</em> REST API Laravel. Meskipun demikian, merujuk pada keterbatasan eksplisit pada [5], masih terdapat celah penelitian: evaluasi sebelumnya berfokus pada sisi klien tanpa mengaudit lapisan <em>backend</em> (jumlah <em>query</em> SQL, fenomena <em>N+1 query</em> ORM, <em>overhead</em> JWT–RBAC, dan puncak memori server) serta belum mengukur ketahanan beban konkuren HTTP (RPS dan latensi persentil p50/p95/p99). Selain itu, [5] secara eksplisit menyarankan eksplorasi <em>code splitting</em> untuk menekan beban eksekusi JavaScript. Oleh karena itu, penelitian ini menyajikan evaluasi empiris performa <em>full-stack</em> terhadap Ekosistem Ruang Modal berbasis web untuk memetakan <em>bottleneck</em> lintas lapisan dan merumuskan prioritas optimasi terukur.</p>
+
+<h2 class="section">2 Tinjauan Literatur</h2>
+<h3 class="subsection">2.1 Ekosistem Digital Alumni SMA Double Track</h3>
+<p>Program SMA Double Track membekali siswa dengan <em>life skill</em> vokasional yang relevan dengan kebutuhan industri dan wirausaha mandiri [1], [2]. Kajian strategis [3], [4] menekankan pentingnya keberlanjutan pendampingan alumni melalui wadah terpadu yang menghubungkan kebutuhan alat kerja/modal usaha, mentor, dan etalase pasar secara terukur.</p>
+<h3 class="subsection">2.2 Arsitektur Hybrid Monolith, JWT Auth, dan RBAC</h3>
+<p>Pola <em>Hybrid Monolith</em> Laravel–React–Vite menyatukan penyajian <em>REST API</em> dan SPA dalam satu repositori sehingga menghilangkan kompleksitas CORS sekaligus menjaga performa respons tinggi [10]–[12]. Kombinasi JWT (RFC 7519) dan RBAC memberikan autentikasi <em>stateless</em> dan kontrol izin granular [13], [14], namun tetap memerlukan audit terhadap biaya kriptografi <em>bcrypt</em> dan pengecekan relasi izin di basis data [15].</p>
+<h3 class="subsection">2.3 Evaluasi Performa Web Full-Stack</h3>
+<p>Kualitas pengalaman pengguna (QoE) ditentukan oleh sinergi efisiensi sisi klien dan kecepatan respons server [9]. Pada aplikasi React berbasis CSR, <em>bundle</em> JavaScript besar memperburuk <em>Total Blocking Time</em> dan dapat diatasi dengan <em>code splitting</em> serta <em>lazy loading</em> [5], [16], [17]. Sementara pada sisi server, <em>N+1 query</em> ORM dan kueri berulang dalam <em>loop</em> menjadi penyebab utama degradasi latensi ketika jumlah data dan konkurensi pengguna meningkat [18].</p>
+
+<h2 class="section">3 Metode Penelitian</h2>
+<p>Penelitian menggunakan pendekatan deskriptif kuantitatif eksperimental melalui empat tahapan: studi literatur, konfigurasi lingkungan dan dataset uji, pengujian tiga lapisan (frontend build/bundle, profiling kernel &amp; query SQL, serta live HTTP load testing), dan analisis komparatif. Spesifikasi lingkungan uji disajikan pada Tabel 1 dan skenario uji beban HTTP pada Tabel 2.</p>
+
+<div class="table-caption">Tabel 1. Spesifikasi lingkungan dan stack teknologi pengujian</div>
+<table>
+  <thead><tr><th>Komponen</th><th>Spesifikasi / Versi</th></tr></thead>
+  <tbody>
+    <tr><td>Sistem Operasi &amp; Runtime</td><td>macOS (Apple Silicon), PHP 8.4.27 (NTS + Zend OPcache), Node.js v26.13.1</td></tr>
+    <tr><td>Backend &amp; Keamanan</td><td>Laravel 13.43.0, JWT Auth v2.10.0, Spatie Laravel Permission v8.5.0, SQLite 3</td></tr>
+    <tr><td>Frontend &amp; UI</td><td>React 18.3, Vite 8.3.8, Redux Toolkit 2.5, TanStack Table 8, TanStack Chart 3, Tailwind CSS v4</td></tr>
+    <tr><td>Instrumen Uji</td><td><code>/usr/bin/time</code>, Laravel <code>DB::enableQueryLog()</code> + <code>hrtime()</code>, Python Concurrent HTTP Benchmarker</td></tr>
+  </tbody>
+</table>
+
+<div class="table-caption">Tabel 2. Skenario pengujian beban dan konkurensi HTTP (total 1.200 permintaan)</div>
+<table>
+  <thead><tr><th class="num">Kode</th><th>Skenario</th><th>Endpoint Target</th><th class="num">Auth</th><th class="num">Req</th><th class="num">Conc.</th></tr></thead>
+  <tbody>
+    <tr><td class="num">S1</td><td>SPA Root Sekuensial</td><td><code>GET /</code></td><td class="num">Publik</td><td class="num">100</td><td class="num">1</td></tr>
+    <tr><td class="num">S2</td><td>SPA Root Konkuren</td><td><code>GET /</code></td><td class="num">Publik</td><td class="num">200</td><td class="num">10</td></tr>
+    <tr><td class="num">S3</td><td>Statistik Publik</td><td><code>GET /api/public/stats</code></td><td class="num">Publik</td><td class="num">200</td><td class="num">10</td></tr>
+    <tr><td class="num">S4</td><td>Etalase Ruang Pasar (Sedang)</td><td><code>GET /api/public/pasar</code></td><td class="num">Publik</td><td class="num">200</td><td class="num">10</td></tr>
+    <tr><td class="num">S5</td><td>Etalase Ruang Pasar (Tinggi)</td><td><code>GET /api/public/pasar</code></td><td class="num">Publik</td><td class="num">200</td><td class="num">20</td></tr>
+    <tr><td class="num">S6</td><td>Dashboard Analitik Admin</td><td><code>GET /api/admin/dashboard</code></td><td class="num">JWT+RBAC</td><td class="num">150</td><td class="num">10</td></tr>
+    <tr><td class="num">S7</td><td>Daftar Ruang Modal Admin</td><td><code>GET /api/admin/modal</code></td><td class="num">JWT+RBAC</td><td class="num">150</td><td class="num">10</td></tr>
+  </tbody>
+</table>
+
+<h2 class="section">4 Hasil dan Pembahasan</h2>
+<h3 class="subsection">4.1 Hasil Pengujian Build dan Ukuran Bundle Frontend</h3>
+<p>Hasil kompilasi produksi Vite 8 (Tabel 3) mencatat waktu <em>build</em> internal 263 ms (0,60 detik <em>wall-clock</em>) untuk 1.904 modul dengan CSS sangat ramping (12,52 kB gzip). Namun, <em>bundle</em> JavaScript utama mencapai 507,57 kB (151,72 kB gzip) karena pustaka grafik admin (`react-charts`/`d3`) belum dipisahkan secara dinamis.</p>
+
+<div class="table-caption">Tabel 3. Hasil pengujian build dan ukuran bundle produksi Vite 8</div>
+<table>
+  <thead><tr><th>Artefak / Metrik</th><th class="num">Ukuran Raw</th><th class="num">Ukuran Gzip</th><th>Evaluasi</th></tr></thead>
+  <tbody>
+    <tr><td>Waktu Build Internal / Wall-Clock</td><td class="num">263 ms / 0,60 s</td><td class="num">—</td><td>Sangat cepat (1.904 modul)</td></tr>
+    <tr><td><code>manifest.json</code></td><td class="num">0,33 kB</td><td class="num">0,17 kB</td><td>Optimal</td></tr>
+    <tr><td><code>assets/app-DSTqdI5T.css</code></td><td class="num">61,49 kB</td><td class="num">12,52 kB</td><td>Optimal (Tailwind v4)</td></tr>
+    <tr><td><code>assets/main-CTpu2Oot.js</code></td><td class="num"><strong>507,57 kB</strong></td><td class="num"><strong>151,72 kB</strong></td><td>Perlu <em>code splitting</em> (&gt;500 kB)</td></tr>
+  </tbody>
+</table>
+
+<h3 class="subsection">4.2 Hasil Profiling Backend Laravel, Query SQL, dan Memori</h3>
+<p>Profiling 13 <em>endpoint</em> pada kernel Laravel (Tabel 4) mencatat puncak penggunaan memori hanya <strong>30 MB</strong>. Endpoint operasional baca hanya mengeksekusi 1–2 kueri (&lt;0,80 ms), sedangkan <code>POST /api/auth/login</code> membutuhkan 224,24 ms secara wajar akibat <em>hashing bcrypt</em> 12 putaran. Dua <em>bottleneck</em> ditemukan pada <code>GET /api/admin/dashboard</code> (<strong>39 kueri</strong> akibat perulangan 6 bulan × 4 modul) dan <code>GET /api/admin/users</code> (<strong>8 kueri</strong> akibat <em>N+1 query</em> pada <code>getAllPermissions()</code>).</p>
+
+<div class="table-caption">Tabel 4. Hasil profiling kernel Laravel, jumlah query SQL, dan ukuran payload</div>
+<table>
+  <thead><tr><th>Endpoint</th><th class="num">Query</th><th class="num">DB (ms)</th><th class="num">Avg (ms)</th><th class="num">p50 (ms)</th><th class="num">p95 (ms)</th><th class="num">Bytes</th></tr></thead>
+  <tbody>
+    <tr><td><code>GET /</code> (SPA Root)</td><td class="num">3</td><td class="num">0,70</td><td class="num">0,60</td><td class="num">0,55</td><td class="num">0,74</td><td class="num">977</td></tr>
+    <tr><td><code>GET /api/public/stats</code></td><td class="num">4</td><td class="num">0,10</td><td class="num">0,32</td><td class="num">0,31</td><td class="num">0,35</td><td class="num">61</td></tr>
+    <tr><td><code>GET /api/public/pasar</code></td><td class="num">1</td><td class="num">0,07</td><td class="num">0,42</td><td class="num">0,41</td><td class="num">0,48</td><td class="num">2.261</td></tr>
+    <tr><td><code>POST /api/auth/login</code></td><td class="num">4</td><td class="num">0,24</td><td class="num"><strong>224,24</strong></td><td class="num">223,73</td><td class="num">226,08</td><td class="num">1.106</td></tr>
+    <tr><td><code>GET /api/auth/me</code></td><td class="num">0</td><td class="num">0,00</td><td class="num">0,28</td><td class="num">0,27</td><td class="num">0,30</td><td class="num">360</td></tr>
+    <tr><td><code>GET /api/admin/dashboard</code></td><td class="num"><strong>39</strong></td><td class="num">1,48</td><td class="num">2,33</td><td class="num">2,25</td><td class="num">2,78</td><td class="num">1.807</td></tr>
+    <tr><td><code>GET /api/admin/modal</code></td><td class="num">2</td><td class="num">0,10</td><td class="num">0,75</td><td class="num">0,71</td><td class="num">0,89</td><td class="num">3.806</td></tr>
+    <tr><td><code>GET /api/admin/tumbuh</code></td><td class="num">2</td><td class="num">0,09</td><td class="num">0,67</td><td class="num">0,64</td><td class="num">0,86</td><td class="num">2.178</td></tr>
+    <tr><td><code>GET /api/admin/pasar</code></td><td class="num">2</td><td class="num">0,07</td><td class="num">0,77</td><td class="num">0,74</td><td class="num">0,93</td><td class="num">4.050</td></tr>
+    <tr><td><code>GET /api/admin/monitoring</code></td><td class="num">2</td><td class="num">0,06</td><td class="num">0,65</td><td class="num">0,63</td><td class="num">0,77</td><td class="num">1.637</td></tr>
+    <tr><td><code>GET /api/admin/users</code></td><td class="num"><strong>8</strong></td><td class="num">0,33</td><td class="num">2,57</td><td class="num">2,52</td><td class="num">2,96</td><td class="num">913</td></tr>
+    <tr><td><code>GET /api/admin/roles</code></td><td class="num">3</td><td class="num">0,10</td><td class="num">1,53</td><td class="num">1,47</td><td class="num">1,73</td><td class="num">997</td></tr>
+  </tbody>
+</table>
+
+<h3 class="subsection">4.3 Hasil Pengujian Beban dan Konkurensi HTTP</h3>
+<p>Pengujian 1.200 permintaan konkuren (Tabel 5 dan Gambar 1) menghasilkan <strong>0,00% error rate</strong> dengan puncak <em>throughput</em> <strong>281,52 RPS</strong> pada skenario <code>S5</code> dan latensi p95 seluruh skenario terjaga di bawah 85 ms.</p>
+
+<div class="table-caption">Tabel 5. Hasil pengujian beban dan konkurensi HTTP</div>
+<table>
+  <thead><tr><th class="num">Kode</th><th>Skenario</th><th class="num">RPS</th><th class="num">Avg (ms)</th><th class="num">p50 (ms)</th><th class="num">p95 (ms)</th><th class="num">p99 (ms)</th><th class="num">Error</th></tr></thead>
+  <tbody>
+    <tr><td class="num">S1</td><td>SPA Root (c=1)</td><td class="num">208,63</td><td class="num">4,72</td><td class="num">4,46</td><td class="num">5,12</td><td class="num">5,50</td><td class="num">0,00%</td></tr>
+    <tr><td class="num">S2</td><td>SPA Root (c=10)</td><td class="num">231,18</td><td class="num">42,19</td><td class="num">43,51</td><td class="num">46,47</td><td class="num">47,43</td><td class="num">0,00%</td></tr>
+    <tr><td class="num">S3</td><td>Public Stats (c=10)</td><td class="num">272,75</td><td class="num">35,80</td><td class="num">36,47</td><td class="num">38,55</td><td class="num">38,89</td><td class="num">0,00%</td></tr>
+    <tr><td class="num">S4</td><td>Public Pasar (c=10)</td><td class="num">269,43</td><td class="num">36,23</td><td class="num">35,78</td><td class="num">43,77</td><td class="num">57,36</td><td class="num">0,00%</td></tr>
+    <tr><td class="num">S5</td><td>Public Pasar (c=20)</td><td class="num"><strong>281,52</strong></td><td class="num">67,50</td><td class="num">70,05</td><td class="num">75,36</td><td class="num">76,42</td><td class="num">0,00%</td></tr>
+    <tr><td class="num">S6</td><td>Admin Dashboard JWT (c=10)</td><td class="num">125,92</td><td class="num">76,99</td><td class="num">78,14</td><td class="num">84,88</td><td class="num">86,31</td><td class="num">0,00%</td></tr>
+    <tr><td class="num">S7</td><td>Admin Modal JWT (c=10)</td><td class="num">164,58</td><td class="num">58,89</td><td class="num">60,22</td><td class="num">63,45</td><td class="num">64,08</td><td class="num">0,00%</td></tr>
+  </tbody>
+</table>
+
+<div class="figure-box">
+  <svg width="620" height="230" viewBox="0 0 620 230" xmlns="http://www.w3.org/2000/svg" style="border:1px solid #ddd;background:#fafafa;">
+    <text x="310" y="20" text-anchor="middle" font-family="Arial" font-size="11" font-weight="bold" fill="#173b64">Perbandingan Throughput (RPS) pada 7 Skenario Uji Beban</text>
+    <line x1="55" y1="185" x2="595" y2="185" stroke="#555" stroke-width="1"/>
+    <line x1="55" y1="35" x2="55" y2="185" stroke="#555" stroke-width="1"/>
+    <!-- Bars (scale: max 300 RPS = 140px) -->
+    <rect x="75" y="88" width="46" height="97" fill="#2474b8"/><text x="98" y="83" text-anchor="middle" font-size="9" font-family="Arial">208.6</text><text x="98" y="202" text-anchor="middle" font-size="9" font-family="Arial">S1</text>
+    <rect x="150" y="77" width="46" height="108" fill="#2474b8"/><text x="173" y="72" text-anchor="middle" font-size="9" font-family="Arial">231.2</text><text x="173" y="202" text-anchor="middle" font-size="9" font-family="Arial">S2</text>
+    <rect x="225" y="58" width="46" height="127" fill="#198754"/><text x="248" y="53" text-anchor="middle" font-size="9" font-family="Arial">272.8</text><text x="248" y="202" text-anchor="middle" font-size="9" font-family="Arial">S3</text>
+    <rect x="300" y="59" width="46" height="126" fill="#198754"/><text x="323" y="54" text-anchor="middle" font-size="9" font-family="Arial">269.4</text><text x="323" y="202" text-anchor="middle" font-size="9" font-family="Arial">S4</text>
+    <rect x="375" y="54" width="46" height="131" fill="#173b64"/><text x="398" y="49" text-anchor="middle" font-size="9" font-family="Arial">281.5</text><text x="398" y="202" text-anchor="middle" font-size="9" font-family="Arial">S5</text>
+    <rect x="450" y="126" width="46" height="59" fill="#d97706"/><text x="473" y="121" text-anchor="middle" font-size="9" font-family="Arial">125.9</text><text x="473" y="202" text-anchor="middle" font-size="9" font-family="Arial">S6</text>
+    <rect x="525" y="108" width="46" height="77" fill="#d97706"/><text x="548" y="103" text-anchor="middle" font-size="9" font-family="Arial">164.6</text><text x="548" y="202" text-anchor="middle" font-size="9" font-family="Arial">S7</text>
+  </svg>
+  <div class="figure-caption">Gambar 1. Grafik perbandingan throughput (RPS) pada tujuh skenario pengujian beban HTTP.</div>
+</div>
+
+<h3 class="subsection">4.4 Rekomendasi Optimasi Prioritas</h3>
+<p>Prioritas optimasi direkomendasikan secara bertahap: (P1) konsolidasi 39 kueri <code>DashboardController</code> menjadi 4 kueri <code>GROUP BY</code> disertai <code>Cache::remember()</code> dan penerapan <code>React.lazy()</code> untuk memecah <em>bundle</em> 507,57 kB [17]; (P2) perbaikan <em>N+1 query</em> pada <code>RoleUserController</code> melalui <em>eager loading</em> <code>roles.permissions</code> [18] serta <em>server-side pagination</em>; dan (P3) penerapan <code>php artisan optimize</code>, Redis, serta Nginx + PHP-FPM atau FrankenPHP pada lingkungan produksi [12].</p>
+
+<h2 class="section">5 Kesimpulan</h2>
+<p>Ekosistem Ruang Modal berbasis web (*Hybrid Monolith* Laravel 13 + React.js 18 + Vite 8 + JWT Auth + Spatie Permission) terbukti andal dan responsif dengan 0,00% kegagalan dari 1.200 permintaan konkuren, konsumsi memori 30 MB, waktu *build* 263 ms, *throughput* publik hingga 281,52 RPS, serta *throughput* admin JWT 125,92–164,58 RPS (p95 &lt; 85 ms). Evaluasi *full-stack* ini melengkapi keterbatasan studi CSR sebelumnya dengan memetakan secara presisi 39 *query* dashboard, *N+1 query* RBAC, dan *bundle* JS 507,57 kB. Penelitian selanjutnya disarankan menguji dampak *before–after* optimasi P1–P2 secara inferensial pada infrastruktur produksi Nginx/FrankenPHP, MySQL/PostgreSQL, dan Redis.</p>
+
+<h2 class="section">Ucapan Terima Kasih</h2>
+<p>Penulis mengucapkan terima kasih kepada pengelola program SMA Double Track, civitas akademika Universitas Islam Madura, serta seluruh pihak yang telah mendukung pelaksanaan penelitian ini.</p>
+
+<h2 class="section">Referensi</h2>
+<div class="refs">
+  <p>[1] M. Z. Asrori, F. Baskoro, A. Y. Wijaya, and H. Hozairi, “Peningkatan Life Skill Siswa SLTA Melalui Program SMA Double Track Sebagai Upaya Mengurangi Potensi Pengangguran di Jawa Timur,” <em>Darmabakti</em>, vol. 3, no. 1, pp. 1–11, 2022, doi: 10.31102/darmabakti.2022.3.1.1-11.</p>
+  <p>[2] N. Alfiyah, A. I. Siska, and N. Kareja, “Pelaksanaan Pendidikan Kewirausahaan dalam Program Double Track pada Sekolah Menengah Atas di Kabupaten Banyuwangi,” <em>Jurnal Pendidikan Ekonomi Undiksha</em>, vol. 14, no. 2, pp. 230–236, 2022, doi: 10.23887/jjpe.v14i2.52966.</p>
+  <p>[3] L. Lutfi and M. Churiyah, “Perumusan Strategi Pelatihan ‘SMA Double Track’ untuk Menumbuhkan Jiwa Kewirausahaan Siswa SMA yang Berbasis SWOT,” <em>Makreju</em>, vol. 1, no. 2, 2023, doi: 10.55606/makreju.v1i2.1295.</p>
+  <p>[4] D. Mayudho, “Manajemen Program Double Track Mandiri dalam Menumbuhkan Jiwa Kewirausahaan Peserta Didik,” <em>JAMP</em>, vol. 6, no. 3, p. 214, 2023, doi: 10.17977/um027v6i32023p214.</p>
+  <p>[5] N. P. P. Cahyono, Hoiriyah, A. K. Darmawan, and Rofiuddin, “Analisis Kinerja Client-Side Rendering pada Hybrid LMS menggunakan Metrik Core Web Vitals di berbagai Kondisi Jaringan,” <em>Sistemasi: Jurnal Sistem Informasi</em>, vol. 15, no. 7, pp. 2602–2617, 2026.</p>
+  <p>[6] M. U. Khasanah and I. M. Suartana, “Perbandingan Performa Client Side Rendering pada Implementasi Static Website (Studi Kasus Barokah RentCar),” <em>JINACS</em>, vol. 6, pp. 541–550, 2024.</p>
+  <p>[7] Y. A. Putra and D. F. Suyatno, “Analisis Performa Rendering Antara Microservice dan Serverless Firebase Architecture pada Aplikasi berbasis Website menggunakan Google Lighthouse,” <em>JEISBI</em>, vol. 4, no. 2, pp. 1–13, 2023.</p>
+  <p>[8] A. Prambayun et al., “Analisis Performa Website Karya Usaha menggunakan Google Lighthouse dan GTmetrix,” <em>Jurnal Komputer dan Informatika</em>, vol. 10, no. 1, pp. 1–6, 2025.</p>
+  <p>[9] N. Wehner, M. Seufert, F. Wamser, and T. Hossfeld, “A Vital Improvement? Relating Google’s Core Web Vitals to Actual Web QoE,” in <em>Proc. QoMEX</em>, Lippstadt, Germany, 2022.</p>
+  <p>[10] P. E. Valentina, D. Handayani, S. R. M. Ibrahim, N. Nanang, and F. M. K. Putra, “Komparasi Performa REST API Laravel 11 dan CodeIgniter 4 menggunakan Metode Eksperimental,” <em>Jurnal Fasilkom</em>, vol. 16, no. 1, 2026, doi: 10.37859/jf.v16i1.11274.</p>
+  <p>[11] M. Faisal and I. K. D. Nuryana, “Comparative Analysis of Laravel, Lumen, Guzzle, Leaf, and Slim Framework Performance on REST API using One Way ANOVA,” <em>JEISBI</em>, vol. 6, no. 2, 2025, doi: 10.26740/jeisbi.v6i2.66146.</p>
+  <p>[12] A. S. Azzahidi, B. Wijayanto, and A. Darmawan, “Performance Evaluation of Backend Frameworks for REST API: A Comparative Study of Spring Boot, Flask, Express.js, Laravel FrankenPHP, and Gin,” <em>Jutif</em>, vol. 6, no. 4, 2025, doi: 10.52436/1.jutif.2025.6.4.4811.</p>
+  <p>[13] R. Yulianto, P. Mardiana, R. A. Rahayu, and G. F. Nama, “Performance Comparison Analysis of Springboot and Laravel Frameworks Using API Web Service,” <em>JITET</em>, vol. 12, no. 2, 2024, doi: 10.23960/jitet.v12i2.4141.</p>
+  <p>[14] “Token-Based Authentication and Role-Based Access Control in Web Applications: Analysis and Implementation of the JWT Standard,” <em>Scientific Bulletin</em>, vol. 16, no. 2, pp. 163–168, 2026, doi: 10.54414/EPSQ8389.</p>
+  <p>[15] N. S. Alshammari et al., “Enhancing Microservices Security with Token-Based Access Control Method,” <em>Sensors</em>, vol. 23, no. 6, p. 3363, 2023, doi: 10.3390/s23063363.</p>
+  <p>[16] Y. S. Aluri, “Frontend Performance Optimization of Large-Scale E-commerce Landing Pages: A Comprehensive Analysis,” <em>IJCESEN</em>, vol. 11, no. 4, pp. 9123–9134, 2025, doi: 10.22399/ijcesen.4372.</p>
+  <p>[17] “React-based Web Application Performance Optimization Using Code Splitting and Lazy Loading,” in <em>Proc. 2025 IEEE ICCAI</em>, 2025, doi: 10.1109/ICCAI65301.2025.11279539.</p>
+  <p>[18] E. Mosul, “Comparative Analysis of Performance and Effectiveness of Laravel and Node.js Frameworks in Web Development,” <em>JITET</em>, vol. 14, no. 2, 2026, doi: 10.23960/jitet.v14i2.9264.</p>
+</div>
+
+<div class="journal-footer">http://sistemasi.ftik.unisi.ac.id</div>
+
+</body>
+</html>

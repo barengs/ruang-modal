@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('sekolah', 180);
             $table->string('nama_produk', 180);
             $table->string('kategori', 100)->index();
+            $table->string('thumbnail', 500)->nullable();
             $table->text('deskripsi');
             $table->string('harga', 100)->nullable();
             $table->string('kontak_link', 500);

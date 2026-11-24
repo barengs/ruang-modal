@@ -3,12 +3,16 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\MasterOption;
 use App\Models\ModalApplication;
 use App\Models\Monitoring;
 use App\Models\PasarProduct;
 use App\Models\TumbuhRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\ImageManager;
 
 class PublicController extends Controller
 {
@@ -21,6 +25,20 @@ class PublicController extends Controller
                 'tumbuh' => TumbuhRequest::count(),
                 'monitoring' => Monitoring::count(),
             ],
+        ]);
+    }
+
+    public function masterOptions(): JsonResponse
+    {
+        $options = MasterOption::where('is_active', true)
+            ->orderBy('urutan')
+            ->orderBy('id')
+            ->get()
+            ->groupBy('group_key')
+            ->map(fn ($items) => $items->pluck('label')->values()->all());
+
+        return response()->json([
+            'options' => $options,
         ]);
     }
 
@@ -48,6 +66,7 @@ class PublicController extends Controller
             'kode' => $p->kode,
             'nama_produk' => $p->nama_produk,
             'kategori' => $p->kategori,
+            'thumbnail' => $p->thumbnail,
             'deskripsi' => $p->deskripsi,
             'harga' => $p->harga,
             'kontak_link' => $p->kontak_link,
@@ -62,6 +81,34 @@ class PublicController extends Controller
         ]);
     }
 
+    public function modalList(Request $request): JsonResponse
+    {
+        $query = ModalApplication::with(['reviewer:id,name', 'histories'])
+            ->latest();
+
+        if ($status = $request->string('status')->trim()->toString()) {
+            $query->where('status_seleksi', $status);
+        }
+
+        if ($search = $request->string('search')->trim()->toString()) {
+            $query->where(function ($q) use ($search) {
+                $q->where('kode', 'like', "%{$search}%")
+                    ->orWhere('nama', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('whatsapp', 'like', "%{$search}%")
+                    ->orWhere('sekolah', 'like', "%{$search}%")
+                    ->orWhere('kompetensi', 'like', "%{$search}%");
+            });
+        }
+
+        $items = $query->get();
+
+        return response()->json([
+            'data' => $items,
+            'total' => $items->count(),
+        ]);
+    }
+
     public function submitModal(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -71,7 +118,7 @@ class PublicController extends Controller
             'sekolah' => ['required', 'string', 'max:180'],
             'tahun_lulus' => ['required', 'string', 'max:10'],
             'kompetensi' => ['required', 'string', 'max:120'],
-            'jalur' => ['required', 'in:Kerja,Usaha'],
+            'jalur' => ['required', 'string', 'max:100'],
             'status_aktivitas' => ['nullable', 'string', 'max:80'],
             'jenis_bantuan' => ['required', 'string', 'max:80'],
             'rincian_kebutuhan' => ['required', 'string', 'max:2000'],
@@ -86,11 +133,62 @@ class PublicController extends Controller
             'status_seleksi' => 'Menunggu Seleksi',
         ]);
 
+        $record->histories()->create([
+            'status_seleksi' => 'Menunggu Seleksi',
+            'catatan' => 'Pengajuan Ruang Modal dikirim oleh pemohon.',
+            'actor_type' => 'pemohon',
+            'actor_name' => $record->nama,
+        ]);
+
         return response()->json([
             'kode' => $record->kode,
-            'data' => $record,
+            'data' => $record->load(['reviewer:id,name', 'histories']),
             'message' => 'Pengajuan Ruang Modal berhasil dikirim. Simpan nomor pengajuan Anda.',
         ], 201);
+    }
+
+    public function tumbuhList(Request $request): JsonResponse
+    {
+        $query = TumbuhRequest::with('reviewer:id,name')
+            ->latest();
+
+        if ($status = $request->string('status')->trim()->toString()) {
+            $query->where('status', $status);
+        }
+
+        if ($search = $request->string('search')->trim()->toString()) {
+            $query->where(function ($q) use ($search) {
+                $q->where('kode', 'like', "%{$search}%")
+                    ->orWhere('nama', 'like', "%{$search}%")
+                    ->orWhere('sekolah', 'like', "%{$search}%")
+                    ->orWhere('bidang_minat', 'like', "%{$search}%")
+                    ->orWhere('topik_pendampingan', 'like', "%{$search}%");
+            });
+        }
+
+        $items = $query->get();
+
+        return response()->json([
+            'data' => $items,
+            'total' => $items->count(),
+        ]);
+    }
+
+    public function pasarList(Request $request): JsonResponse
+    {
+        $query = PasarProduct::with('reviewer:id,name')
+            ->latest();
+
+        if ($status = $request->string('status')->trim()->toString()) {
+            $query->where('status_publikasi', $status);
+        }
+
+        $items = $query->get();
+
+        return response()->json([
+            'data' => $items,
+            'total' => $items->count(),
+        ]);
     }
 
     public function submitTumbuh(Request $request): JsonResponse
@@ -113,7 +211,7 @@ class PublicController extends Controller
 
         return response()->json([
             'kode' => $record->kode,
-            'data' => $record,
+            'data' => $record->load('reviewer:id,name'),
             'message' => 'Permintaan pendampingan Ruang Tumbuh berhasil dikirim.',
         ], 201);
     }
@@ -127,21 +225,53 @@ class PublicController extends Controller
             'sekolah' => ['required', 'string', 'max:180'],
             'nama_produk' => ['required', 'string', 'max:180'],
             'kategori' => ['required', 'string', 'max:100'],
+            'thumbnail' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp,gif,bmp', 'max:5120'],
             'deskripsi' => ['required', 'string', 'max:2000'],
             'harga' => ['nullable', 'string', 'max:100'],
             'kontak_link' => ['required', 'string', 'max:500'],
         ]);
 
+        $defaultThumbnails = [
+            'Kuliner' => '/images/etalase/kuliner.webp',
+            'Fashion' => '/images/etalase/fashion.webp',
+            'Jasa kreatif' => '/images/etalase/jasa-kreatif.webp',
+            'Kecantikan' => '/images/etalase/kecantikan.webp',
+            'Kerajinan' => '/images/etalase/kerajinan.webp',
+            'Teknologi' => '/images/etalase/teknologi.webp',
+        ];
+
+        $thumbnailPath = $defaultThumbnails[$validated['kategori']] ?? '/images/etalase/default.webp';
+
+        if ($request->hasFile('thumbnail') && $request->file('thumbnail')->isValid()) {
+            $uploadDir = public_path('images/etalase/uploads');
+            if (! is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+
+            $filename = 'produk-'.now('Asia/Jakarta')->format('YmdHis').'-'.strtolower(Str::random(8)).'.webp';
+            $fullPath = $uploadDir.DIRECTORY_SEPARATOR.$filename;
+
+            $manager = ImageManager::usingDriver(Driver::class);
+            $image = $manager->decodePath($request->file('thumbnail')->getRealPath());
+            $image->coverDown(800, 450);
+            $image->encodeUsingFileExtension('webp', quality: 85)->save($fullPath);
+
+            $thumbnailPath = '/images/etalase/uploads/'.$filename;
+        }
+
+        unset($validated['thumbnail']);
+
         $record = PasarProduct::create([
             ...$validated,
+            'thumbnail' => $thumbnailPath,
             'kode' => PasarProduct::generateKode(),
             'status_publikasi' => 'Menunggu Moderasi',
         ]);
 
         return response()->json([
             'kode' => $record->kode,
-            'data' => $record,
-            'message' => 'Produk berhasil diajukan dan akan ditinjau admin sebelum ditampilkan.',
+            'data' => $record->load('reviewer:id,name'),
+            'message' => 'Produk berhasil diajukan (thumbnail diproses ke WebP) dan akan ditinjau admin.',
         ], 201);
     }
 }
