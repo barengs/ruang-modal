@@ -1,0 +1,188 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+@source '../**/*.jsx';
+
+@theme {
+    --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --color-bs-primary: #173b64;
+    --color-bs-primary-hover: #102a49;
+    --color-bs-info: #2474b8;
+    --color-bs-success: #198754;
+    --color-bs-warning: #f59e0b;
+    --color-bs-danger: #dc3545;
+    --color-bs-secondary: #6c757d;
+    --color-bs-border: #dee2e6;
+    --color-bs-bg: #f4f6f9;
+}
+
+@layer base {
+    body {
+        font-family: var(--font-sans);
+        background-color: var(--color-bs-bg);
+        color: #212529;
+    }
+}
+
+/* Bootstrap-style Layout & Components built with Tailwind CSS */
+@layer components {
+    /* Bootstrap Container & 12-Col Grid */
+    .bs-container {
+        @apply w-full max-w-[1200px] mx-auto px-4;
+    }
+    .bs-container-fluid {
+        @apply w-full px-4 md:px-6;
+    }
+    .bs-row {
+        @apply grid grid-cols-12 gap-4;
+    }
+
+    /* Bootstrap Card */
+    .bs-card {
+        @apply bg-white border border-[#dee2e6] rounded-md shadow-xs overflow-hidden;
+    }
+    .bs-card-header {
+        @apply px-4 py-3 bg-[#f8f9fa] border-b border-[#dee2e6] font-semibold text-[#173b64] flex items-center justify-between gap-2;
+    }
+    .bs-card-body {
+        @apply p-4 md:p-5;
+    }
+    .bs-card-footer {
+        @apply px-4 py-3 bg-[#f8f9fa] border-t border-[#dee2e6] text-sm text-[#6c757d];
+    }
+
+    /* Bootstrap Buttons */
+    .bs-btn {
+        @apply inline-flex items-center justify-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded border border-transparent transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed;
+    }
+    .bs-btn-sm {
+        @apply px-2.5 py-1 text-xs;
+    }
+    .bs-btn-lg {
+        @apply px-5 py-2.5 text-base;
+    }
+    .bs-btn-primary {
+        @apply bg-[#173b64] text-white border-[#173b64] hover:bg-[#102a49] hover:border-[#102a49];
+    }
+    .bs-btn-info {
+        @apply bg-[#2474b8] text-white border-[#2474b8] hover:bg-[#1c5c94] hover:border-[#1c5c94];
+    }
+    .bs-btn-secondary {
+        @apply bg-[#6c757d] text-white border-[#6c757d] hover:bg-[#5c636a];
+    }
+    .bs-btn-success {
+        @apply bg-[#198754] text-white border-[#198754] hover:bg-[#157347];
+    }
+    .bs-btn-warning {
+        @apply bg-[#ffc107] text-[#212529] border-[#ffc107] hover:bg-[#ffca2c];
+    }
+    .bs-btn-danger {
+        @apply bg-[#dc3545] text-white border-[#dc3545] hover:bg-[#bb2d3b];
+    }
+    .bs-btn-light {
+        @apply bg-[#f8f9fa] text-[#212529] border-[#dee2e6] hover:bg-[#e9ecef];
+    }
+    .bs-btn-outline-primary {
+        @apply bg-transparent text-[#173b64] border-[#173b64] hover:bg-[#173b64] hover:text-white;
+    }
+    .bs-btn-outline-secondary {
+        @apply bg-transparent text-[#495057] border-[#ced4da] hover:bg-[#e9ecef] hover:text-[#212529];
+    }
+    .bs-btn-outline-danger {
+        @apply bg-transparent text-[#dc3545] border-[#dc3545] hover:bg-[#dc3545] hover:text-white;
+    }
+
+    /* Bootstrap Form Controls */
+    .bs-form-label {
+        @apply block text-sm font-medium text-[#212529] mb-1.5;
+    }
+    .bs-form-control {
+        @apply w-full px-3 py-2 text-sm text-[#212529] bg-white border border-[#ced4da] rounded transition focus:outline-none focus:border-[#2474b8] focus:ring-3 focus:ring-[#2474b8]/20 disabled:bg-[#e9ecef];
+    }
+    .bs-form-select {
+        @apply w-full px-3 py-2 text-sm text-[#212529] bg-white border border-[#ced4da] rounded transition focus:outline-none focus:border-[#2474b8] focus:ring-3 focus:ring-[#2474b8]/20;
+    }
+    .bs-form-text {
+        @apply text-xs text-[#6c757d] mt-1;
+    }
+
+    /* Bootstrap Badges */
+    .bs-badge {
+        @apply inline-flex items-center px-2.5 py-0.5 text-xs font-semibold rounded-full whitespace-nowrap;
+    }
+    .bs-badge-primary {
+        @apply bg-[#173b64] text-white;
+    }
+    .bs-badge-info {
+        @apply bg-[#e7f1ff] text-[#0d47a1] border border-[#b6d4fe];
+    }
+    .bs-badge-success {
+        @apply bg-[#d1e7dd] text-[#0f5132] border border-[#badbcc];
+    }
+    .bs-badge-warning {
+        @apply bg-[#fff3cd] text-[#664d03] border border-[#ffecb5];
+    }
+    .bs-badge-danger {
+        @apply bg-[#f8d7da] text-[#842029] border border-[#f5c2c7];
+    }
+    .bs-badge-secondary {
+        @apply bg-[#e9ecef] text-[#495057] border border-[#dee2e6];
+    }
+
+    /* Bootstrap Alerts */
+    .bs-alert {
+        @apply px-4 py-3 rounded border text-sm flex items-start gap-2.5;
+    }
+    .bs-alert-success {
+        @apply bg-[#d1e7dd] border-[#badbcc] text-[#0f5132];
+    }
+    .bs-alert-danger {
+        @apply bg-[#f8d7da] border-[#f5c2c7] text-[#842029];
+    }
+    .bs-alert-warning {
+        @apply bg-[#fff3cd] border-[#ffecb5] text-[#664d03];
+    }
+    .bs-alert-info {
+        @apply bg-[#cff4fc] border-[#b6effb] text-[#055160];
+    }
+
+    /* Bootstrap Tables */
+    .bs-table-responsive {
+        @apply w-full overflow-x-auto border border-[#dee2e6] rounded;
+    }
+    .bs-table {
+        @apply w-full text-sm text-left border-collapse bg-white;
+    }
+    .bs-table thead th {
+        @apply bg-[#f8f9fa] text-[#212529] font-semibold px-3 py-2.5 border-b-2 border-[#dee2e6] whitespace-nowrap select-none;
+    }
+    .bs-table tbody td {
+        @apply px-3 py-2.5 border-b border-[#dee2e6] align-top text-[#212529];
+    }
+    .bs-table tbody tr:nth-child(even) {
+        @apply bg-[#fcfcfd];
+    }
+    .bs-table tbody tr:hover {
+        @apply bg-[#f1f5f9];
+    }
+
+    /* Bootstrap Modal */
+    .bs-modal-backdrop {
+        @apply fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4;
+    }
+    .bs-modal-dialog {
+        @apply bg-white rounded-md shadow-xl border border-[#dee2e6] w-full max-w-lg overflow-hidden;
+    }
+    .bs-modal-header {
+        @apply px-4 py-3 bg-[#f8f9fa] border-b border-[#dee2e6] flex items-center justify-between;
+    }
+    .bs-modal-body {
+        @apply p-4 max-h-[75vh] overflow-y-auto;
+    }
+    .bs-modal-footer {
+        @apply px-4 py-3 bg-[#f8f9fa] border-t border-[#dee2e6] flex items-center justify-end gap-2;
+    }
+}
