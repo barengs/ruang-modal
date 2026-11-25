@@ -9,11 +9,14 @@ use Illuminate\Support\Str;
 class Monitoring extends Model
 {
     protected $fillable = [
+        'user_id',
         'kode',
         'ref_kode',
         'nama_alumni',
         'modul',
         'tanggal_pantau',
+        'tahap_pantau',
+        'pemanfaatan_bantuan',
         'status_produktif',
         'pendapatan_omzet',
         'pendapatan_nominal',
@@ -33,6 +36,11 @@ class Monitoring extends Model
     public static function generateKode(): string
     {
         return 'MON-'.now('Asia/Jakarta')->format('Ymd').'-'.strtoupper(Str::random(8));
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function creator(): BelongsTo

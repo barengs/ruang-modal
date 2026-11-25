@@ -72,7 +72,7 @@ export default function AdminTumbuhPage() {
 
         exportToPdfReport({
             title: 'Laporan Permintaan Ruang Tumbuh — SMA Double Track',
-            subtitle: 'Rekapitulasi Permintaan Pendampingan & Mentoring Alumni SMA Double Track Mandiri',
+            subtitle: 'Rekapitulasi Permintaan Pendampingan & Mentoring Alumni SMA Double Track',
             filename: `Laporan-Ruang-Tumbuh-${new Date().toISOString().slice(0, 10)}`,
             summary: [
                 { label: 'Total Permintaan', value: `${tumbuh.length} Permintaan` },

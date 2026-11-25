@@ -11,7 +11,10 @@ class PasarController extends Controller
 {
     public function index(): JsonResponse
     {
-        $items = PasarProduct::with('reviewer:id,name')
+        $items = PasarProduct::with([
+            'user:id,name,email,whatsapp,sekolah,tahun_lulus,kompetensi,nama_usaha',
+            'reviewer:id,name',
+        ])
             ->latest()
             ->get();
 

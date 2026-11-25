@@ -8,15 +8,20 @@ import HomePage from './pages/public/HomePage';
 import RuangModalPage from './pages/public/RuangModalPage';
 import RuangTumbuhPage from './pages/public/RuangTumbuhPage';
 import RuangPasarPage from './pages/public/RuangPasarPage';
+import EtalasePasarPage from './pages/public/EtalasePasarPage';
 import TentangPage from './pages/public/TentangPage';
 import KontakPage from './pages/public/KontakPage';
 import LoginPage from './pages/auth/LoginPage';
+import RegisterPage from './pages/auth/RegisterPage';
+import AlumniDashboardPage from './pages/alumni/AlumniDashboardPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminModalPage from './pages/admin/AdminModalPage';
 import AdminTumbuhPage from './pages/admin/AdminTumbuhPage';
 import AdminPasarPage from './pages/admin/AdminPasarPage';
 import AdminMonitoringPage from './pages/admin/AdminMonitoringPage';
+import AdminChatPage from './pages/admin/AdminChatPage';
 import AdminMasterDataPage from './pages/admin/AdminMasterDataPage';
+import AdminAlumniPage from './pages/admin/AdminAlumniPage';
 import AdminUsersPage from './pages/admin/AdminUsersPage';
 import AdminRolesPage from './pages/admin/AdminRolesPage';
 
@@ -53,9 +58,12 @@ export default function App() {
                 <Route path="/ruang-modal" element={<RuangModalPage />} />
                 <Route path="/ruang-tumbuh" element={<RuangTumbuhPage />} />
                 <Route path="/ruang-pasar" element={<RuangPasarPage />} />
+                <Route path="/etalase-pasar" element={<EtalasePasarPage />} />
                 <Route path="/tentang" element={<TentangPage />} />
                 <Route path="/kontak" element={<KontakPage />} />
                 <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/alumni" element={<AlumniDashboardPage />} />
             </Route>
 
             {/* Protected Admin Panel Routes */}
@@ -108,10 +116,26 @@ export default function App() {
                     }
                 />
                 <Route
+                    path="chat"
+                    element={
+                        <ProtectedRoute permission="chat.manage">
+                            <AdminChatPage />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
                     path="master-data"
                     element={
                         <ProtectedRoute permission="master.manage">
                             <AdminMasterDataPage />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="alumni"
+                    element={
+                        <ProtectedRoute permission="users.manage">
+                            <AdminAlumniPage />
                         </ProtectedRoute>
                     }
                 />

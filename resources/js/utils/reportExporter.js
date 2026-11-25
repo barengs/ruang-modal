@@ -162,7 +162,7 @@ export function exportToPdfReport({
         cmds.push(`${marginX} ${pageH - 59} Td`);
         cmds.push(
             `(${escapePdfText(
-                subtitle || 'Program Ekosistem Alumni SMA Double Track Mandiri — Dinas Pendidikan Provinsi Jawa Timur & ITS'
+                subtitle || 'Program Ekosistem Alumni SMA Double Track — Dinas Pendidikan Provinsi Jawa Timur & ITS'
             )}) Tj`
         );
         cmds.push('ET');
@@ -253,7 +253,7 @@ export function exportToPdfReport({
 
         cmds.push('BT /F1 7.5 Tf 0.392 0.455 0.545 rg');
         cmds.push(
-            `${marginX} 20 Td (Ekosistem Alumni SMA Double Track Mandiri — Laporan Resmi Panel Pengelola) Tj ET`
+            `${marginX} 20 Td (Ekosistem Alumni SMA Double Track — Laporan Resmi Panel Pengelola) Tj ET`
         );
 
         cmds.push('BT /F2 7.5 Tf 0.125 0.220 0.502 rg');
@@ -617,4 +617,185 @@ export function exportToExcelFile({
     a.click();
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 30000);
+}
+
+/**
+ * Generate & Cetak Berita Acara Serah Terima (BAST) Fasilitasi Ruang Modal (PDF Portrait A4)
+ */
+export function exportBastPdf(item, formatRupiahFn) {
+    if (!item) return;
+
+    const pageW = 595.28; // A4 Portrait width (pt)
+    const pageH = 841.89; // A4 Portrait height (pt)
+    const marginX = 42;
+    const usableW = pageW - marginX * 2;
+
+    const nomorBast = item.nomor_bast || `BAST/DT-RM/${new Date().getFullYear()}/${item.kode?.slice(-6) || '001'}`;
+    const tglSalur = item.tanggal_penyaluran || new Date().toISOString().slice(0, 10);
+    const nominalStr = formatRupiahFn
+        ? formatRupiahFn(item.nominal_disetujui || item.estimasi_biaya || 0)
+        : `Rp ${Number(item.nominal_disetujui || item.estimasi_biaya || 0).toLocaleString('id-ID')}`;
+
+    const cmds = [];
+
+    // Header Bar Navy & Amber
+    cmds.push('0.125 0.220 0.502 rg');
+    cmds.push(`${marginX} ${pageH - 36} ${usableW * 0.75} 6 re f`);
+    cmds.push('0.973 0.627 0.000 rg');
+    cmds.push(`${marginX + usableW * 0.75} ${pageH - 36} ${usableW * 0.25} 6 re f`);
+
+    // Title
+    cmds.push('BT /F2 13 Tf 0.125 0.220 0.502 rg');
+    cmds.push(`${marginX} ${pageH - 58} Td (BERITA ACARA SERAH TERIMA (BAST) FASILITASI RUANG MODAL) Tj ET`);
+
+    cmds.push('BT /F1 9 Tf 0.392 0.455 0.545 rg');
+    cmds.push(
+        `${marginX} ${pageH - 72} Td (Program Ekosistem Alumni SMA Double Track - Dinas Pendidikan Prov. Jawa Timur & ITS) Tj ET`
+    );
+
+    // Nomor BAST Box
+    cmds.push('0.961 0.973 0.992 rg 0.859 0.890 0.941 RG 0.8 w');
+    cmds.push(`${marginX} ${pageH - 114} ${usableW} 30 re B`);
+
+    cmds.push('BT /F2 9.5 Tf 0.125 0.220 0.502 rg');
+    cmds.push(`${marginX + 10} ${pageH - 97} Td (Nomor BAST: ${escapePdfText(nomorBast)}) Tj ET`);
+    cmds.push('BT /F1 8.5 Tf 0.118 0.161 0.231 rg');
+    cmds.push(
+        `${marginX + 10} ${pageH - 109} Td (Kode Pengajuan: ${escapePdfText(item.kode)}   |   Tanggal Penyaluran: ${escapePdfText(tglSalur)}   |   Status: ${escapePdfText(item.status_seleksi)}) Tj ET`
+    );
+
+    let y = pageH - 138;
+
+    const drawSectionHeader = (label) => {
+        cmds.push('0.125 0.220 0.502 rg');
+        cmds.push(`${marginX} ${y - 4} ${usableW} 18 re f`);
+        cmds.push('BT /F2 8.5 Tf 1 1 1 rg');
+        cmds.push(`${marginX + 8} ${y + 1.5} Td (${escapePdfText(label)}) Tj ET`);
+        y -= 22;
+    };
+
+    const drawKeyVal = (key, val) => {
+        cmds.push('BT /F2 8.5 Tf 0.278 0.333 0.412 rg');
+        cmds.push(`${marginX + 6} ${y} Td (${escapePdfText(key)}) Tj ET`);
+        const wrapped = wrapText(val || '-', 66);
+        wrapped.forEach((line, idx) => {
+            cmds.push('BT /F1 8.5 Tf 0.118 0.161 0.231 rg');
+            cmds.push(`${marginX + 165} ${y - idx * 12} Td (:  ${escapePdfText(line)}) Tj ET`);
+        });
+        y -= Math.max(15, wrapped.length * 12 + 3);
+    };
+
+    drawSectionHeader('I. IDENTITAS ALUMNI PENERIMA FASILITASI');
+    drawKeyVal('Nama Lengkap Alumni', item.nama);
+    drawKeyVal('Asal Sekolah & Tahun Lulus', `${item.sekolah} (Lulusan ${item.tahun_lulus})`);
+    drawKeyVal('Kompetensi Double Track', item.kompetensi);
+    drawKeyVal('Kontak (WhatsApp / Email)', `${item.whatsapp || '-'} / ${item.email || '-'}`);
+    drawKeyVal('Guru Pendamping Sekolah', item.guru_pendamping || '-');
+
+    y -= 8;
+    drawSectionHeader('II. HASIL SELEKSI & RUBRIK KELAYAKAN');
+    drawKeyVal('Jalur & Jenis Bantuan', `Ruang Modal ${item.jalur} - ${item.jenis_bantuan}`);
+    drawKeyVal(
+        'Nilai Akhir Rubrik Seleksi',
+        item.skor_total != null
+            ? `${item.skor_total} / 100 (Kompetensi:${item.skor_kompetensi || 0}, Rencana:${item.skor_rencana || 0}, Alat:${item.skor_kebutuhan || 0}, Dampak:${item.skor_dampak || 0}, Komitmen:${item.skor_komitmen || 0})`
+            : 'Terverifikasi oleh Tim Seleksi'
+    );
+    drawKeyVal('Peninjau / Verifikator', item.reviewer?.name || 'Tim Seleksi Ruang Modal');
+    drawKeyVal('Catatan Verifikasi', item.catatan_admin || 'Layak menerima fasilitasi bantuan produktif.');
+
+    y -= 8;
+    drawSectionHeader('III. RINCIAN BARANG / MODAL PRODUKTIF YANG DISALURKAN');
+    drawKeyVal('Nilai Bantuan Disetujui', nominalStr);
+    drawKeyVal(
+        'Rincian Alat / Modal Disalurkan',
+        item.rincian_bantuan_disalurkan || item.rincian_kebutuhan
+    );
+    drawKeyVal('Rencana & Target Produktif', item.rencana_deskripsi);
+
+    y -= 8;
+    drawSectionHeader('IV. PERNYATAAN KOMITMEN PENERIMA BANTUAN');
+    const komitmenLines = [
+        '1. Penerima menyatakan telah menerima fasilitasi peralatan kerja / modal usaha dalam kondisi baik dan sesuai.',
+        '2. Bantuan wajib dimanfaatkan secara produktif sesuai rencana kerja/usaha dan tidak diperjualbelikan.',
+        '3. Penerima berkomitmen mengikuti pendampingan dan melaporkan perkembangan usaha/omzet selama minimal 6 bulan.',
+    ];
+    komitmenLines.forEach((line) => {
+        cmds.push('BT /F1 8 Tf 0.118 0.161 0.231 rg');
+        cmds.push(`${marginX + 8} ${y} Td (${escapePdfText(line)}) Tj ET`);
+        y -= 13;
+    });
+
+    // Signature Boxes
+    y -= 28;
+    cmds.push('BT /F2 8.5 Tf 0.125 0.220 0.502 rg');
+    cmds.push(`${marginX + 20} ${y} Td (PIHAK PERTAMA (PENGELOLA PROGRAM)) Tj ET`);
+    cmds.push('BT /F2 8.5 Tf 0.125 0.220 0.502 rg');
+    cmds.push(`${marginX + 300} ${y} Td (PIHAK KEDUA (ALUMNI PENERIMA)) Tj ET`);
+
+    y -= 55;
+    cmds.push('BT /F2 8.5 Tf 0.118 0.161 0.231 rg');
+    cmds.push(
+        `${marginX + 20} ${y} Td (( ${escapePdfText(item.reviewer?.name || 'Koordinator Ruang Modal DT')} )) Tj ET`
+    );
+    cmds.push('BT /F2 8.5 Tf 0.118 0.161 0.231 rg');
+    cmds.push(`${marginX + 300} ${y} Td (( ${escapePdfText(item.nama)} )) Tj ET`);
+
+    // Footer
+    cmds.push('0.859 0.890 0.941 RG 0.6 w');
+    cmds.push(`${marginX} 32 ${usableW} 0.5 re S`);
+    cmds.push('BT /F1 7.5 Tf 0.392 0.455 0.545 rg');
+    cmds.push(
+        `${marginX} 20 Td (Dokumen Resmi BAST Ruang Modal SMA Double Track - Dicetak otomatis dari Sistem Ekosistem Alumni) Tj ET`
+    );
+
+    const streamStr = cmds.join('\n');
+    const streamBytes = enc.encode(streamStr);
+
+    const objects = [
+        { id: 1, body: '<< /Type /Catalog /Pages 2 0 R >>' },
+        { id: 2, body: '<< /Type /Pages /Kids [5 0 R] /Count 1 >>' },
+        {
+            id: 3,
+            body: '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>',
+        },
+        {
+            id: 4,
+            body: '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>',
+        },
+        {
+            id: 5,
+            body: `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW} ${pageH}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 6 0 R >>`,
+        },
+        {
+            id: 6,
+            body: `<< /Length ${streamBytes.length} >>\nstream\n${streamStr}\nendstream`,
+        },
+    ];
+
+    let pdfText = '%PDF-1.4\n';
+    const offsets = [0];
+    for (const obj of objects) {
+        offsets[obj.id] = enc.encode(pdfText).length;
+        pdfText += `${obj.id} 0 obj\n${obj.body}\nendobj\n`;
+    }
+    const xrefOffset = enc.encode(pdfText).length;
+    const totalObjs = objects.length + 1;
+    pdfText += `xref\n0 ${totalObjs}\n0000000000 65535 f \n`;
+    for (let i = 1; i < totalObjs; i++) {
+        pdfText += `${String(offsets[i] || 0).padStart(10, '0')} 00000 n \n`;
+    }
+    pdfText += `trailer\n<< /Size ${totalObjs} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+
+    const pdfBlob = new Blob([enc.encode(pdfText)], { type: 'application/pdf' });
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    const previewWin = window.open(pdfUrl, '_blank');
+    const a = document.createElement('a');
+    a.href = pdfUrl;
+    a.download = `BAST-${item.kode}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    if (previewWin) previewWin.focus();
+    setTimeout(() => URL.revokeObjectURL(pdfUrl), 60000);
 }

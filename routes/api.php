@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\ChatController;
 use App\Http\Controllers\Api\Admin\DashboardController;
 use App\Http\Controllers\Api\Admin\MasterOptionController;
 use App\Http\Controllers\Api\Admin\ModalController;
@@ -7,7 +8,9 @@ use App\Http\Controllers\Api\Admin\MonitoringController;
 use App\Http\Controllers\Api\Admin\PasarController;
 use App\Http\Controllers\Api\Admin\RoleUserController;
 use App\Http\Controllers\Api\Admin\TumbuhController;
+use App\Http\Controllers\Api\AlumniController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\PublicChatController;
 use App\Http\Controllers\Api\PublicController;
 use Illuminate\Support\Facades\Route;
 
@@ -15,6 +18,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('public')->group(function () {
     Route::get('/stats', [PublicController::class, 'stats']);
     Route::get('/master-options', [PublicController::class, 'masterOptions']);
+    Route::get('/testimonials', [PublicController::class, 'testimonials']);
     Route::get('/pasar', [PublicController::class, 'pasar']);
     Route::get('/pasar-submissions', [PublicController::class, 'pasarList']);
     Route::get('/modal', [PublicController::class, 'modalList']);
@@ -22,17 +26,32 @@ Route::prefix('public')->group(function () {
     Route::post('/modal', [PublicController::class, 'submitModal']);
     Route::post('/tumbuh', [PublicController::class, 'submitTumbuh']);
     Route::post('/pasar', [PublicController::class, 'submitPasar']);
+
+    // Public Live Chat endpoints
+    Route::post('/chat/start', [PublicChatController::class, 'start']);
+    Route::get('/chat/{token}', [PublicChatController::class, 'show']);
+    Route::post('/chat/{token}/messages', [PublicChatController::class, 'sendMessage']);
 });
 
 // JWT Authentication endpoints
 Route::prefix('auth')->group(function () {
+    Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/social', [AuthController::class, 'socialLogin']);
 
     Route::middleware('auth:api')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/refresh', [AuthController::class, 'refresh']);
         Route::post('/logout', [AuthController::class, 'logout']);
     });
+});
+
+// Protected Alumni Portal endpoints (JWT Auth)
+Route::prefix('alumni')->middleware('auth:api')->group(function () {
+    Route::get('/dashboard', [AlumniController::class, 'dashboard']);
+    Route::post('/monitoring', [AlumniController::class, 'storeMonitoring']);
+    Route::post('/testimonials', [AlumniController::class, 'storeTestimonial']);
+    Route::patch('/profile', [AlumniController::class, 'updateProfile']);
 });
 
 // Protected Admin endpoints (JWT + Spatie Permission RBAC)
@@ -74,6 +93,18 @@ Route::prefix('admin')->middleware('auth:api')->group(function () {
     Route::delete('/monitoring/{monitoring}', [MonitoringController::class, 'destroy'])
         ->middleware('permission:monitoring.delete');
 
+    // Live Chat Admin
+    Route::get('/chats', [ChatController::class, 'index'])
+        ->middleware('permission:chat.manage');
+    Route::get('/chats/{chatSession}', [ChatController::class, 'show'])
+        ->middleware('permission:chat.manage');
+    Route::post('/chats/{chatSession}/messages', [ChatController::class, 'reply'])
+        ->middleware('permission:chat.manage');
+    Route::patch('/chats/{chatSession}/status', [ChatController::class, 'updateStatus'])
+        ->middleware('permission:chat.manage');
+    Route::delete('/chats/{chatSession}', [ChatController::class, 'destroy'])
+        ->middleware('permission:chat.manage');
+
     // Master Data Options
     Route::get('/master-options', [MasterOptionController::class, 'index'])
         ->middleware('permission:master.manage');
@@ -84,7 +115,17 @@ Route::prefix('admin')->middleware('auth:api')->group(function () {
     Route::delete('/master-options/{masterOption}', [MasterOptionController::class, 'destroy'])
         ->middleware('permission:master.manage');
 
-    // User & Role Management (Spatie Permission)
+    // Data Akun Alumni Management
+    Route::get('/alumni', [RoleUserController::class, 'alumniList'])
+        ->middleware('permission:users.manage');
+    Route::post('/alumni', [RoleUserController::class, 'storeAlumni'])
+        ->middleware('permission:users.manage');
+    Route::patch('/alumni/{user}', [RoleUserController::class, 'updateAlumni'])
+        ->middleware('permission:users.manage');
+    Route::delete('/alumni/{user}', [RoleUserController::class, 'deleteUser'])
+        ->middleware('permission:users.manage');
+
+    // User Pengelola & Role Management (Spatie Permission)
     Route::get('/users', [RoleUserController::class, 'users'])
         ->middleware('permission:users.manage');
     Route::post('/users', [RoleUserController::class, 'storeUser'])

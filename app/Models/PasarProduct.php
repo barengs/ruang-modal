@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 class PasarProduct extends Model
 {
     protected $fillable = [
+        'user_id',
         'kode',
         'nama_alumni',
         'email',
@@ -28,6 +29,11 @@ class PasarProduct extends Model
     public static function generateKode(): string
     {
         return 'RP-'.now('Asia/Jakarta')->format('Ymd').'-'.strtoupper(Str::random(8));
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function reviewer(): BelongsTo

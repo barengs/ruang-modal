@@ -11,7 +11,10 @@ class MonitoringController extends Controller
 {
     public function index(): JsonResponse
     {
-        $items = Monitoring::with('creator:id,name')
+        $items = Monitoring::with([
+            'user:id,name,email,whatsapp,sekolah,tahun_lulus,kompetensi,nama_usaha',
+            'creator:id,name',
+        ])
             ->latest('tanggal_pantau')
             ->latest()
             ->get();
@@ -28,6 +31,8 @@ class MonitoringController extends Controller
             'nama_alumni' => ['required', 'string', 'max:150'],
             'modul' => ['required', 'in:Modal,Tumbuh,Pasar'],
             'tanggal_pantau' => ['required', 'date'],
+            'tahap_pantau' => ['nullable', 'string', 'max:100'],
+            'pemanfaatan_bantuan' => ['nullable', 'string', 'max:120'],
             'status_produktif' => ['required', 'string', 'max:100'],
             'pendapatan_omzet' => ['nullable', 'string', 'max:100'],
             'pendapatan_nominal' => ['nullable', 'integer', 'min:0'],
@@ -58,6 +63,8 @@ class MonitoringController extends Controller
             'nama_alumni' => ['required', 'string', 'max:150'],
             'modul' => ['required', 'in:Modal,Tumbuh,Pasar'],
             'tanggal_pantau' => ['required', 'date'],
+            'tahap_pantau' => ['nullable', 'string', 'max:100'],
+            'pemanfaatan_bantuan' => ['nullable', 'string', 'max:120'],
             'status_produktif' => ['required', 'string', 'max:100'],
             'pendapatan_omzet' => ['nullable', 'string', 'max:100'],
             'pendapatan_nominal' => ['nullable', 'integer', 'min:0'],

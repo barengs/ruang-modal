@@ -9,6 +9,7 @@ import {
 } from '../../store/slices/publicSlice';
 import DataTable from '../../components/DataTable';
 import StatusBadge from '../../components/StatusBadge';
+import AlumniAuthGate from '../../components/AlumniAuthGate';
 import TumbuhRequestDetailModal from '../../components/TumbuhRequestDetailModal';
 import { formatDateTime } from '../../utils/format';
 
@@ -48,6 +49,7 @@ function loadMyCodes() {
 
 export default function RuangTumbuhPage() {
     const dispatch = useDispatch();
+    const { user } = useSelector((state) => state.auth);
     const {
         masterOptions,
         tumbuhRequests,
@@ -60,6 +62,18 @@ export default function RuangTumbuhPage() {
     const [detailId, setDetailId] = useState(null);
     const [onlyMine, setOnlyMine] = useState(false);
     const [myCodes, setMyCodes] = useState(() => loadMyCodes());
+
+    useEffect(() => {
+        if (user) {
+            setForm((prev) => ({
+                ...prev,
+                nama: prev.nama || user.name || '',
+                email: prev.email || user.email || '',
+                whatsapp: prev.whatsapp || user.whatsapp || '',
+                sekolah: prev.sekolah || user.sekolah || '',
+            }));
+        }
+    }, [user]);
 
     useEffect(() => {
         dispatch(resetSubmitState());
@@ -217,7 +231,10 @@ export default function RuangTumbuhPage() {
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    {!user ? (
+                        <AlumniAuthGate moduleName="Ruang Tumbuh" />
+                    ) : (
+                        <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="bs-row">
                             <div className="col-span-12 md:col-span-6">
                                 <label className="bs-form-label">Nama Lengkap *</label>
@@ -310,6 +327,7 @@ export default function RuangTumbuhPage() {
                             </button>
                         </div>
                     </form>
+                    )}
                 </div>
             </div>
 

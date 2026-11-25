@@ -71,7 +71,7 @@ export default function AdminPasarPage() {
 
         exportToPdfReport({
             title: 'Laporan Etalase Ruang Pasar — SMA Double Track',
-            subtitle: 'Rekapitulasi Produk & Jasa Karya Alumni SMA Double Track Mandiri',
+            subtitle: 'Rekapitulasi Produk & Jasa Karya Alumni SMA Double Track',
             filename: `Laporan-Ruang-Pasar-${new Date().toISOString().slice(0, 10)}`,
             summary: [
                 { label: 'Total Produk / Jasa', value: `${pasar.length} Produk` },

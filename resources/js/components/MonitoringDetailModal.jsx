@@ -124,6 +124,22 @@ export default function MonitoringDetailModal({
                                         <span className="text-[#64748b]">Status Produktif</span>
                                         <span className="bs-badge bs-badge-success">{item.status_produktif}</span>
                                     </div>
+                                    {item.tahap_pantau && (
+                                        <div className="flex justify-between gap-2">
+                                            <span className="text-[#64748b]">Tahap Periode</span>
+                                            <span className="font-semibold text-[#203880] text-right">
+                                                {item.tahap_pantau}
+                                            </span>
+                                        </div>
+                                    )}
+                                    {item.pemanfaatan_bantuan && (
+                                        <div className="flex justify-between gap-2">
+                                            <span className="text-[#64748b]">Pemanfaatan Alat/Modal</span>
+                                            <span className="font-semibold text-[#0068b0] text-right">
+                                                {item.pemanfaatan_bantuan}
+                                            </span>
+                                        </div>
+                                    )}
                                     <div className="flex justify-between gap-2">
                                         <span className="text-[#64748b]">Pendapatan / Omzet (Teks)</span>
                                         <span className="font-bold text-[#008a75] text-right">

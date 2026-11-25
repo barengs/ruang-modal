@@ -40,7 +40,8 @@ export default function AdminUsersPage() {
     );
 
     const roleOptions = useMemo(() => {
-        if (roles.length > 0) return roles.map((r) => r.name);
+        const filtered = roles.map((r) => r.name).filter((name) => name !== 'alumni');
+        if (filtered.length > 0) return filtered;
         return ['super-admin', 'admin', 'verifikator', 'petugas-monitoring'];
     }, [roles]);
 

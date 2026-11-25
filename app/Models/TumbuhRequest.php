@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 class TumbuhRequest extends Model
 {
     protected $fillable = [
+        'user_id',
         'kode',
         'nama',
         'email',
@@ -25,6 +26,11 @@ class TumbuhRequest extends Model
     public static function generateKode(): string
     {
         return 'RT-'.now('Asia/Jakarta')->format('Ymd').'-'.strtoupper(Str::random(8));
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function reviewer(): BelongsTo

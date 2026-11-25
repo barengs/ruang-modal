@@ -28,6 +28,7 @@ class RolePermissionSeeder extends Seeder
             'monitoring.view',
             'monitoring.create',
             'monitoring.delete',
+            'chat.manage',
             'master.manage',
             'users.manage',
             'roles.manage',
@@ -54,6 +55,7 @@ class RolePermissionSeeder extends Seeder
             'pasar.moderate',
             'monitoring.view',
             'monitoring.create',
+            'chat.manage',
             'master.manage',
         ]);
 
@@ -73,8 +75,11 @@ class RolePermissionSeeder extends Seeder
             'dashboard.view',
             'monitoring.view',
             'monitoring.create',
+            'chat.manage',
             'master.manage',
         ]);
+
+        Role::firstOrCreate(['name' => 'alumni', 'guard_name' => 'api']);
 
         $users = [
             [

@@ -1,6 +1,7 @@
 import React from 'react';
 
 const STATUS_CLASS_MAP = {
+    Disalurkan: 'bs-badge-primary',
     Disetujui: 'bs-badge-success',
     Tayang: 'bs-badge-success',
     Selesai: 'bs-badge-success',

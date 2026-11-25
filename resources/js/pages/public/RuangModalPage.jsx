@@ -10,11 +10,12 @@ import {
 import DataTable from '../../components/DataTable';
 import StatusBadge from '../../components/StatusBadge';
 import CurrencyInput from '../../components/CurrencyInput';
+import AlumniAuthGate from '../../components/AlumniAuthGate';
 import ModalApplicationDetailModal from '../../components/ModalApplicationDetailModal';
 import { formatDateTime, formatRupiah } from '../../utils/format';
 
 const MY_CODES_STORAGE_KEY = 'rm_my_submitted_codes';
-const STATUS_OPTIONS = ['Menunggu Seleksi', 'Disetujui', 'Perlu Perbaikan', 'Ditolak'];
+const STATUS_OPTIONS = ['Menunggu Seleksi', 'Disetujui', 'Disalurkan', 'Perlu Perbaikan', 'Ditolak'];
 
 const INITIAL_FORM = {
     nama: '',
@@ -29,6 +30,9 @@ const INITIAL_FORM = {
     estimasi_biaya: '',
     rincian_kebutuhan: '',
     rencana_deskripsi: '',
+    guru_pendamping: '',
+    komitmen_pendampingan: true,
+    dokumen_lampiran: null,
 };
 
 function loadMyCodes() {
@@ -43,6 +47,7 @@ function loadMyCodes() {
 
 export default function RuangModalPage() {
     const dispatch = useDispatch();
+    const { user } = useSelector((state) => state.auth);
     const {
         masterOptions,
         modalApplications,
@@ -55,6 +60,20 @@ export default function RuangModalPage() {
     const [detailId, setDetailId] = useState(null);
     const [onlyMine, setOnlyMine] = useState(false);
     const [myCodes, setMyCodes] = useState(() => loadMyCodes());
+
+    useEffect(() => {
+        if (user) {
+            setForm((prev) => ({
+                ...prev,
+                nama: prev.nama || user.name || '',
+                email: prev.email || user.email || '',
+                whatsapp: prev.whatsapp || user.whatsapp || '',
+                sekolah: prev.sekolah || user.sekolah || '',
+                tahun_lulus: prev.tahun_lulus || user.tahun_lulus || '',
+                kompetensi: prev.kompetensi || user.kompetensi || '',
+            }));
+        }
+    }, [user]);
 
     useEffect(() => {
         dispatch(resetSubmitState());
@@ -74,16 +93,38 @@ export default function RuangModalPage() {
     }, [modalApplications, onlyMine, myCodes]);
 
     const handleChange = (e) => {
-        setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+        const { name, type, checked, files, value } = e.target;
+        if (type === 'checkbox') {
+            setForm((prev) => ({ ...prev, [name]: checked }));
+        } else if (type === 'file') {
+            setForm((prev) => ({ ...prev, [name]: files?.[0] || null }));
+        } else {
+            setForm((prev) => ({ ...prev, [name]: value }));
+        }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const payload = {
-            ...form,
-            estimasi_biaya: form.estimasi_biaya ? Number(form.estimasi_biaya) : 0,
-        };
-        const res = await dispatch(submitModalApplication(payload));
+        const formData = new FormData();
+        formData.append('nama', form.nama);
+        formData.append('email', form.email);
+        formData.append('whatsapp', form.whatsapp);
+        formData.append('sekolah', form.sekolah);
+        formData.append('tahun_lulus', form.tahun_lulus);
+        formData.append('kompetensi', form.kompetensi);
+        formData.append('jalur', form.jalur);
+        formData.append('status_aktivitas', form.status_aktivitas);
+        formData.append('jenis_bantuan', form.jenis_bantuan);
+        formData.append('estimasi_biaya', form.estimasi_biaya ? Number(form.estimasi_biaya) : 0);
+        formData.append('rincian_kebutuhan', form.rincian_kebutuhan);
+        formData.append('rencana_deskripsi', form.rencana_deskripsi);
+        formData.append('guru_pendamping', form.guru_pendamping || '');
+        formData.append('komitmen_pendampingan', form.komitmen_pendampingan ? '1' : '0');
+        if (form.dokumen_lampiran) {
+            formData.append('dokumen_lampiran', form.dokumen_lampiran);
+        }
+
+        const res = await dispatch(submitModalApplication(formData));
         if (submitModalApplication.fulfilled.match(res)) {
             setForm(INITIAL_FORM);
             const newKode = res.payload?.kode;
@@ -225,7 +266,10 @@ export default function RuangModalPage() {
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    {!user ? (
+                        <AlumniAuthGate moduleName="Ruang Modal" />
+                    ) : (
+                        <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="bs-row">
                             <div className="col-span-12 md:col-span-6">
                                 <label className="bs-form-label">Nama Lengkap *</label>
@@ -385,6 +429,52 @@ export default function RuangModalPage() {
                             />
                         </div>
 
+                        <div className="bs-row">
+                            <div className="col-span-12 md:col-span-6">
+                                <label className="bs-form-label">
+                                    Guru / Fasilitator Pendamping Sekolah (Rekomendasi Sekolah)
+                                </label>
+                                <input
+                                    name="guru_pendamping"
+                                    value={form.guru_pendamping}
+                                    onChange={handleChange}
+                                    placeholder="Contoh: Drs. Hendro Wibowo, M.Pd."
+                                    className="bs-form-control"
+                                />
+                            </div>
+                            <div className="col-span-12 md:col-span-6">
+                                <label className="bs-form-label">
+                                    Lampiran Proposal / RAB / Foto Pendukung (PDF/Gambar, Maks 5MB)
+                                </label>
+                                <input
+                                    type="file"
+                                    name="dokumen_lampiran"
+                                    accept=".pdf,.jpg,.jpeg,.png,.webp"
+                                    onChange={handleChange}
+                                    className="bs-form-control text-xs py-1.5"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="p-3.5 rounded-lg bg-[#f8fafd] border border-[#dbe3f0]">
+                            <label className="flex items-start gap-2.5 cursor-pointer text-xs text-[#1e293b]">
+                                <input
+                                    type="checkbox"
+                                    name="komitmen_pendampingan"
+                                    checked={Boolean(form.komitmen_pendampingan)}
+                                    onChange={handleChange}
+                                    required
+                                    className="mt-0.5 rounded border-slate-300 text-[#203880]"
+                                />
+                                <span>
+                                    <strong>Pernyataan Komitmen Alumni:</strong> Saya menyatakan data yang diajukan
+                                    adalah benar dan bersedia mengikuti proses seleksi, memanfaatkan bantuan secara
+                                    produktif sesuai rencana, serta mengikuti pendampingan dan melaporkan perkembangan
+                                    usaha/kerja selama minimal 6 bulan.
+                                </span>
+                            </label>
+                        </div>
+
                         <div className="pt-2">
                             <button type="submit" disabled={submitting} className="bs-btn bs-btn-primary">
                                 <Send className="w-4 h-4" />
@@ -392,6 +482,7 @@ export default function RuangModalPage() {
                             </button>
                         </div>
                     </form>
+                    )}
                 </div>
             </div>
 

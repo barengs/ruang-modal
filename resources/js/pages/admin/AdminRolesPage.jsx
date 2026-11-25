@@ -8,6 +8,7 @@ import {
     CheckSquare,
     Database,
     LayoutDashboard,
+    MessageCircle,
     Plus,
     RotateCcw,
     Save,
@@ -93,6 +94,19 @@ const MENU_MATRIX_ROWS = [
             update: null,
             delete: 'monitoring.delete',
             manage: null,
+        },
+    },
+    {
+        key: 'chat',
+        menu: 'Live Chat',
+        desc: 'Layanan tanya jawab dan konsultasi real-time antara alumni/pengguna dengan admin',
+        icon: MessageCircle,
+        permissions: {
+            view: null,
+            create: null,
+            update: null,
+            delete: null,
+            manage: 'chat.manage',
         },
     },
     {

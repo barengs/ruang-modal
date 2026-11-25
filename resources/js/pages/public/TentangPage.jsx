@@ -72,14 +72,14 @@ export default function TentangPage() {
     return (
         <div className="space-y-6">
             {/* Hero Banner */}
-            <div className="rounded-md bg-gradient-to-r from-[#203880] via-[#0068b0] to-[#1098e0] text-white p-6 md:p-8 shadow-sm border-b-4 border-[#f8a000]">
+            <div className="bg-gradient-to-r from-[#203880] via-[#0068b0] to-[#1098e0] text-white p-6 md:p-8 shadow-sm border-b-4 border-[#f8a000]">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div className="max-w-2xl space-y-3">
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f8a000] text-[#17285e] text-xs font-bold tracking-wide">
                             Tentang Platform
                         </span>
                         <h1 className="text-2xl md:text-3xl font-bold leading-tight">
-                            Ekosistem Alumni SMA Double Track Mandiri
+                            Ekosistem Alumni SMA Double Track
                         </h1>
                         <p className="text-sm md:text-base text-[#e6f2ff] leading-relaxed">
                             Wadah sinergi pasca-pelatihan bagi lulusan SMA Double Track untuk mengubah keterampilan
@@ -90,7 +90,7 @@ export default function TentangPage() {
                     <div className="bg-white rounded-md p-3.5 shadow-sm shrink-0 self-start md:self-center">
                         <img
                             src="/images/logo-dt.webp"
-                            alt="Logo SMA Double Track Mandiri"
+                            alt="Logo SMA Double Track"
                             className="h-14 md:h-16 w-auto object-contain"
                         />
                     </div>

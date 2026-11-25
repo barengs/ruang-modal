@@ -49,19 +49,29 @@ export default function KontakPage() {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="rounded-md bg-gradient-to-r from-[#203880] via-[#0068b0] to-[#1098e0] text-white p-6 md:p-8 shadow-sm border-b-4 border-[#f8a000]">
-                <div className="max-w-3xl space-y-2">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f8a000] text-[#17285e] text-xs font-bold tracking-wide">
-                        <MessageSquare className="w-3.5 h-3.5" />
-                        Hubungi Kami
-                    </span>
-                    <h1 className="text-2xl md:text-3xl font-bold leading-tight">
-                        Kontak & Pusat Bantuan Pengelola
-                    </h1>
-                    <p className="text-sm md:text-base text-[#e6f2ff]">
-                        Punya pertanyaan seputar pengajuan Ruang Modal, jadwal mentoring Ruang Tumbuh, atau kurasi
-                        etalase Ruang Pasar? Hubungi tim pengelola melalui kanal di bawah ini.
-                    </p>
+            <div className="bg-gradient-to-r from-[#203880] via-[#0068b0] to-[#1098e0] text-white p-6 md:p-8 shadow-sm border-b-4 border-[#f8a000]">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="max-w-2xl space-y-2">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f8a000] text-[#17285e] text-xs font-bold tracking-wide">
+                            <MessageSquare className="w-3.5 h-3.5" />
+                            Hubungi Kami
+                        </span>
+                        <h1 className="text-2xl md:text-3xl font-bold leading-tight">
+                            Kontak & Pusat Bantuan Pengelola
+                        </h1>
+                        <p className="text-sm md:text-base text-[#e6f2ff]">
+                            Punya pertanyaan seputar pengajuan Ruang Modal, jadwal mentoring Ruang Tumbuh, atau kurasi
+                            etalase Ruang Pasar? Hubungi tim pengelola melalui Live Chat atau kanal di bawah ini.
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => window.dispatchEvent(new CustomEvent('dt-open-live-chat'))}
+                        className="bs-btn bg-[#f8a000] text-[#17285e] font-bold hover:bg-[#ffc010] shrink-0 self-start md:self-center shadow-sm"
+                    >
+                        <MessageSquare className="w-4 h-4" />
+                        Mulai Live Chat Real-Time
+                    </button>
                 </div>
             </div>
 

@@ -19,6 +19,8 @@ const INITIAL_FORM = {
     nama_alumni: '',
     modul: 'Modal',
     tanggal_pantau: new Date().toISOString().slice(0, 10),
+    tahap_pantau: 'Bulan 1-2 (Implementasi)',
+    pemanfaatan_bantuan: 'Digunakan sesuai tujuan',
     status_produktif: '',
     pendapatan_omzet: '',
     pendapatan_nominal: '',
@@ -75,7 +77,7 @@ export default function AdminMonitoringPage() {
 
         exportToPdfReport({
             title: 'Laporan Monitoring Alumni — SMA Double Track',
-            subtitle: 'Rekapitulasi Pemantauan Produktivitas & Perkembangan Omzet Alumni SMA Double Track Mandiri',
+            subtitle: 'Rekapitulasi Pemantauan Produktivitas & Perkembangan Omzet Alumni SMA Double Track',
             filename: `Laporan-Monitoring-Alumni-${new Date().toISOString().slice(0, 10)}`,
             summary: [
                 { label: 'Total Catatan Pantau', value: `${monitoring.length} Catatan` },
@@ -144,12 +146,29 @@ export default function AdminMonitoringPage() {
             },
             {
                 accessorKey: 'tanggal_pantau',
-                header: 'Tanggal Pantau',
+                header: 'Tahap & Tgl Pantau',
+                cell: ({ row, getValue }) => (
+                    <div>
+                        <div className="text-xs font-semibold text-[#203880]">
+                            {row.original.tahap_pantau || 'Monitoring Berkala'}
+                        </div>
+                        <div className="text-[11px] text-[#64748b]">{getValue()}</div>
+                    </div>
+                ),
             },
             {
                 accessorKey: 'status_produktif',
-                header: 'Status Produktif',
-                cell: ({ getValue }) => <span className="bs-badge bs-badge-success">{getValue()}</span>,
+                header: 'Status & Pemanfaatan Alat',
+                cell: ({ row, getValue }) => (
+                    <div>
+                        <span className="bs-badge bs-badge-success">{getValue()}</span>
+                        {row.original.pemanfaatan_bantuan && (
+                            <div className="text-[11px] text-[#0068b0] font-medium mt-0.5">
+                                Alat: {row.original.pemanfaatan_bantuan}
+                            </div>
+                        )}
+                    </div>
+                ),
             },
             {
                 accessorKey: 'pendapatan_omzet',
@@ -333,6 +352,42 @@ export default function AdminMonitoringPage() {
                                             required
                                             className="bs-form-control"
                                         />
+                                    </div>
+                                    <div className="col-span-12 sm:col-span-6">
+                                        <label className="bs-form-label">Tahap Periode Monitoring (6 Bulan)</label>
+                                        <select
+                                            name="tahap_pantau"
+                                            value={form.tahap_pantau}
+                                            onChange={handleChange}
+                                            className="bs-form-select"
+                                        >
+                                            <option value="Bulan 1-2 (Implementasi)">
+                                                Bulan 1-2 (Implementasi Kerja/Usaha)
+                                            </option>
+                                            <option value="Bulan 3-4 (Produktivitas & Pemasaran)">
+                                                Bulan 3-4 (Peningkatan Produktivitas & Pemasaran)
+                                            </option>
+                                            <option value="Bulan 5-6 (Evaluasi & Keberlanjutan)">
+                                                Bulan 5-6 (Evaluasi Pendapatan & Keberlanjutan)
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div className="col-span-12 sm:col-span-6">
+                                        <label className="bs-form-label">Evaluasi Pemanfaatan Alat / Modal</label>
+                                        <select
+                                            name="pemanfaatan_bantuan"
+                                            value={form.pemanfaatan_bantuan}
+                                            onChange={handleChange}
+                                            className="bs-form-select"
+                                        >
+                                            <option value="Digunakan sesuai tujuan">
+                                                Digunakan sesuai tujuan
+                                            </option>
+                                            <option value="Digunakan sebagian">Digunakan sebagian</option>
+                                            <option value="Belum optimal / kendala teknis">
+                                                Belum optimal / kendala teknis
+                                            </option>
+                                        </select>
                                     </div>
                                     <div className="col-span-12 sm:col-span-6">
                                         <label className="bs-form-label">Status Produktif *</label>

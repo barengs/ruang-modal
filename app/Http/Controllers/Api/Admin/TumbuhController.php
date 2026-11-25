@@ -11,7 +11,10 @@ class TumbuhController extends Controller
 {
     public function index(): JsonResponse
     {
-        $items = TumbuhRequest::with('reviewer:id,name')
+        $items = TumbuhRequest::with([
+            'user:id,name,email,whatsapp,sekolah,tahun_lulus,kompetensi,nama_usaha',
+            'reviewer:id,name',
+        ])
             ->latest()
             ->get();
 

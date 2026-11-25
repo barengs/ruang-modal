@@ -4,17 +4,25 @@ import { useSelector } from 'react-redux';
 import {
     Briefcase,
     ChevronDown,
+    Clock,
     FileSpreadsheet,
     Home,
     Info,
     LogIn,
+    Mail,
+    MapPin,
     Menu,
+    MessageCircle,
     Phone,
     ShieldCheck,
     Store,
     TrendingUp,
+    User,
+    UserPlus,
     X,
 } from 'lucide-react';
+import { isAlumniUser } from '../store/slices/authSlice';
+import PublicLiveChatWidget from '../components/PublicLiveChatWidget';
 
 export default function PublicLayout() {
     const [menuOpen, setMenuOpen] = useState(false);
@@ -42,7 +50,7 @@ export default function PublicLayout() {
         {
             to: '/ruang-pasar',
             label: 'Ruang Pasar',
-            desc: 'Pendaftaran produk & etalase alumni',
+            desc: 'Form pendaftaran produk & jasa ke etalase',
             icon: Store,
             iconColor: 'text-[#f8a000]',
         },
@@ -106,7 +114,7 @@ export default function PublicLayout() {
                                     Ekosistem Alumni
                                 </div>
                                 <div className="text-[11px] font-semibold text-[#f8a000]">
-                                    SMA Double Track Mandiri
+                                    SMA Double Track
                                 </div>
                             </div>
                         </Link>
@@ -174,6 +182,11 @@ export default function PublicLayout() {
                                 )}
                             </div>
 
+                            <NavLink to="/etalase-pasar" className={navLinkClass}>
+                                <Store className="w-4 h-4" />
+                                Etalase Pasar
+                            </NavLink>
+
                             <NavLink to="/tentang" className={navLinkClass}>
                                 <Info className="w-4 h-4" />
                                 Tentang
@@ -187,21 +200,40 @@ export default function PublicLayout() {
                             <div className="w-px h-6 bg-[#dbe3f0] mx-2" />
 
                             {user ? (
-                                <Link
-                                    to="/admin"
-                                    className="bs-btn bs-btn-sm bg-[#008a75] text-white hover:bg-[#006e5d] border-[#008a75]"
-                                >
-                                    <ShieldCheck className="w-4 h-4" />
-                                    Panel Admin
-                                </Link>
+                                isAlumniUser(user) ? (
+                                    <Link
+                                        to="/alumni"
+                                        className="bs-btn bs-btn-sm bg-[#203880] text-white hover:bg-[#17285e] border-[#203880]"
+                                    >
+                                        <User className="w-4 h-4 text-[#ffc010]" />
+                                        Dashboard Alumni
+                                    </Link>
+                                ) : (
+                                    <Link
+                                        to="/admin"
+                                        className="bs-btn bs-btn-sm bg-[#008a75] text-white hover:bg-[#006e5d] border-[#008a75]"
+                                    >
+                                        <ShieldCheck className="w-4 h-4" />
+                                        Panel Admin
+                                    </Link>
+                                )
                             ) : (
-                                <Link
-                                    to="/login"
-                                    className="bs-btn bs-btn-sm bg-[#f8a000] text-[#17285e] font-semibold hover:bg-[#e08e00] border-[#f8a000]"
-                                >
-                                    <LogIn className="w-4 h-4" />
-                                    Login Pengelola
-                                </Link>
+                                <div className="flex items-center gap-1.5">
+                                    <Link
+                                        to="/register"
+                                        className="bs-btn bs-btn-sm bs-btn-outline-primary"
+                                    >
+                                        <UserPlus className="w-3.5 h-3.5" />
+                                        Daftar Alumni
+                                    </Link>
+                                    <Link
+                                        to="/login"
+                                        className="bs-btn bs-btn-sm bg-[#f8a000] text-[#17285e] font-semibold hover:bg-[#e08e00] border-[#f8a000]"
+                                    >
+                                        <LogIn className="w-4 h-4" />
+                                        Masuk
+                                    </Link>
+                                </div>
                             )}
                         </div>
 
@@ -270,6 +302,15 @@ export default function PublicLayout() {
                             </div>
 
                             <NavLink
+                                to="/etalase-pasar"
+                                onClick={() => setMenuOpen(false)}
+                                className={mobileNavLinkClass}
+                            >
+                                <Store className="w-4 h-4" />
+                                Etalase Pasar
+                            </NavLink>
+
+                            <NavLink
                                 to="/tentang"
                                 onClick={() => setMenuOpen(false)}
                                 className={mobileNavLinkClass}
@@ -287,14 +328,39 @@ export default function PublicLayout() {
                                 Kontak
                             </NavLink>
 
-                            <Link
-                                to={user ? '/admin' : '/login'}
-                                onClick={() => setMenuOpen(false)}
-                                className="flex items-center gap-2 px-3 py-2 rounded text-sm font-semibold bg-[#f8a000] text-[#17285e] mt-2"
-                            >
-                                {user ? <ShieldCheck className="w-4 h-4" /> : <LogIn className="w-4 h-4" />}
-                                {user ? 'Panel Admin' : 'Login Pengelola'}
-                            </Link>
+                            {user ? (
+                                <Link
+                                    to={isAlumniUser(user) ? '/alumni' : '/admin'}
+                                    onClick={() => setMenuOpen(false)}
+                                    className="flex items-center gap-2 px-3 py-2 rounded text-sm font-semibold bg-[#f8a000] text-[#17285e] mt-2"
+                                >
+                                    {isAlumniUser(user) ? (
+                                        <User className="w-4 h-4" />
+                                    ) : (
+                                        <ShieldCheck className="w-4 h-4" />
+                                    )}
+                                    {isAlumniUser(user) ? 'Dashboard Alumni' : 'Panel Admin'}
+                                </Link>
+                            ) : (
+                                <div className="grid grid-cols-2 gap-2 pt-2">
+                                    <Link
+                                        to="/register"
+                                        onClick={() => setMenuOpen(false)}
+                                        className="flex items-center justify-center gap-1.5 px-3 py-2 rounded text-xs font-semibold border border-[#203880] text-[#203880]"
+                                    >
+                                        <UserPlus className="w-3.5 h-3.5" />
+                                        Daftar Alumni
+                                    </Link>
+                                    <Link
+                                        to="/login"
+                                        onClick={() => setMenuOpen(false)}
+                                        className="flex items-center justify-center gap-1.5 px-3 py-2 rounded text-xs font-semibold bg-[#f8a000] text-[#17285e]"
+                                    >
+                                        <LogIn className="w-3.5 h-3.5" />
+                                        Masuk
+                                    </Link>
+                                </div>
+                            )}
                         </div>
                     )}
                 </nav>
@@ -307,35 +373,191 @@ export default function PublicLayout() {
                 </div>
             </main>
 
-            {/* Double Track Branded Footer */}
-            <footer className="bg-white border-t border-[#dbe3f0] py-5 text-xs text-[#64748b]">
-                <div className="bs-container flex flex-col sm:flex-row items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                        <img
-                            src="/images/logo-dt.webp"
-                            alt="Logo SMA Double Track"
-                            className="h-8 w-auto object-contain"
-                        />
-                        <span>
-                            <strong className="text-[#203880]">Ekosistem Alumni SMA Double Track</strong> — Dari
-                            keterampilan menjadi penghasilan.
-                        </span>
+            {/* Double Track Tall Multi-Column Footer */}
+            <footer className="bg-white border-t border-[#dbe3f0] text-[#475569] mt-8">
+                {/* Top Brand Spectrum Line */}
+                <div className="h-1 w-full bg-gradient-to-r from-[#203880] via-[#0068b0] to-[#f8a000]" />
+
+                <div className="bs-container py-10 md:py-12">
+                    <div className="bs-row gap-y-8">
+                        {/* Column 1: Logo & About Program */}
+                        <div className="col-span-12 lg:col-span-4 space-y-3.5 pr-0 lg:pr-6">
+                            <Link to="/" className="inline-block no-underline">
+                                <img
+                                    src="/images/logo-footer-dt.webp"
+                                    alt="Logo SMA Double Track"
+                                    className="h-16 w-auto object-contain"
+                                />
+                            </Link>
+                            <div className="space-y-1.5">
+                                <div className="font-bold text-base text-[#203880]">
+                                    Ekosistem Alumni SMA Double Track
+                                </div>
+                                <p className="text-xs text-[#64748b] leading-relaxed">
+                                    Platform terpadu pasca-pelatihan bagi lulusan SMA Double Track untuk mengubah
+                                    keterampilan vokasional menjadi penghasilan melalui fasilitasi modal usaha/alat
+                                    kerja, pendampingan mentor, dan etalase pemasaran produk alumni.
+                                </p>
+                            </div>
+                            <div className="pt-1">
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#eef4ff] text-[#203880] border border-[#dbe3f0] text-[11px] font-semibold">
+                                    Dari Keterampilan Menjadi Penghasilan
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Column 2: Layanan Pengajuan */}
+                        <div className="col-span-12 sm:col-span-6 lg:col-span-3 space-y-3">
+                            <h3 className="text-xs font-bold uppercase tracking-wider text-[#203880] border-b border-[#eef2f9] pb-2">
+                                Layanan Pengajuan
+                            </h3>
+                            <ul className="space-y-2.5 text-xs">
+                                <li>
+                                    <Link
+                                        to="/ruang-modal"
+                                        className="flex items-start gap-2 text-[#475569] hover:text-[#203880] group no-underline"
+                                    >
+                                        <Briefcase className="w-4 h-4 text-[#0068b0] shrink-0 mt-0.5" />
+                                        <div>
+                                            <div className="font-semibold text-[#203880] group-hover:underline">
+                                                Ruang Modal
+                                            </div>
+                                            <div className="text-[11px] text-[#64748b]">
+                                                Fasilitasi alat kerja & modal produksi
+                                            </div>
+                                        </div>
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link
+                                        to="/ruang-tumbuh"
+                                        className="flex items-start gap-2 text-[#475569] hover:text-[#203880] group no-underline"
+                                    >
+                                        <TrendingUp className="w-4 h-4 text-[#008a75] shrink-0 mt-0.5" />
+                                        <div>
+                                            <div className="font-semibold text-[#203880] group-hover:underline">
+                                                Ruang Tumbuh
+                                            </div>
+                                            <div className="text-[11px] text-[#64748b]">
+                                                Pendampingan karier & mentoring usaha
+                                            </div>
+                                        </div>
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link
+                                        to="/ruang-pasar"
+                                        className="flex items-start gap-2 text-[#475569] hover:text-[#203880] group no-underline"
+                                    >
+                                        <Store className="w-4 h-4 text-[#f8a000] shrink-0 mt-0.5" />
+                                        <div>
+                                            <div className="font-semibold text-[#203880] group-hover:underline">
+                                                Ruang Pasar
+                                            </div>
+                                            <div className="text-[11px] text-[#64748b]">
+                                                Etalase produk & jasa unggulan alumni
+                                            </div>
+                                        </div>
+                                    </Link>
+                                </li>
+                            </ul>
+                        </div>
+
+                        {/* Column 3: Navigasi Portal */}
+                        <div className="col-span-12 sm:col-span-6 lg:col-span-2 space-y-3">
+                            <h3 className="text-xs font-bold uppercase tracking-wider text-[#203880] border-b border-[#eef2f9] pb-2">
+                                Navigasi Portal
+                            </h3>
+                            <ul className="space-y-2 text-xs">
+                                <li>
+                                    <Link to="/" className="text-[#475569] hover:text-[#203880] hover:underline">
+                                        Beranda Utama
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link
+                                        to="/etalase-pasar"
+                                        className="text-[#475569] hover:text-[#203880] hover:underline"
+                                    >
+                                        Katalog Etalase Pasar
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link to="/tentang" className="text-[#475569] hover:text-[#203880] hover:underline">
+                                        Tentang Program
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link to="/kontak" className="text-[#475569] hover:text-[#203880] hover:underline">
+                                        Kontak & FAQ
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link
+                                        to={user ? '/admin' : '/login'}
+                                        className="text-[#475569] hover:text-[#203880] hover:underline"
+                                    >
+                                        {user ? 'Panel Admin Pengelola' : 'Login Pengelola'}
+                                    </Link>
+                                </li>
+                                <li className="pt-1">
+                                    <button
+                                        type="button"
+                                        onClick={() => window.dispatchEvent(new CustomEvent('dt-open-live-chat'))}
+                                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0068b0] hover:text-[#203880] cursor-pointer"
+                                    >
+                                        <MessageCircle className="w-3.5 h-3.5 text-[#f8a000]" />
+                                        Buka Live Chat
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+
+                        {/* Column 4: Sekretariat & Kontak */}
+                        <div className="col-span-12 lg:col-span-3 space-y-3">
+                            <h3 className="text-xs font-bold uppercase tracking-wider text-[#203880] border-b border-[#eef2f9] pb-2">
+                                Sekretariat Pengelola
+                            </h3>
+                            <ul className="space-y-2.5 text-xs text-[#64748b]">
+                                <li className="flex items-start gap-2">
+                                    <MapPin className="w-4 h-4 text-[#0068b0] shrink-0 mt-0.5" />
+                                    <span>
+                                        Pusat Pengelola Program SMA Double Track, Surabaya, Jawa Timur
+                                    </span>
+                                </li>
+                                <li className="flex items-center gap-2">
+                                    <Phone className="w-4 h-4 text-[#008a75] shrink-0" />
+                                    <span>+62 812-3456-7890 (Helpdesk Alumni)</span>
+                                </li>
+                                <li className="flex items-center gap-2">
+                                    <Mail className="w-4 h-4 text-[#f8a000] shrink-0" />
+                                    <span>ekosistem.alumni@doubletrack.sch.id</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <Clock className="w-4 h-4 text-[#203880] shrink-0 mt-0.5" />
+                                    <span>Senin – Jumat: 08.00 – 16.00 WIB</span>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-3 flex-wrap justify-center">
-                        <Link to="/tentang" className="hover:text-[#203880] font-medium hover:underline">
-                            Tentang
-                        </Link>
-                        <span>•</span>
-                        <Link to="/kontak" className="hover:text-[#203880] font-medium hover:underline">
-                            Kontak
-                        </Link>
-                        <span>•</span>
-                        <span className="text-[#203880] font-medium">
+                </div>
+
+                {/* Bottom Copyright Bar */}
+                <div className="bg-[#203880] text-[#dbeafe] py-3.5 text-xs">
+                    <div className="bs-container flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">
+                        <span>
+                            &copy; {new Date().getFullYear()}{' '}
+                            <strong className="text-white">Ekosistem Alumni SMA Double Track</strong>. Diselenggarakan
+                            oleh Dinas Pendidikan Provinsi Jawa Timur &amp; ITS.
+                        </span>
+                        <span className="text-[#ffc010] font-semibold">
                             Ruang Modal • Ruang Tumbuh • Ruang Pasar
                         </span>
                     </div>
                 </div>
             </footer>
+            {/* Floating Real-Time Live Chat Widget */}
+            <PublicLiveChatWidget />
         </div>
     );
 }

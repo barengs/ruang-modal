@@ -3,6 +3,10 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ModalApplication;
+use App\Models\Monitoring;
+use App\Models\PasarProduct;
+use App\Models\TumbuhRequest;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,16 +18,21 @@ class RoleUserController extends Controller
 {
     public function users(): JsonResponse
     {
-        $users = User::with('roles:id,name')->latest()->get()->map(fn (User $u) => [
-            'id' => $u->id,
-            'name' => $u->name,
-            'email' => $u->email,
-            'roles' => $u->getRoleNames()->values()->all(),
-            'permissions' => $u->getAllPermissions()->pluck('name')->values()->all(),
-            'created_at' => $u->created_at?->toISOString(),
-        ]);
+        $users = User::with('roles:id,name')
+            ->whereDoesntHave('roles', fn ($q) => $q->where('name', 'alumni'))
+            ->latest()
+            ->get()
+            ->map(fn (User $u) => [
+                'id' => $u->id,
+                'name' => $u->name,
+                'email' => $u->email,
+                'roles' => $u->getRoleNames()->values()->all(),
+                'permissions' => $u->getAllPermissions()->pluck('name')->values()->all(),
+                'created_at' => $u->created_at?->toISOString(),
+            ]);
 
         $availableRoles = Role::where('guard_name', 'api')
+            ->where('name', '!=', 'alumni')
             ->orderBy('name')
             ->get(['id', 'name']);
 
@@ -31,6 +40,109 @@ class RoleUserController extends Controller
             'data' => $users,
             'available_roles' => $availableRoles,
         ]);
+    }
+
+    public function alumniList(): JsonResponse
+    {
+        $alumni = User::with([
+            'roles:id,name',
+            'modalApplications:id,user_id,kode,jenis_bantuan,estimasi_biaya,status_seleksi,created_at',
+            'tumbuhRequests:id,user_id,kode,bidang_minat,topik_pendampingan,status,created_at',
+            'pasarProducts:id,user_id,kode,nama_produk,kategori,harga,status_publikasi,created_at',
+            'monitorings:id,user_id,kode,ref_kode,modul,status_produktif,pendapatan_omzet,tanggal_pantau',
+        ])
+            ->whereHas('roles', fn ($q) => $q->where('name', 'alumni'))
+            ->latest()
+            ->get()
+            ->map(fn (User $u) => $this->formatAlumniRecord($u));
+
+        return response()->json([
+            'data' => $alumni,
+        ]);
+    }
+
+    public function storeAlumni(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:150'],
+            'email' => ['required', 'email', 'max:150', 'unique:users,email'],
+            'password' => ['required', 'string', 'min:8'],
+            'whatsapp' => ['required', 'string', 'max:40'],
+            'sekolah' => ['required', 'string', 'max:180'],
+            'tahun_lulus' => ['required', 'string', 'max:10'],
+            'kompetensi' => ['required', 'string', 'max:120'],
+            'nama_usaha' => ['nullable', 'string', 'max:180'],
+        ]);
+
+        Role::firstOrCreate(['name' => 'alumni', 'guard_name' => 'api']);
+
+        $user = User::create([
+            'name' => trim($validated['name']),
+            'email' => strtolower(trim($validated['email'])),
+            'password' => $validated['password'],
+            'whatsapp' => trim($validated['whatsapp']),
+            'sekolah' => trim($validated['sekolah']),
+            'tahun_lulus' => trim($validated['tahun_lulus']),
+            'kompetensi' => trim($validated['kompetensi']),
+            'nama_usaha' => $validated['nama_usaha'] ?? null,
+        ]);
+
+        $user->syncRoles(['alumni']);
+
+        return response()->json([
+            'data' => $this->formatAlumniRecord($user),
+            'message' => 'Data akun alumni berhasil ditambahkan.',
+        ], 201);
+    }
+
+    public function updateAlumni(Request $request, User $user): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:150'],
+            'email' => ['required', 'email', 'max:150', Rule::unique('users', 'email')->ignore($user->id)],
+            'whatsapp' => ['required', 'string', 'max:40'],
+            'sekolah' => ['required', 'string', 'max:180'],
+            'tahun_lulus' => ['required', 'string', 'max:10'],
+            'kompetensi' => ['required', 'string', 'max:120'],
+            'nama_usaha' => ['nullable', 'string', 'max:180'],
+        ]);
+
+        $user->update($validated);
+
+        return response()->json([
+            'data' => $this->formatAlumniRecord($user),
+            'message' => 'Data profil alumni berhasil diperbarui.',
+        ]);
+    }
+
+    protected function formatAlumniRecord(User $u): array
+    {
+        $u->loadMissing([
+            'modalApplications:id,user_id,kode,jenis_bantuan,estimasi_biaya,status_seleksi,created_at',
+            'tumbuhRequests:id,user_id,kode,bidang_minat,topik_pendampingan,status,created_at',
+            'pasarProducts:id,user_id,kode,nama_produk,kategori,harga,status_publikasi,created_at',
+            'monitorings:id,user_id,kode,ref_kode,modul,status_produktif,pendapatan_omzet,tanggal_pantau',
+        ]);
+
+        return [
+            'id' => $u->id,
+            'name' => $u->name,
+            'email' => $u->email,
+            'whatsapp' => $u->whatsapp,
+            'sekolah' => $u->sekolah,
+            'tahun_lulus' => $u->tahun_lulus,
+            'kompetensi' => $u->kompetensi,
+            'nama_usaha' => $u->nama_usaha,
+            'modal_count' => $u->modalApplications->count(),
+            'tumbuh_count' => $u->tumbuhRequests->count(),
+            'pasar_count' => $u->pasarProducts->count(),
+            'monitoring_count' => $u->monitorings->count(),
+            'modal_applications' => $u->modalApplications,
+            'tumbuh_requests' => $u->tumbuhRequests,
+            'pasar_products' => $u->pasarProducts,
+            'monitorings' => $u->monitorings,
+            'created_at' => $u->created_at?->toISOString(),
+        ];
     }
 
     public function storeUser(Request $request): JsonResponse
@@ -101,6 +213,7 @@ class RoleUserController extends Controller
     public function roles(): JsonResponse
     {
         $roles = Role::where('guard_name', 'api')
+            ->where('name', '!=', 'alumni')
             ->with('permissions:id,name')
             ->get()
             ->map(fn (Role $r) => [

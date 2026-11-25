@@ -2,8 +2,11 @@ import React, { useMemo } from 'react';
 import {
     Briefcase,
     Calendar,
+    CheckCircle2,
     Clock,
     Edit3,
+    ExternalLink,
+    FileCheck,
     FileText,
     GraduationCap,
     History,
@@ -15,6 +18,7 @@ import {
 } from 'lucide-react';
 import StatusBadge from './StatusBadge';
 import { formatDateTime, formatRupiah } from '../utils/format';
+import { exportBastPdf } from '../utils/reportExporter';
 
 export default function ModalApplicationDetailModal({
     item,
@@ -165,6 +169,33 @@ export default function ModalApplicationDetailModal({
                                             {item.whatsapp || '-'}
                                         </span>
                                     </div>
+                                    {item.guru_pendamping && (
+                                        <div className="flex justify-between gap-2">
+                                            <span className="text-[#6c757d]">Guru Pendamping</span>
+                                            <span className="font-semibold text-[#0068b0] text-right">
+                                                {item.guru_pendamping}
+                                            </span>
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between items-center gap-2">
+                                        <span className="text-[#6c757d]">Komitmen 6 Bulan</span>
+                                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#198754]">
+                                            <CheckCircle2 className="w-3.5 h-3.5" /> Bersedia Didampingi
+                                        </span>
+                                    </div>
+                                    {item.dokumen_lampiran && (
+                                        <div className="pt-1 border-t border-[#e9ecef] flex justify-between items-center">
+                                            <span className="text-[#6c757d]">Lampiran Proposal/RAB</span>
+                                            <a
+                                                href={item.dokumen_lampiran}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="inline-flex items-center gap-1 text-[#0068b0] font-semibold hover:underline"
+                                            >
+                                                Lihat Lampiran <ExternalLink className="w-3 h-3" />
+                                            </a>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -173,7 +204,7 @@ export default function ModalApplicationDetailModal({
                             <div className="border border-[#dee2e6] rounded-md p-3.5 h-full space-y-2.5 bg-white">
                                 <div className="font-semibold text-xs uppercase tracking-wider text-[#203880] flex items-center gap-1.5 border-b border-[#e9ecef] pb-2">
                                     <Briefcase className="w-3.5 h-3.5 text-[#198754]" />
-                                    Informasi Bantuan & Seleksi
+                                    Informasi Bantuan, Skor & BAST
                                 </div>
                                 <div className="space-y-1.5 text-xs">
                                     <div className="flex justify-between items-center gap-2">
@@ -187,11 +218,35 @@ export default function ModalApplicationDetailModal({
                                         </span>
                                     </div>
                                     <div className="flex justify-between gap-2">
-                                        <span className="text-[#6c757d]">Estimasi Kebutuhan</span>
+                                        <span className="text-[#6c757d]">Estimasi Pengajuan</span>
                                         <span className="font-bold text-[#198754] text-right">
                                             {formatRupiah(item.estimasi_biaya)}
                                         </span>
                                     </div>
+                                    {item.nominal_disetujui != null && (
+                                        <div className="flex justify-between gap-2">
+                                            <span className="text-[#6c757d]">Nominal Disetujui</span>
+                                            <span className="font-bold text-[#203880] text-right">
+                                                {formatRupiah(item.nominal_disetujui)}
+                                            </span>
+                                        </div>
+                                    )}
+                                    {item.skor_total != null && (
+                                        <div className="flex justify-between items-center gap-2">
+                                            <span className="text-[#6c757d]">Skor Rubrik Seleksi</span>
+                                            <span className="bs-badge bs-badge-success">
+                                                {item.skor_total} / 100
+                                            </span>
+                                        </div>
+                                    )}
+                                    {item.nomor_bast && (
+                                        <div className="flex justify-between gap-2">
+                                            <span className="text-[#6c757d]">Nomor BAST</span>
+                                            <code className="font-bold text-[#008a75]">
+                                                {item.nomor_bast} ({item.tanggal_penyaluran || '-'})
+                                            </code>
+                                        </div>
+                                    )}
                                     <div className="flex justify-between items-center gap-2">
                                         <span className="text-[#6c757d]">Status Seleksi</span>
                                         <StatusBadge status={item.status_seleksi} />
@@ -206,6 +261,52 @@ export default function ModalApplicationDetailModal({
                             </div>
                         </div>
                     </div>
+
+                    {/* Rincian Rubrik Penilaian 5 Indikator (jika sudah dinilai) */}
+                    {item.skor_total != null && (
+                        <div className="border border-[#dee2e6] rounded-md p-3.5 space-y-2.5 bg-white">
+                            <div className="flex items-center justify-between border-b border-[#e9ecef] pb-2">
+                                <span className="font-semibold text-xs uppercase tracking-wider text-[#203880]">
+                                    Hasil Rubrik Penilaian Seleksi (5 Indikator Blueprint)
+                                </span>
+                                <span className="bs-badge bs-badge-primary">
+                                    Nilai Akhir: {item.skor_total} / 100
+                                </span>
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs text-center">
+                                <div className="p-2 rounded bg-[#f8fafd] border border-[#dbe3f0]">
+                                    <div className="text-[11px] text-[#64748b]">Kompetensi (20%)</div>
+                                    <div className="font-bold text-sm text-[#203880]">
+                                        {item.skor_kompetensi ?? '-'}
+                                    </div>
+                                </div>
+                                <div className="p-2 rounded bg-[#f8fafd] border border-[#dbe3f0]">
+                                    <div className="text-[11px] text-[#64748b]">Rencana (25%)</div>
+                                    <div className="font-bold text-sm text-[#203880]">
+                                        {item.skor_rencana ?? '-'}
+                                    </div>
+                                </div>
+                                <div className="p-2 rounded bg-[#f8fafd] border border-[#dbe3f0]">
+                                    <div className="text-[11px] text-[#64748b]">Ketepatan Alat (25%)</div>
+                                    <div className="font-bold text-sm text-[#203880]">
+                                        {item.skor_kebutuhan ?? '-'}
+                                    </div>
+                                </div>
+                                <div className="p-2 rounded bg-[#f8fafd] border border-[#dbe3f0]">
+                                    <div className="text-[11px] text-[#64748b]">Dampak Ekonomi (20%)</div>
+                                    <div className="font-bold text-sm text-[#203880]">
+                                        {item.skor_dampak ?? '-'}
+                                    </div>
+                                </div>
+                                <div className="p-2 rounded bg-[#f8fafd] border border-[#dbe3f0]">
+                                    <div className="text-[11px] text-[#64748b]">Komitmen (10%)</div>
+                                    <div className="font-bold text-sm text-[#203880]">
+                                        {item.skor_komitmen ?? '-'}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Rincian Kebutuhan & Rencana Pemanfaatan */}
                     <div className="border border-[#dee2e6] rounded-md p-3.5 space-y-3 bg-white">
@@ -349,6 +450,16 @@ export default function ModalApplicationDetailModal({
 
                 {/* Modal Footer */}
                 <div className="bs-modal-footer">
+                    {['Disetujui', 'Disalurkan'].includes(item.status_seleksi) && (
+                        <button
+                            type="button"
+                            onClick={() => exportBastPdf(item, formatRupiah)}
+                            className="bs-btn bs-btn-sm bs-btn-success"
+                        >
+                            <FileCheck className="w-3.5 h-3.5" />
+                            Cetak BAST (PDF)
+                        </button>
+                    )}
                     {isAdmin && onProcess && (
                         <button
                             type="button"
@@ -356,7 +467,7 @@ export default function ModalApplicationDetailModal({
                             className="bs-btn bs-btn-sm bs-btn-primary"
                         >
                             <Edit3 className="w-3.5 h-3.5" />
-                            Proses Seleksi
+                            Proses Seleksi & BAST
                         </button>
                     )}
                     <button

@@ -7,6 +7,7 @@ use App\Models\MasterOption;
 use App\Models\ModalApplication;
 use App\Models\Monitoring;
 use App\Models\PasarProduct;
+use App\Models\Testimonial;
 use App\Models\TumbuhRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -39,6 +40,17 @@ class PublicController extends Controller
 
         return response()->json([
             'options' => $options,
+        ]);
+    }
+
+    public function testimonials(): JsonResponse
+    {
+        $items = Testimonial::where('is_approved', true)
+            ->latest()
+            ->get();
+
+        return response()->json([
+            'data' => $items,
         ]);
     }
 
@@ -124,18 +136,50 @@ class PublicController extends Controller
             'rincian_kebutuhan' => ['required', 'string', 'max:2000'],
             'estimasi_biaya' => ['nullable', 'integer', 'min:0'],
             'rencana_deskripsi' => ['required', 'string', 'max:3000'],
+            'guru_pendamping' => ['nullable', 'string', 'max:150'],
+            'komitmen_pendampingan' => ['nullable', 'boolean'],
+            'dokumen_lampiran' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:5120'],
         ]);
+
+        $lampiranPath = null;
+        if ($request->hasFile('dokumen_lampiran') && $request->file('dokumen_lampiran')->isValid()) {
+            $file = $request->file('dokumen_lampiran');
+            $uploadDir = public_path('uploads/modal');
+            if (! is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+
+            $ext = strtolower($file->getClientOriginalExtension());
+            if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
+                $filename = 'lampiran-modal-'.now('Asia/Jakarta')->format('YmdHis').'-'.strtolower(Str::random(8)).'.webp';
+                $fullPath = $uploadDir.DIRECTORY_SEPARATOR.$filename;
+                $manager = ImageManager::usingDriver(Driver::class);
+                $image = $manager->decodePath($file->getRealPath());
+                $image->scaleDown(1200, 1200);
+                $image->encodeUsingFileExtension('webp', quality: 85)->save($fullPath);
+                $lampiranPath = '/uploads/modal/'.$filename;
+            } else {
+                $filename = 'proposal-modal-'.now('Asia/Jakarta')->format('YmdHis').'-'.strtolower(Str::random(8)).'.'.$ext;
+                $file->move($uploadDir, $filename);
+                $lampiranPath = '/uploads/modal/'.$filename;
+            }
+        }
+
+        unset($validated['dokumen_lampiran']);
 
         $record = ModalApplication::create([
             ...$validated,
+            'user_id' => auth('api')->id(),
             'kode' => ModalApplication::generateKode(),
             'estimasi_biaya' => $validated['estimasi_biaya'] ?? 0,
+            'komitmen_pendampingan' => filter_var($request->input('komitmen_pendampingan', true), FILTER_VALIDATE_BOOLEAN),
+            'dokumen_lampiran' => $lampiranPath,
             'status_seleksi' => 'Menunggu Seleksi',
         ]);
 
         $record->histories()->create([
             'status_seleksi' => 'Menunggu Seleksi',
-            'catatan' => 'Pengajuan Ruang Modal dikirim oleh pemohon.',
+            'catatan' => 'Pengajuan Ruang Modal dikirim oleh pemohon beserta komitmen pendampingan.',
             'actor_type' => 'pemohon',
             'actor_name' => $record->nama,
         ]);
@@ -205,6 +249,7 @@ class PublicController extends Controller
 
         $record = TumbuhRequest::create([
             ...$validated,
+            'user_id' => auth('api')->id(),
             'kode' => TumbuhRequest::generateKode(),
             'status' => 'Menunggu',
         ]);
@@ -263,6 +308,7 @@ class PublicController extends Controller
 
         $record = PasarProduct::create([
             ...$validated,
+            'user_id' => auth('api')->id(),
             'thumbnail' => $thumbnailPath,
             'kode' => PasarProduct::generateKode(),
             'status_publikasi' => 'Menunggu Moderasi',

@@ -166,6 +166,45 @@ export const deleteMasterOptionItem = createAsyncThunk(
     }
 );
 
+export const fetchAlumniList = createAsyncThunk('admin/fetchAlumniList', async (_, { rejectWithValue }) => {
+    try {
+        const { data } = await api.get('/admin/alumni');
+        return data.data;
+    } catch (err) {
+        return rejectWithValue(err.response?.data?.message || 'Gagal memuat data alumni.');
+    }
+});
+
+export const createAlumniItem = createAsyncThunk('admin/createAlumni', async (payload, { rejectWithValue }) => {
+    try {
+        const { data } = await api.post('/admin/alumni', payload);
+        return data;
+    } catch (err) {
+        return rejectWithValue(err.response?.data?.message || 'Gagal menambahkan data alumni.');
+    }
+});
+
+export const updateAlumniItem = createAsyncThunk(
+    'admin/updateAlumni',
+    async ({ id, payload }, { rejectWithValue }) => {
+        try {
+            const { data } = await api.patch(`/admin/alumni/${id}`, payload);
+            return data;
+        } catch (err) {
+            return rejectWithValue(err.response?.data?.message || 'Gagal memperbarui data alumni.');
+        }
+    }
+);
+
+export const deleteAlumniItem = createAsyncThunk('admin/deleteAlumni', async (id, { rejectWithValue }) => {
+    try {
+        await api.delete(`/admin/alumni/${id}`);
+        return id;
+    } catch (err) {
+        return rejectWithValue(err.response?.data?.message || 'Gagal menghapus data alumni.');
+    }
+});
+
 export const fetchUsersList = createAsyncThunk('admin/fetchUsersList', async (_, { rejectWithValue }) => {
     try {
         const { data } = await api.get('/admin/users');
@@ -272,6 +311,7 @@ const adminSlice = createSlice({
         pasar: [],
         monitoring: [],
         masterOptions: [],
+        alumni: [],
         users: [],
         roles: [],
         allPermissions: [],
@@ -373,13 +413,30 @@ const adminSlice = createSlice({
             })
             .addCase(fetchUsersList.fulfilled, (state, action) => {
                 state.users = action.payload.users;
-                if (state.roles.length === 0 && action.payload.availableRoles.length > 0) {
+                if (action.payload.availableRoles.length > 0) {
                     state.roles = action.payload.availableRoles.map((r) => ({
                         id: r.id,
                         name: r.name,
                         permissions: [],
                     }));
                 }
+            })
+            .addCase(fetchAlumniList.fulfilled, (state, action) => {
+                state.alumni = action.payload;
+            })
+            .addCase(createAlumniItem.fulfilled, (state, action) => {
+                state.alumni = [action.payload.data, ...state.alumni];
+                state.flash = action.payload.message;
+            })
+            .addCase(updateAlumniItem.fulfilled, (state, action) => {
+                state.alumni = state.alumni.map((a) =>
+                    a.id === action.payload.data.id ? action.payload.data : a
+                );
+                state.flash = action.payload.message;
+            })
+            .addCase(deleteAlumniItem.fulfilled, (state, action) => {
+                state.alumni = state.alumni.filter((a) => a.id !== action.payload);
+                state.flash = 'Data akun alumni berhasil dihapus.';
             })
             .addCase(fetchRolesList.fulfilled, (state, action) => {
                 state.roles = action.payload.roles;

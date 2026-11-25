@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { AlertCircle, CheckCircle2, ExternalLink, Eye, History, ImagePlus, Send, Trash2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Eye, History, ImagePlus, Send, Store, Trash2 } from 'lucide-react';
 import {
     fetchPublicMasterOptions,
-    fetchPublicPasar,
     fetchPublicPasarSubmissions,
     resetSubmitState,
     submitPasarProduct,
@@ -11,12 +11,12 @@ import {
 import DataTable from '../../components/DataTable';
 import StatusBadge from '../../components/StatusBadge';
 import CurrencyInput from '../../components/CurrencyInput';
+import AlumniAuthGate from '../../components/AlumniAuthGate';
 import PasarProductDetailModal from '../../components/PasarProductDetailModal';
 import {
     formatDateTime,
     getCategoryThumbnail,
     getProductThumbnail,
-    safeOrderUrl,
 } from '../../utils/format';
 
 const MY_PASAR_STORAGE_KEY = 'rp_my_submitted_codes';
@@ -48,10 +48,9 @@ function loadMyCodes() {
 
 export default function RuangPasarPage() {
     const dispatch = useDispatch();
+    const { user } = useSelector((state) => state.auth);
     const {
         masterOptions,
-        products,
-        loadingProducts,
         pasarSubmissions,
         loadingPasarSubmissions,
         submitting,
@@ -67,9 +66,20 @@ export default function RuangPasarPage() {
     const [myCodes, setMyCodes] = useState(() => loadMyCodes());
 
     useEffect(() => {
+        if (user) {
+            setForm((prev) => ({
+                ...prev,
+                nama_alumni: prev.nama_alumni || user.name || '',
+                email: prev.email || user.email || '',
+                whatsapp: prev.whatsapp || user.whatsapp || '',
+                sekolah: prev.sekolah || user.sekolah || '',
+            }));
+        }
+    }, [user]);
+
+    useEffect(() => {
         dispatch(resetSubmitState());
         dispatch(fetchPublicMasterOptions());
-        dispatch(fetchPublicPasar());
         dispatch(fetchPublicPasarSubmissions());
         return () => dispatch(resetSubmitState());
     }, [dispatch]);
@@ -82,14 +92,9 @@ export default function RuangPasarPage() {
         };
     }, [thumbnailPreview]);
 
-    const allKnownItems = useMemo(() => {
-        if (pasarSubmissions.length > 0) return pasarSubmissions;
-        return products;
-    }, [pasarSubmissions, products]);
-
     const detailItem = useMemo(
-        () => allKnownItems.find((item) => item.id === detailId) || null,
-        [allKnownItems, detailId]
+        () => pasarSubmissions.find((item) => item.id === detailId) || null,
+        [pasarSubmissions, detailId]
     );
 
     const displayedHistory = useMemo(() => {
@@ -242,91 +247,25 @@ export default function RuangPasarPage() {
 
     return (
         <div className="space-y-6">
-            {/* Etalase Publik */}
+            {/* Form Pendaftaran Produk ke Ruang Pasar */}
             <div className="bs-card">
-                <div className="bs-card-header">
+                <div className="bs-card-header flex-col sm:flex-row sm:items-center">
                     <div>
-                        <h1 className="text-lg font-bold text-[#203880]">Ruang Pasar — Etalase Alumni</h1>
+                        <h1 className="text-lg font-bold text-[#203880]">
+                            Pengajuan Ruang Pasar — Daftarkan Produk / Jasa
+                        </h1>
                         <p className="text-xs font-normal text-[#64748b]">
-                            Produk dan jasa alumni yang telah lolos moderasi admin. Klik kartu untuk melihat detail
-                            produk.
+                            Data produk atau jasa akan ditinjau oleh admin sebelum dipublikasikan di halaman Etalase
+                            Ruang Pasar.
                         </p>
                     </div>
-                    <span className="bs-badge bs-badge-primary">{products.length} Produk Tayang</span>
-                </div>
-                <div className="bs-card-body">
-                    {loadingProducts ? (
-                        <div className="text-center py-6 text-sm text-[#64748b]">Memuat etalase...</div>
-                    ) : products.length === 0 ? (
-                        <div className="bs-alert bs-alert-info">Belum ada produk yang dipublikasikan.</div>
-                    ) : (
-                        <div className="bs-row">
-                            {products.map((p) => (
-                                <div key={p.id} className="col-span-12 md:col-span-6 lg:col-span-4">
-                                    <div
-                                        onClick={(e) => {
-                                            if (e.target.closest('a, button')) return;
-                                            setDetailId(p.id);
-                                        }}
-                                        className="group cursor-pointer border border-[#dbe3f0] rounded-md overflow-hidden h-full flex flex-col justify-between bg-[#fbfcff] hover:border-[#0068b0] hover:shadow-sm transition-all"
-                                    >
-                                        <div>
-                                            <div className="relative h-44 w-full bg-[#eef2f9] border-b border-[#dbe3f0] overflow-hidden">
-                                                <img
-                                                    src={getProductThumbnail(p)}
-                                                    alt={p.nama_produk}
-                                                    loading="lazy"
-                                                    onError={(e) => {
-                                                        e.currentTarget.onerror = null;
-                                                        e.currentTarget.src = getCategoryThumbnail(p.kategori);
-                                                    }}
-                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                                />
-                                                <span className="bs-badge bs-badge-info absolute top-2.5 left-2.5 shadow-xs">
-                                                    {p.kategori}
-                                                </span>
-                                            </div>
-                                            <div className="p-4 pb-0 space-y-1.5">
-                                                <div className="text-[11px] font-mono text-[#64748b]">{p.kode}</div>
-                                                <h3 className="font-semibold text-[#203880]">{p.nama_produk}</h3>
-                                                <p className="text-xs text-[#475569] leading-relaxed">{p.deskripsi}</p>
-                                            </div>
-                                        </div>
-                                        <div className="p-4 pt-3 mt-3 border-t border-[#eef2f9] space-y-2">
-                                            <div className="font-bold text-sm text-[#008a75]">
-                                                {p.harga || 'Hubungi penjual'}
-                                            </div>
-                                            <div className="text-xs text-[#64748b]">
-                                                Alumni: <strong className="text-[#1e293b]">{p.nama_alumni}</strong>
-                                                {p.sekolah ? ` • ${p.sekolah}` : ''}
-                                            </div>
-                                            <a
-                                                href={safeOrderUrl(p.kontak_link)}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="bs-btn bs-btn-sm bs-btn-outline-primary w-full"
-                                            >
-                                                Hubungi / Pesan
-                                                <ExternalLink className="w-3.5 h-3.5" />
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Form Pendaftaran Produk */}
-            <div className="bs-card">
-                <div className="bs-card-header">
-                    <div>
-                        <h2 className="text-base font-bold text-[#203880]">Daftarkan Produk / Jasa ke Etalase</h2>
-                        <p className="text-xs font-normal text-[#64748b]">
-                            Data akan ditinjau oleh admin sebelum dipublikasikan di etalase publik.
-                        </p>
-                    </div>
+                    <Link
+                        to="/etalase-pasar"
+                        className="bs-btn bs-btn-sm bs-btn-outline-primary shrink-0"
+                    >
+                        <Store className="w-3.5 h-3.5" />
+                        Lihat Daftar Etalase Pasar
+                    </Link>
                 </div>
                 <div className="bs-card-body">
                     {submitResult && (
@@ -350,7 +289,7 @@ export default function RuangPasarPage() {
                                     className="bs-btn bs-btn-sm bs-btn-success"
                                 >
                                     <Eye className="w-3.5 h-3.5" />
-                                    Lihat Detail & Riwayat
+                                    Lihat Detail &amp; Riwayat
                                 </button>
                             )}
                         </div>
@@ -363,7 +302,10 @@ export default function RuangPasarPage() {
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    {!user ? (
+                        <AlumniAuthGate moduleName="Ruang Pasar" />
+                    ) : (
+                        <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="bs-row">
                             <div className="col-span-12 md:col-span-6">
                                 <label className="bs-form-label">Nama Alumni *</label>
@@ -530,6 +472,7 @@ export default function RuangPasarPage() {
                             </button>
                         </div>
                     </form>
+                    )}
                 </div>
             </div>
 
@@ -539,7 +482,7 @@ export default function RuangPasarPage() {
                     <div>
                         <h2 className="text-base font-bold text-[#203880] flex items-center gap-2">
                             <History className="w-4 h-4 text-[#0068b0]" />
-                            Riwayat & Status Pengajuan Produk Ruang Pasar
+                            Riwayat &amp; Status Pengajuan Produk Ruang Pasar
                         </h2>
                         <p className="text-xs font-normal text-[#64748b]">
                             Klik baris data pada tabel untuk melihat detail lengkap dan riwayat moderasi produk.
@@ -598,7 +541,7 @@ export default function RuangPasarPage() {
             {detailItem && (
                 <PasarProductDetailModal
                     item={detailItem}
-                    allItems={allKnownItems}
+                    allItems={pasarSubmissions}
                     onClose={() => setDetailId(null)}
                     onSelectOther={(other) => setDetailId(other.id)}
                     isAdmin={false}
