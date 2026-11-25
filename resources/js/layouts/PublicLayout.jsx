@@ -94,8 +94,12 @@ export default function PublicLayout() {
             isActive ? 'bg-[#203880] text-white' : 'text-[#203880] hover:bg-[#eef4ff]'
         }`;
 
+    const hasFullBleedHero = ['/', '/etalase-pasar', '/tentang', '/kontak'].includes(
+        location.pathname
+    );
+
     return (
-        <div className="min-h-screen flex flex-col bg-[#f3f6fb]">
+        <div className="min-h-screen flex flex-col bg-[#f3f6fb] overflow-x-hidden">
             {/* Double Track Signature Navbar */}
             <header className="sticky top-0 z-40 bg-white border-b border-[#dbe3f0] shadow-xs">
                 {/* Top Brand Spectrum Bar (Navy -> Ocean Blue -> Amber Gold) */}
@@ -111,7 +115,7 @@ export default function PublicLayout() {
                             />
                             <div className="hidden sm:block pl-3 border-l border-[#dbe3f0] leading-tight">
                                 <div className="font-bold text-sm text-[#203880] tracking-tight">
-                                    Ekosistem Alumni
+                                    Ruang Alumni
                                 </div>
                                 <div className="text-[11px] font-semibold text-[#f8a000]">
                                     SMA Double Track
@@ -367,7 +371,7 @@ export default function PublicLayout() {
             </header>
 
             {/* Main Content */}
-            <main className="flex-1 py-6">
+            <main className={`flex-1 ${hasFullBleedHero ? 'pb-6' : 'py-6'}`}>
                 <div className="bs-container">
                     <Outlet />
                 </div>
@@ -391,7 +395,7 @@ export default function PublicLayout() {
                             </Link>
                             <div className="space-y-1.5">
                                 <div className="font-bold text-base text-[#203880]">
-                                    Ekosistem Alumni SMA Double Track
+                                    Ruang Alumni SMA Double Track
                                 </div>
                                 <p className="text-xs text-[#64748b] leading-relaxed">
                                     Platform terpadu pasca-pelatihan bagi lulusan SMA Double Track untuk mengubah
@@ -547,7 +551,7 @@ export default function PublicLayout() {
                     <div className="bs-container flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">
                         <span>
                             &copy; {new Date().getFullYear()}{' '}
-                            <strong className="text-white">Ekosistem Alumni SMA Double Track</strong>. Diselenggarakan
+                            <strong className="text-white">Ruang Alumni SMA Double Track</strong>. Diselenggarakan
                             oleh Dinas Pendidikan Provinsi Jawa Timur &amp; ITS.
                         </span>
                         <span className="text-[#ffc010] font-semibold">

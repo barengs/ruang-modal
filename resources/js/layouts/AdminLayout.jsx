@@ -122,7 +122,7 @@ export default function AdminLayout() {
                         <div className="hidden sm:block pl-2.5 border-l border-[#dbe3f0] leading-tight">
                             <div className="font-bold text-sm text-[#203880]">Panel Pengelola</div>
                             <div className="text-[11px] font-semibold text-[#f8a000]">
-                                Ekosistem Alumni Double Track
+                                Ruang Alumni Double Track
                             </div>
                         </div>
                     </Link>

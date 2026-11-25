@@ -162,7 +162,7 @@ export function exportToPdfReport({
         cmds.push(`${marginX} ${pageH - 59} Td`);
         cmds.push(
             `(${escapePdfText(
-                subtitle || 'Program Ekosistem Alumni SMA Double Track — Dinas Pendidikan Provinsi Jawa Timur & ITS'
+                subtitle || 'Program Ruang Alumni SMA Double Track — Dinas Pendidikan Provinsi Jawa Timur & ITS'
             )}) Tj`
         );
         cmds.push('ET');
@@ -253,7 +253,7 @@ export function exportToPdfReport({
 
         cmds.push('BT /F1 7.5 Tf 0.392 0.455 0.545 rg');
         cmds.push(
-            `${marginX} 20 Td (Ekosistem Alumni SMA Double Track — Laporan Resmi Panel Pengelola) Tj ET`
+            `${marginX} 20 Td (Ruang Alumni SMA Double Track — Laporan Resmi Panel Pengelola) Tj ET`
         );
 
         cmds.push('BT /F2 7.5 Tf 0.125 0.220 0.502 rg');
@@ -466,7 +466,7 @@ function colIndexToLetter(index) {
  * @param {Array<any>} config.data
  */
 export function exportToExcelFile({
-    title = 'Laporan Ekosistem Alumni SMA Double Track',
+    title = 'Laporan Ruang Alumni SMA Double Track',
     sheetName = 'Data Laporan',
     filename = 'Laporan-Double-Track',
     columns = [],
@@ -650,7 +650,7 @@ export function exportBastPdf(item, formatRupiahFn) {
 
     cmds.push('BT /F1 9 Tf 0.392 0.455 0.545 rg');
     cmds.push(
-        `${marginX} ${pageH - 72} Td (Program Ekosistem Alumni SMA Double Track - Dinas Pendidikan Prov. Jawa Timur & ITS) Tj ET`
+        `${marginX} ${pageH - 72} Td (Program Ruang Alumni SMA Double Track - Dinas Pendidikan Prov. Jawa Timur & ITS) Tj ET`
     );
 
     // Nomor BAST Box
@@ -746,7 +746,7 @@ export function exportBastPdf(item, formatRupiahFn) {
     cmds.push(`${marginX} 32 ${usableW} 0.5 re S`);
     cmds.push('BT /F1 7.5 Tf 0.392 0.455 0.545 rg');
     cmds.push(
-        `${marginX} 20 Td (Dokumen Resmi BAST Ruang Modal SMA Double Track - Dicetak otomatis dari Sistem Ekosistem Alumni) Tj ET`
+        `${marginX} 20 Td (Dokumen Resmi BAST Ruang Modal SMA Double Track - Dicetak otomatis dari Sistem Ruang Alumni) Tj ET`
     );
 
     const streamStr = cmds.join('\n');

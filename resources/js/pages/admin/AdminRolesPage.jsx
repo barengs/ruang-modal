@@ -34,7 +34,7 @@ const MENU_MATRIX_ROWS = [
     {
         key: 'dashboard',
         menu: 'Dashboard',
-        desc: 'Halaman ringkasan statistik & grafik analitik ekosistem alumni',
+        desc: 'Halaman ringkasan statistik & grafik analitik ruang alumni',
         icon: LayoutDashboard,
         permissions: {
             view: 'dashboard.view',

@@ -31,7 +31,7 @@ export default function AdminDashboardPage() {
             {/* Page Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                    <h1 className="text-xl font-bold text-[#203880]">Dashboard Ekosistem Alumni</h1>
+                    <h1 className="text-xl font-bold text-[#203880]">Dashboard Ruang Alumni</h1>
                     <p className="text-xs text-[#6c757d]">
                         Ringkasan statistik & analitik visual berbasis TanStack Chart.
                     </p>

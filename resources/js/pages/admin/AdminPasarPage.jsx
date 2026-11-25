@@ -97,7 +97,7 @@ export default function AdminPasarPage() {
 
     const handleExportExcel = () => {
         exportToExcelFile({
-            title: 'LAPORAN PRODUK & JASA RUANG PASAR — EKOSISTEM ALUMNI SMA DOUBLE TRACK',
+            title: 'LAPORAN PRODUK & JASA RUANG PASAR — RUANG ALUMNI SMA DOUBLE TRACK',
             sheetName: 'Ruang Pasar',
             filename: `Data-Ruang-Pasar-${new Date().toISOString().slice(0, 10)}`,
             columns: [

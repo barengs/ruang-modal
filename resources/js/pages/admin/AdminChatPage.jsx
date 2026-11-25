@@ -16,7 +16,7 @@ import api from '../../api/axios';
 import { formatDateTime, safeOrderUrl } from '../../utils/format';
 
 const QUICK_REPLIES = [
-    'Halo! Ada yang bisa kami bantu terkait layanan Ekosistem Alumni SMA Double Track?',
+    'Halo! Ada yang bisa kami bantu terkait layanan Ruang Alumni SMA Double Track?',
     'Pengajuan Anda telah kami terima dan sedang dalam tahap verifikasi tim pengelola.',
     'Silakan klik baris pengajuan Anda pada tabel Riwayat untuk melihat catatan detail dari admin.',
     'Terima kasih atas konfirmasinya, data Anda segera kami tindak lanjuti.',

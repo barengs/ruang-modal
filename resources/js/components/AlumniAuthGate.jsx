@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { LogIn, ShieldAlert, UserPlus } from 'lucide-react';
 
-export default function AlumniAuthGate({ moduleName = 'Layanan Ekosistem Alumni' }) {
+export default function AlumniAuthGate({ moduleName = 'Layanan Ruang Alumni' }) {
     const location = useLocation();
     const redirectParam = encodeURIComponent(location.pathname);
 

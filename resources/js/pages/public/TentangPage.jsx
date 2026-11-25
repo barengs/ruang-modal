@@ -1,8 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import {
+    ArrowRight,
     Award,
     Briefcase,
+    Check,
     CheckCircle2,
     Layers,
     ShieldCheck,
@@ -71,31 +73,83 @@ export default function TentangPage() {
 
     return (
         <div className="space-y-6">
-            {/* Hero Banner */}
-            <div className="bg-gradient-to-r from-[#203880] via-[#0068b0] to-[#1098e0] text-white p-6 md:p-8 shadow-sm border-b-4 border-[#f8a000]">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <div className="max-w-2xl space-y-3">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f8a000] text-[#17285e] text-xs font-bold tracking-wide">
-                            Tentang Platform
-                        </span>
-                        <h1 className="text-2xl md:text-3xl font-bold leading-tight">
-                            Ekosistem Alumni SMA Double Track
-                        </h1>
-                        <p className="text-sm md:text-base text-[#e6f2ff] leading-relaxed">
-                            Wadah sinergi pasca-pelatihan bagi lulusan SMA Double Track untuk mengubah keterampilan
-                            vokasional menjadi kemandirian ekonomi melalui fasilitasi modal, pendampingan intensif, dan
-                            perluasan akses pasar.
-                        </p>
-                    </div>
-                    <div className="bg-white rounded-md p-3.5 shadow-sm shrink-0 self-start md:self-center">
-                        <img
-                            src="/images/logo-dt.webp"
-                            alt="Logo SMA Double Track"
-                            className="h-14 md:h-16 w-auto object-contain"
-                        />
+            {/* Compact Full-Bleed Hero Banner (Matching Beranda Style) */}
+            <section className="w-screen relative left-1/2 -translate-x-1/2 bg-[#243271] text-white py-8 md:py-10 overflow-hidden shadow-sm">
+                <div
+                    className="pointer-events-none absolute -top-20 -left-20 w-72 h-72 rounded-full opacity-20 blur-3xl"
+                    style={{ background: 'radial-gradient(circle, #38bdf8 0%, transparent 70%)' }}
+                />
+                <div
+                    className="pointer-events-none absolute -bottom-16 right-1/4 w-80 h-80 rounded-full opacity-20 blur-3xl"
+                    style={{ background: 'radial-gradient(circle, #0d4cc4 0%, transparent 70%)' }}
+                />
+
+                <div className="bs-container relative z-10">
+                    <div className="grid grid-cols-12 items-center gap-6">
+                        <div className="col-span-12 lg:col-span-8 space-y-3">
+                            <p className="text-xs sm:text-sm font-medium text-white/95 tracking-wide">
+                                Profil &amp; Arsitektur Program{' '}
+                                <span className="text-[#ffb703] font-bold">SMA Double Track</span>
+                            </p>
+                            <h1 className="text-2xl sm:text-3xl font-extrabold leading-tight tracking-tight text-white">
+                                Ruang Alumni SMA Double Track
+                            </h1>
+                            <p className="text-xs sm:text-sm text-[#dbeafe] leading-relaxed max-w-2xl">
+                                Wadah sinergi pasca-pelatihan bagi lulusan SMA Double Track untuk mengubah keterampilan
+                                vokasional menjadi kemandirian ekonomi melalui fasilitasi modal, pendampingan intensif,
+                                dan perluasan akses pasar.
+                            </p>
+                            <ul className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-1">
+                                {[
+                                    'Berbasis Kompetensi Vokasional',
+                                    'Terkurasi & Transparan',
+                                    'Monitoring Berkelanjutan',
+                                ].map((item) => (
+                                    <li
+                                        key={item}
+                                        className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-white"
+                                    >
+                                        <span className="w-4 h-4 rounded-full bg-[#14b8a6] text-white inline-flex items-center justify-center shrink-0">
+                                            <Check className="w-3 h-3 stroke-[3]" />
+                                        </span>
+                                        <span>{item}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+
+                        <div className="col-span-12 lg:col-span-4 flex lg:justify-end">
+                            <div className="w-full sm:w-auto min-w-[260px] bg-[#1a2563]/90 backdrop-blur-md border border-white/30 rounded-xl p-4 shadow-xl space-y-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="bg-white rounded-lg p-2 shrink-0 shadow-xs">
+                                        <img
+                                            src="/images/logo-dt.webp"
+                                            alt="Logo SMA Double Track"
+                                            className="h-10 w-auto object-contain"
+                                        />
+                                    </div>
+                                    <div>
+                                        <div className="text-[11px] text-[#cbd5e1] font-medium">
+                                            3 Pilar Terintegrasi
+                                        </div>
+                                        <div className="text-sm font-extrabold text-[#ffb703] leading-snug">
+                                            Modal • Tumbuh • Pasar
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <Link
+                                    to="/ruang-modal"
+                                    className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-gradient-to-r from-[#f26722] to-[#f9841a] hover:from-[#e05815] hover:to-[#eb770e] text-white font-bold text-xs sm:text-sm shadow-md transition-all no-underline"
+                                >
+                                    Ajukan Layanan Alumni
+                                    <ArrowRight className="w-4 h-4" />
+                                </Link>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
             {/* Latar Belakang & Visi Misi */}
             <div className="bs-row">
@@ -111,11 +165,11 @@ export default function TentangPage() {
                             <p>
                                 Program <strong>SMA Double Track</strong> membekali siswa SMA dengan keterampilan kerja dan
                                 kewirausahaan di samping pendidikan akademik reguler. Setelah lulus, alumni membutuhkan
-                                ekosistem pendukung agar keterampilan yang telah dipelajari dapat tumbuh menjadi sumber
+                                ruang pendukung agar keterampilan yang telah dipelajari dapat tumbuh menjadi sumber
                                 penghasilan nyata.
                             </p>
                             <p>
-                                Platform <strong>Ekosistem Alumni SMA Double Track</strong> hadir menghubungkan alumni
+                                Platform <strong>Ruang Alumni SMA Double Track</strong> hadir menghubungkan alumni
                                 dengan pengelola program, mentor industri, serta masyarakat luas melalui tiga pilar layanan
                                 terintegrasi: <strong>Ruang Modal</strong>, <strong>Ruang Tumbuh</strong>, dan{' '}
                                 <strong>Ruang Pasar</strong>.
@@ -158,7 +212,7 @@ export default function TentangPage() {
                         <div className="bs-card-header">
                             <span className="inline-flex items-center gap-2">
                                 <Target className="w-4 h-4 text-[#198754]" />
-                                Tujuan Ekosistem
+                                Tujuan Ruang Alumni
                             </span>
                         </div>
                         <div className="bs-card-body">

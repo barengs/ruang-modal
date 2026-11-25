@@ -210,7 +210,7 @@ export default function AdminModalPage() {
 
     const handleExportExcel = () => {
         exportToExcelFile({
-            title: 'LAPORAN PENGAJUAN & PENYALURAN RUANG MODAL — EKOSISTEM ALUMNI SMA DOUBLE TRACK',
+            title: 'LAPORAN PENGAJUAN & PENYALURAN RUANG MODAL — RUANG ALUMNI SMA DOUBLE TRACK',
             sheetName: 'Ruang Modal',
             filename: `Data-Ruang-Modal-${new Date().toISOString().slice(0, 10)}`,
             columns: [
