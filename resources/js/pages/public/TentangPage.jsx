@@ -85,13 +85,14 @@ export default function TentangPage() {
                 />
 
                 <div className="bs-container relative z-10">
-                    <div className="grid grid-cols-12 items-center gap-6">
-                        <div className="col-span-12 lg:col-span-8 space-y-3">
+                    <div className="grid grid-cols-12 items-center gap-6 lg:gap-8">
+                        {/* Kolom Kiri: Teks Profil, Headline, Checklist & CTA */}
+                        <div className="col-span-12 lg:col-span-7 space-y-3.5">
                             <p className="text-xs sm:text-sm font-medium text-white/95 tracking-wide">
                                 Profil &amp; Arsitektur Program{' '}
                                 <span className="text-[#ffb703] font-bold">SMA Double Track</span>
                             </p>
-                            <h1 className="text-2xl sm:text-3xl font-extrabold leading-tight tracking-tight text-white">
+                            <h1 className="text-2xl sm:text-3xl lg:text-[34px] font-extrabold leading-tight tracking-tight text-white">
                                 Ruang Alumni SMA Double Track
                             </h1>
                             <p className="text-xs sm:text-sm text-[#dbeafe] leading-relaxed max-w-2xl">
@@ -116,35 +117,48 @@ export default function TentangPage() {
                                     </li>
                                 ))}
                             </ul>
-                        </div>
 
-                        <div className="col-span-12 lg:col-span-4 flex lg:justify-end">
-                            <div className="w-full sm:w-auto min-w-[260px] bg-[#1a2563]/90 backdrop-blur-md border border-white/30 rounded-xl p-4 shadow-xl space-y-3">
-                                <div className="flex items-center gap-3">
-                                    <div className="bg-white rounded-lg p-2 shrink-0 shadow-xs">
-                                        <img
-                                            src="/images/logo-dt.webp"
-                                            alt="Logo SMA Double Track"
-                                            className="h-10 w-auto object-contain"
-                                        />
-                                    </div>
-                                    <div>
-                                        <div className="text-[11px] text-[#cbd5e1] font-medium">
-                                            3 Pilar Terintegrasi
-                                        </div>
-                                        <div className="text-sm font-extrabold text-[#ffb703] leading-snug">
-                                            Modal • Tumbuh • Pasar
-                                        </div>
-                                    </div>
-                                </div>
-
+                            <div className="pt-2 flex flex-wrap items-center gap-3">
                                 <Link
                                     to="/ruang-modal"
-                                    className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-gradient-to-r from-[#f26722] to-[#f9841a] hover:from-[#e05815] hover:to-[#eb770e] text-white font-bold text-xs sm:text-sm shadow-md transition-all no-underline"
+                                    className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg bg-gradient-to-r from-[#f26722] to-[#f9841a] hover:from-[#e05815] hover:to-[#eb770e] text-white font-bold text-xs sm:text-sm shadow-md transition-all no-underline"
                                 >
                                     Ajukan Layanan Alumni
                                     <ArrowRight className="w-4 h-4" />
                                 </Link>
+                            </div>
+                        </div>
+
+                        {/* Kolom Kanan: Visual Stiker Tiga Siswa dengan Booklet & Floating Badge */}
+                        <div className="col-span-12 lg:col-span-5 flex justify-center lg:justify-end">
+                            <div className="relative max-w-[360px] sm:max-w-[400px] lg:max-w-[440px] w-full">
+                                {/* Stiker Tiga Siswa Berjilbab & Rompi Merah */}
+                                <div className="relative z-10 flex justify-center">
+                                    <img
+                                        src="/images/tiga-siswa-dt.webp"
+                                        alt="Tiga Siswa SMA Double Track dengan Booklet"
+                                        className="w-full h-auto max-h-[300px] sm:max-h-[340px] lg:max-h-[360px] object-contain drop-shadow-2xl select-none"
+                                    />
+                                </div>
+
+                                {/* Floating Card Logo & 3 Pilar */}
+                                <div className="absolute -bottom-2 -left-2 sm:-left-4 z-20 bg-[#1a2563]/90 backdrop-blur-md border border-white/30 rounded-xl p-3 shadow-xl flex items-center gap-3">
+                                    <div className="bg-white rounded-lg p-1.5 shrink-0 shadow-xs">
+                                        <img
+                                            src="/images/logo-dt.webp"
+                                            alt="Logo SMA Double Track"
+                                            className="h-8 w-auto object-contain"
+                                        />
+                                    </div>
+                                    <div>
+                                        <div className="text-[10px] text-[#cbd5e1] font-medium leading-none">
+                                            3 Pilar Terintegrasi
+                                        </div>
+                                        <div className="text-xs sm:text-sm font-extrabold text-[#ffb703] mt-1">
+                                            Modal • Tumbuh • Pasar
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
