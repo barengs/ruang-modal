@@ -4,7 +4,6 @@ const api = axios.create({
     baseURL: '/api',
     headers: {
         Accept: 'application/json',
-        'Content-Type': 'application/json',
     },
 });
 
@@ -13,6 +12,13 @@ api.interceptors.request.use((config) => {
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Jika payload adalah FormData, pastikan Content-Type tidak dikunci ke application/json
+    // agar browser secara otomatis menyertakan multipart/form-data beserta boundary yang valid
+    if (config.data instanceof FormData) {
+        delete config.headers['Content-Type'];
+    }
+
     return config;
 });
 

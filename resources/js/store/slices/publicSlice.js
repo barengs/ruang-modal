@@ -34,12 +34,21 @@ export const fetchPublicTumbuh = createAsyncThunk('public/fetchTumbuh', async (p
     return data.data;
 });
 
+const getErrorMessage = (err, fallback) => {
+    const errors = err.response?.data?.errors;
+    if (errors && typeof errors === 'object') {
+        const first = Object.values(errors).flat()[0];
+        if (first) return first;
+    }
+    return err.response?.data?.message || fallback;
+};
+
 export const submitModalApplication = createAsyncThunk('public/submitModal', async (payload, { rejectWithValue }) => {
     try {
         const { data } = await api.post('/public/modal', payload);
         return data;
     } catch (err) {
-        return rejectWithValue(err.response?.data?.message || 'Gagal mengirim pengajuan Ruang Modal.');
+        return rejectWithValue(getErrorMessage(err, 'Gagal mengirim pengajuan Ruang Modal.'));
     }
 });
 
@@ -48,7 +57,7 @@ export const submitTumbuhRequest = createAsyncThunk('public/submitTumbuh', async
         const { data } = await api.post('/public/tumbuh', payload);
         return data;
     } catch (err) {
-        return rejectWithValue(err.response?.data?.message || 'Gagal mengirim permintaan Ruang Tumbuh.');
+        return rejectWithValue(getErrorMessage(err, 'Gagal mengirim permintaan Ruang Tumbuh.'));
     }
 });
 
@@ -57,7 +66,7 @@ export const submitPasarProduct = createAsyncThunk('public/submitPasar', async (
         const { data } = await api.post('/public/pasar', payload);
         return data;
     } catch (err) {
-        return rejectWithValue(err.response?.data?.message || 'Gagal mengajukan produk ke Ruang Pasar.');
+        return rejectWithValue(getErrorMessage(err, 'Gagal mengajukan produk ke Ruang Pasar.'));
     }
 });
 
