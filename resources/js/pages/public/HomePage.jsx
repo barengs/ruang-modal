@@ -212,7 +212,7 @@ export default function HomePage() {
 
                             {/* Right Column: Alumni Entrepreneur Visual + Floating Cards & Speedometer Gauge */}
                             <div className="col-span-12 lg:col-span-6">
-                                <div className="relative max-w-[520px] mx-auto lg:ml-auto">
+                                <div className="relative max-w-[600px] mx-auto lg:ml-auto">
                                     {/* Group photo cropped — semua alumni terlihat */}
                                     <div className="relative overflow-hidden rounded-2xl">
                                         <img
