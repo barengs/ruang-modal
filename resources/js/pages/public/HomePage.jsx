@@ -212,13 +212,13 @@ export default function HomePage() {
 
                             {/* Right Column: Alumni Entrepreneur Visual + Floating Cards & Speedometer Gauge */}
                             <div className="col-span-12 lg:col-span-6">
-                                <div className="relative max-w-[520px] mx-auto lg:ml-auto">
-                                    {/* Group photo — semua alumni terlihat, background menyatu dengan hero */}
-                                    <div className="relative overflow-hidden rounded-2xl">
+                                <div className="relative max-w-[540px] mx-auto lg:ml-auto">
+                                    {/* Group photo — transparan sejati mengapung di atas latar hero */}
+                                    <div className="relative">
                                         <img
                                             src="/images/hero-alumni.webp"
                                             alt="Alumni Wirausaha SMA Double Track"
-                                            className="w-full h-auto object-contain select-none block"
+                                            className="w-full h-auto object-contain select-none block drop-shadow-2xl"
                                         />
                                     </div>
 
