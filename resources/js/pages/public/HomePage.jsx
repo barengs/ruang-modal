@@ -222,8 +222,8 @@ export default function HomePage() {
                                         />
                                     </div>
 
-                                    {/* Floating Card 1 (Left): Pertumbuhan Ekosistem / Business Growth */}
-                                    <div className="absolute top-[20%] left-2 z-20 bg-[#1a2563]/90 backdrop-blur-md border border-white/40 rounded-xl px-3.5 py-2.5 sm:px-4 sm:py-3 shadow-xl min-w-[165px] sm:min-w-[190px]">
+                                    {/* Floating Card 1 (Bottom-Left): Pertumbuhan Alumni / Business Growth — diposisikan di bawah pinggang agar tidak menutupi wajah talent */}
+                                    <div className="absolute bottom-10 -left-2 sm:-left-6 z-20 bg-[#1a2563]/90 backdrop-blur-md border border-white/40 rounded-xl px-3.5 py-2.5 sm:px-4 sm:py-3 shadow-xl min-w-[165px] sm:min-w-[190px]">
                                         <div className="flex items-center justify-between text-[11px] text-[#cbd5e1] font-medium mb-1">
                                             <span>Pertumbuhan Alumni</span>
                                             <span className="text-white/60">:</span>
