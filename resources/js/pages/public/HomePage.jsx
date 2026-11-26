@@ -152,9 +152,9 @@ export default function HomePage() {
                     />
 
                     <div className="bs-container relative z-10">
-                        <div className="grid grid-cols-12 items-center gap-8 lg:gap-6">
+                        <div className="grid grid-cols-12 items-center gap-8 lg:gap-4">
                             {/* Left Column: Headline, Value Props Checklist & Orange CTA */}
-                            <div className="col-span-12 lg:col-span-6 space-y-5">
+                            <div className="col-span-12 lg:col-span-5 space-y-5">
                                 <p className="text-sm sm:text-base font-medium text-white/95 tracking-wide">
                                     Ruang Pasca-Pelatihan Alumni{' '}
                                     <span className="text-[#ffb703] font-bold">SMA Double Track</span>
@@ -211,19 +211,20 @@ export default function HomePage() {
                             </div>
 
                             {/* Right Column: Alumni Entrepreneur Visual + Floating Cards & Speedometer Gauge */}
-                            <div className="col-span-12 lg:col-span-6">
-                                <div className="relative max-w-[460px] mx-auto lg:ml-auto">
-                                    {/* Portrait with Royal Blue Organic Cloud Backdrop */}
-                                    <div className="relative overflow-hidden rounded-b-3xl">
+                            <div className="col-span-12 lg:col-span-7">
+                                <div className="relative w-full">
+                                    {/* Landscape Group Photo — full-width, no max-w cap */}
+                                    <div className="relative overflow-hidden rounded-2xl">
                                         <img
                                             src="/images/hero-alumni.webp"
                                             alt="Alumni Wirausaha SMA Double Track"
-                                            className="w-full h-auto object-contain select-none block"
+                                            className="w-full h-auto object-cover select-none block"
+                                            style={{ maxHeight: '340px', objectPosition: 'center top' }}
                                         />
                                     </div>
 
                                     {/* Floating Card 1 (Left): Pertumbuhan Ekosistem / Business Growth */}
-                                    <div className="absolute top-[26%] left-0 sm:-left-4 z-20 bg-[#1a2563]/90 backdrop-blur-md border border-white/40 rounded-xl px-3.5 py-2.5 sm:px-4 sm:py-3 shadow-xl min-w-[165px] sm:min-w-[190px]">
+                                    <div className="absolute top-[20%] left-2 z-20 bg-[#1a2563]/90 backdrop-blur-md border border-white/40 rounded-xl px-3.5 py-2.5 sm:px-4 sm:py-3 shadow-xl min-w-[165px] sm:min-w-[190px]">
                                         <div className="flex items-center justify-between text-[11px] text-[#cbd5e1] font-medium mb-1">
                                             <span>Pertumbuhan Alumni</span>
                                             <span className="text-white/60">:</span>
@@ -260,7 +261,7 @@ export default function HomePage() {
                                     </div>
 
                                     {/* Floating Card 2 (Top-Right): Rating / Review Card */}
-                                    <div className="absolute top-[6%] right-0 sm:-right-3 z-20 bg-[#1a2563]/90 backdrop-blur-md border border-white/40 rounded-xl px-3.5 py-2.5 sm:px-4 sm:py-3 shadow-xl">
+                                    <div className="absolute top-[4%] right-2 z-20 bg-[#1a2563]/90 backdrop-blur-md border border-white/40 rounded-xl px-3.5 py-2.5 sm:px-4 sm:py-3 shadow-xl">
                                         <div className="flex items-center justify-between gap-4 mb-1.5">
                                             <span className="text-[11px] font-semibold text-white/90">
                                                 Kualitas Karya Alumni
@@ -280,7 +281,7 @@ export default function HomePage() {
                                     </div>
 
                                     {/* Floating Badge 3 (Bottom-Right): Speedometer / Acceleration Gauge */}
-                                    <div className="absolute -bottom-3 right-3 sm:right-4 z-20 flex flex-col items-center">
+                                    <div className="absolute bottom-3 right-3 z-20 flex flex-col items-center">
                                         <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full p-2 bg-gradient-to-br from-[#38bdf8] via-[#22d3ee] to-[#10b981] shadow-xl flex items-center justify-center">
                                             <div className="w-full h-full rounded-full bg-white flex items-center justify-center relative">
                                                 {/* Gauge Ticks SVG */}
