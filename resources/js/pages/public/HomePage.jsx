@@ -152,9 +152,9 @@ export default function HomePage() {
                     />
 
                     <div className="bs-container relative z-10">
-                        <div className="grid grid-cols-12 items-center gap-8 lg:gap-4">
+                        <div className="grid grid-cols-12 items-center gap-8 lg:gap-6">
                             {/* Left Column: Headline, Value Props Checklist & Orange CTA */}
-                            <div className="col-span-12 lg:col-span-5 space-y-5">
+                            <div className="col-span-12 lg:col-span-6 space-y-5">
                                 <p className="text-sm sm:text-base font-medium text-white/95 tracking-wide">
                                     Ruang Pasca-Pelatihan Alumni{' '}
                                     <span className="text-[#ffb703] font-bold">SMA Double Track</span>
@@ -211,15 +211,15 @@ export default function HomePage() {
                             </div>
 
                             {/* Right Column: Alumni Entrepreneur Visual + Floating Cards & Speedometer Gauge */}
-                            <div className="col-span-12 lg:col-span-7">
+                            <div className="col-span-12 lg:col-span-6">
                                 <div className="relative w-full">
-                                    {/* Landscape Group Photo — full-width, no max-w cap */}
-                                    <div className="relative overflow-hidden rounded-2xl">
+                                    {/* Group photo — fixed height, crop focus on faces */}
+                                    <div className="relative overflow-hidden rounded-2xl" style={{ height: '320px' }}>
                                         <img
                                             src="/images/hero-alumni.webp"
                                             alt="Alumni Wirausaha SMA Double Track"
-                                            className="w-full h-auto object-cover select-none block"
-                                            style={{ maxHeight: '340px', objectPosition: 'center top' }}
+                                            className="w-full h-full object-cover select-none block"
+                                            style={{ objectPosition: 'center 15%' }}
                                         />
                                     </div>
 
