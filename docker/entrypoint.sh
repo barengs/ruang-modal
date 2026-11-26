@@ -8,7 +8,7 @@ export RUN_MIGRATIONS="${RUN_MIGRATIONS:-true}"
 export RUN_SEEDER="${RUN_SEEDER:-false}"
 export RUN_QUEUE_WORKER="${RUN_QUEUE_WORKER:-false}"
 
-# Ensure storage, cache, and database directories exist & are writable
+# Ensure storage, cache, database, and upload directories exist & are writable
 mkdir -p \
     storage/app/public \
     storage/framework/cache/data \
@@ -16,7 +16,9 @@ mkdir -p \
     storage/framework/views \
     storage/logs \
     bootstrap/cache \
-    database
+    database \
+    public/uploads/modal \
+    public/images/etalase/uploads
 
 # If SQLite is selected, make sure the SQLite database file exists
 if [ "${DB_CONNECTION:-sqlite}" = "sqlite" ]; then
@@ -28,8 +30,8 @@ if [ "${DB_CONNECTION:-sqlite}" = "sqlite" ]; then
     fi
 fi
 
-chown -R www-data:www-data storage bootstrap/cache database
-chmod -R 775 storage bootstrap/cache database
+chown -R www-data:www-data storage bootstrap/cache database public/uploads public/images/etalase
+chmod -R 775 storage bootstrap/cache database public/uploads public/images/etalase
 
 # Wait for MySQL/MariaDB if DB_CONNECTION=mysql or mariadb
 if [ "${DB_CONNECTION}" = "mysql" ] || [ "${DB_CONNECTION}" = "mariadb" ]; then

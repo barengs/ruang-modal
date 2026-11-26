@@ -103,16 +103,22 @@ RUN chmod +x /usr/local/bin/entrypoint.sh \
         /var/www/html/storage/logs \
         /var/www/html/bootstrap/cache \
         /var/www/html/database \
+        /var/www/html/public/uploads/modal \
+        /var/www/html/public/images/etalase/uploads \
         /run/nginx \
         /var/log/supervisor \
     && chown -R www-data:www-data \
         /var/www/html/storage \
         /var/www/html/bootstrap/cache \
         /var/www/html/database \
+        /var/www/html/public/uploads \
+        /var/www/html/public/images/etalase \
     && chmod -R 775 \
         /var/www/html/storage \
         /var/www/html/bootstrap/cache \
-        /var/www/html/database
+        /var/www/html/database \
+        /var/www/html/public/uploads \
+        /var/www/html/public/images/etalase
 
 # Run composer package discovery without dev packages
 RUN php artisan package:discover --ansi || true

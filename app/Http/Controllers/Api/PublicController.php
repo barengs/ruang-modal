@@ -146,22 +146,38 @@ class PublicController extends Controller
             $file = $request->file('dokumen_lampiran');
             $uploadDir = public_path('uploads/modal');
             if (! is_dir($uploadDir)) {
-                mkdir($uploadDir, 0755, true);
+                @mkdir($uploadDir, 0775, true);
             }
 
             $ext = strtolower($file->getClientOriginalExtension());
-            if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
-                $filename = 'lampiran-modal-'.now('Asia/Jakarta')->format('YmdHis').'-'.strtolower(Str::random(8)).'.webp';
-                $fullPath = $uploadDir.DIRECTORY_SEPARATOR.$filename;
-                $manager = ImageManager::usingDriver(Driver::class);
-                $image = $manager->decodePath($file->getRealPath());
-                $image->scaleDown(1200, 1200);
-                $image->encodeUsingFileExtension('webp', quality: 85)->save($fullPath);
-                $lampiranPath = '/uploads/modal/'.$filename;
-            } else {
-                $filename = 'proposal-modal-'.now('Asia/Jakarta')->format('YmdHis').'-'.strtolower(Str::random(8)).'.'.$ext;
-                $file->move($uploadDir, $filename);
-                $lampiranPath = '/uploads/modal/'.$filename;
+            $randomSuffix = strtolower(Str::random(8));
+            $timestamp = now('Asia/Jakarta')->format('YmdHis');
+
+            try {
+                if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
+                    $filename = "lampiran-modal-{$timestamp}-{$randomSuffix}.webp";
+                    $fullPath = $uploadDir.DIRECTORY_SEPARATOR.$filename;
+
+                    $manager = ImageManager::usingDriver(Driver::class);
+                    $image = $manager->decodePath($file->getRealPath());
+                    $image->scaleDown(1200, 1200);
+                    $image->encodeUsingFileExtension('webp', quality: 85)->save($fullPath);
+                    $lampiranPath = '/uploads/modal/'.$filename;
+                } else {
+                    $filename = "proposal-modal-{$timestamp}-{$randomSuffix}.{$ext}";
+                    $file->move($uploadDir, $filename);
+                    $lampiranPath = '/uploads/modal/'.$filename;
+                }
+            } catch (\Throwable $e) {
+                // Fallback: jika pemrosesan WebP/GD gagal, simpan file original langsung
+                try {
+                    $fallbackFilename = "lampiran-modal-{$timestamp}-{$randomSuffix}.{$ext}";
+                    $file->move($uploadDir, $fallbackFilename);
+                    $lampiranPath = '/uploads/modal/'.$fallbackFilename;
+                } catch (\Throwable $fallbackError) {
+                    \Illuminate\Support\Facades\Log::error('Gagal menyimpan dokumen lampiran modal: '.$fallbackError->getMessage());
+                    $lampiranPath = null;
+                }
             }
         }
 
@@ -290,18 +306,32 @@ class PublicController extends Controller
         if ($request->hasFile('thumbnail') && $request->file('thumbnail')->isValid()) {
             $uploadDir = public_path('images/etalase/uploads');
             if (! is_dir($uploadDir)) {
-                mkdir($uploadDir, 0755, true);
+                @mkdir($uploadDir, 0775, true);
             }
 
-            $filename = 'produk-'.now('Asia/Jakarta')->format('YmdHis').'-'.strtolower(Str::random(8)).'.webp';
-            $fullPath = $uploadDir.DIRECTORY_SEPARATOR.$filename;
+            $timestamp = now('Asia/Jakarta')->format('YmdHis');
+            $randomSuffix = strtolower(Str::random(8));
 
-            $manager = ImageManager::usingDriver(Driver::class);
-            $image = $manager->decodePath($request->file('thumbnail')->getRealPath());
-            $image->coverDown(800, 450);
-            $image->encodeUsingFileExtension('webp', quality: 85)->save($fullPath);
+            try {
+                $filename = "produk-{$timestamp}-{$randomSuffix}.webp";
+                $fullPath = $uploadDir.DIRECTORY_SEPARATOR.$filename;
 
-            $thumbnailPath = '/images/etalase/uploads/'.$filename;
+                $manager = ImageManager::usingDriver(Driver::class);
+                $image = $manager->decodePath($request->file('thumbnail')->getRealPath());
+                $image->coverDown(800, 450);
+                $image->encodeUsingFileExtension('webp', quality: 85)->save($fullPath);
+
+                $thumbnailPath = '/images/etalase/uploads/'.$filename;
+            } catch (\Throwable $e) {
+                try {
+                    $ext = strtolower($request->file('thumbnail')->getClientOriginalExtension()) ?: 'webp';
+                    $fallbackFilename = "produk-{$timestamp}-{$randomSuffix}.{$ext}";
+                    $request->file('thumbnail')->move($uploadDir, $fallbackFilename);
+                    $thumbnailPath = '/images/etalase/uploads/'.$fallbackFilename;
+                } catch (\Throwable $fallbackError) {
+                    \Illuminate\Support\Facades\Log::error('Gagal menyimpan thumbnail produk: '.$fallbackError->getMessage());
+                }
+            }
         }
 
         unset($validated['thumbnail']);
