@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { fetchMe, hasPermission } from './store/slices/authSlice';
 import PublicLayout from './layouts/PublicLayout';
 import AdminLayout from './layouts/AdminLayout';
@@ -51,8 +53,21 @@ export default function App() {
     }, [dispatch, token]);
 
     return (
-        <Routes>
-            {/* Public Portal Routes */}
+        <>
+            <ToastContainer
+                position="top-right"
+                autoClose={4000}
+                hideProgressBar={false}
+                newestOnTop
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="colored"
+            />
+            <Routes>
+                {/* Public Portal Routes */}
             <Route element={<PublicLayout />}>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/ruang-modal" element={<RuangModalPage />} />
@@ -160,5 +175,6 @@ export default function App() {
 
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </>
     );
 }

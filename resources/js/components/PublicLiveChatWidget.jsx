@@ -8,6 +8,7 @@ import {
     Sparkles,
     User,
 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import api from '../api/axios';
 
 const CHAT_TOKEN_KEY = 'dt_live_chat_session_token';
@@ -138,8 +139,9 @@ export default function PublicLiveChatWidget() {
                 // ignore
             }
             notifyChatChannel();
-        } catch {
-            // ignore
+            toast.success('Sesi live chat dimulai!');
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Gagal memulai sesi live chat.');
         } finally {
             setStarting(false);
         }
@@ -157,8 +159,9 @@ export default function PublicLiveChatWidget() {
             });
             setSession(data.session);
             notifyChatChannel();
-        } catch {
+        } catch (err) {
             setInputMsg(text);
+            toast.error(err.response?.data?.message || 'Gagal mengirim pesan chat.');
         } finally {
             setSending(false);
         }
@@ -168,6 +171,7 @@ export default function PublicLiveChatWidget() {
         if (!window.confirm('Mulai sesi percakapan baru?')) return;
         setToken('');
         setSession(null);
+        toast.info('Sesi percakapan baru disiapkan.');
         setStartForm((prev) => ({ ...prev, message: '' }));
         try {
             localStorage.removeItem(CHAT_TOKEN_KEY);

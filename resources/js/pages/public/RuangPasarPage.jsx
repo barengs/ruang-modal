@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { AlertCircle, CheckCircle2, Eye, History, ImagePlus, Send, Store, Trash2 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import {
     fetchPublicMasterOptions,
     fetchPublicPasarSubmissions,
@@ -143,6 +144,7 @@ export default function RuangPasarPage() {
 
         const res = await dispatch(submitPasarProduct(formData));
         if (submitPasarProduct.fulfilled.match(res)) {
+            toast.success(res.payload?.message || 'Produk berhasil didaftarkan ke Ruang Pasar!');
             setForm(INITIAL_FORM);
             clearThumbnailFile();
             const newKode = res.payload?.kode;
@@ -155,6 +157,8 @@ export default function RuangPasarPage() {
                     // ignore storage error
                 }
             }
+        } else {
+            toast.error(res.payload || 'Gagal mengajukan produk ke Ruang Pasar.');
         }
     };
 

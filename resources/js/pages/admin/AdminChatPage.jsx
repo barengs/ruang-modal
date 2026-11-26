@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import {
     CheckCircle2,
     ExternalLink,
@@ -166,8 +167,9 @@ export default function AdminChatPage() {
             setActiveSession(data.data);
             fetchSessions();
             notifyChatChannel();
-        } catch {
+        } catch (err) {
             setReplyText(text);
+            toast.error(err.response?.data?.message || 'Gagal mengirim balasan chat.');
         } finally {
             setSending(false);
         }
@@ -183,8 +185,9 @@ export default function AdminChatPage() {
             setActiveSession(data.data);
             fetchSessions();
             notifyChatChannel();
-        } catch {
-            // ignore
+            toast.success(`Status percakapan diubah menjadi ${nextStatus}.`);
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Gagal memperbarui status chat.');
         }
     };
 
@@ -201,8 +204,9 @@ export default function AdminChatPage() {
                 setActiveSession(null);
             }
             notifyChatChannel();
-        } catch {
-            // ignore
+            toast.success('Percakapan live chat berhasil dihapus.');
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Gagal menghapus percakapan live chat.');
         }
     };
 

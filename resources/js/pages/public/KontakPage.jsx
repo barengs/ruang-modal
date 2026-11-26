@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Check, CheckCircle2, Clock, HelpCircle, Mail, MapPin, MessageSquare, Phone, Send } from 'lucide-react';
+import { toast } from 'react-toastify';
 import { fetchPublicMasterOptions } from '../../store/slices/publicSlice';
 
 const INITIAL_CONTACT = {
@@ -29,6 +30,7 @@ export default function KontakPage() {
         e.preventDefault();
         setSubmitted(true);
         setForm(INITIAL_CONTACT);
+        toast.success('Pesan bantuan Anda berhasil dikirim! Tim pengelola akan segera merespons.');
     };
 
     const faqs = [

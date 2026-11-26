@@ -20,6 +20,7 @@ import {
     TrendingUp,
     User,
 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import api from '../../api/axios';
 import { logoutUser } from '../../store/slices/authSlice';
 import CurrencyInput from '../../components/CurrencyInput';
@@ -122,6 +123,7 @@ export default function AlumniDashboardPage() {
 
     const handleLogout = async () => {
         await dispatch(logoutUser());
+        toast.info('Anda telah keluar.');
         navigate('/login');
     };
 
@@ -137,6 +139,7 @@ export default function AlumniDashboardPage() {
             };
             const { data } = await api.post('/alumni/monitoring', payload);
             setFlash(data.message);
+            toast.success(data.message || 'Laporan perkembangan usaha berhasil disimpan.');
             setMonForm({
                 ref_kode: '',
                 modul: 'Modal',
@@ -148,7 +151,9 @@ export default function AlumniDashboardPage() {
             });
             fetchAlumniDashboard();
         } catch (err) {
-            setError(err.response?.data?.message || 'Gagal menyimpan laporan perkembangan usaha.');
+            const msg = err.response?.data?.message || 'Gagal menyimpan laporan perkembangan usaha.';
+            setError(msg);
+            toast.error(msg);
         } finally {
             setSubmittingMon(false);
         }
@@ -162,10 +167,13 @@ export default function AlumniDashboardPage() {
         try {
             const { data } = await api.post('/alumni/testimonials', testiForm);
             setFlash(data.message);
+            toast.success(data.message || 'Testimoni Anda berhasil dikirim.');
             setTestiForm((prev) => ({ ...prev, capaian: '', kutipan: '' }));
             fetchAlumniDashboard();
         } catch (err) {
-            setError(err.response?.data?.message || 'Gagal mengirim testimoni.');
+            const msg = err.response?.data?.message || 'Gagal mengirim testimoni.';
+            setError(msg);
+            toast.error(msg);
         } finally {
             setSubmittingTesti(false);
         }

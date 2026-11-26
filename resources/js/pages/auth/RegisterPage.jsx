@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { AlertCircle, LogIn, UserPlus } from 'lucide-react';
+import { toast } from 'react-toastify';
 import { clearAuthError, registerUser } from '../../store/slices/authSlice';
 import { fetchPublicMasterOptions } from '../../store/slices/publicSlice';
 
@@ -44,7 +45,10 @@ export default function RegisterPage() {
         e.preventDefault();
         const res = await dispatch(registerUser(form));
         if (registerUser.fulfilled.match(res)) {
+            toast.success('Pendaftaran akun alumni berhasil! Selamat datang.');
             navigate(redirectTo, { replace: true });
+        } else {
+            toast.error(res.payload || 'Pendaftaran akun gagal. Periksa data Anda.');
         }
     };
 

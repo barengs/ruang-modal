@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AlertCircle, CheckCircle2, Eye, History, Send } from 'lucide-react';
+import { toast } from 'react-toastify';
 import {
     fetchPublicMasterOptions,
     fetchPublicTumbuh,
@@ -100,6 +101,7 @@ export default function RuangTumbuhPage() {
         e.preventDefault();
         const res = await dispatch(submitTumbuhRequest(form));
         if (submitTumbuhRequest.fulfilled.match(res)) {
+            toast.success(res.payload?.message || 'Permintaan pendampingan Ruang Tumbuh berhasil dikirim!');
             setForm(INITIAL_FORM);
             const newKode = res.payload?.kode;
             if (newKode) {
@@ -111,6 +113,8 @@ export default function RuangTumbuhPage() {
                     // ignore storage error
                 }
             }
+        } else {
+            toast.error(res.payload || 'Gagal mengirim permintaan Ruang Tumbuh.');
         }
     };
 

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { AlertCircle, KeyRound, Lock, Mail, UserPlus, X } from 'lucide-react';
+import { toast } from 'react-toastify';
 import {
     clearAuthError,
     isAlumniUser,
@@ -113,6 +114,7 @@ export default function LoginPage() {
         const res = await dispatch(loginUser({ email, password }));
         if (loginUser.fulfilled.match(res)) {
             const loggedUser = res.payload?.user;
+            toast.success(`Selamat datang kembali, ${loggedUser?.name || 'Alumni'}!`);
             if (redirectTo) {
                 navigate(redirectTo, { replace: true });
             } else if (isAlumniUser(loggedUser)) {
@@ -120,6 +122,8 @@ export default function LoginPage() {
             } else {
                 navigate('/admin', { replace: true });
             }
+        } else {
+            toast.error(res.payload || 'Login gagal, periksa email dan password.');
         }
     };
 
@@ -130,9 +134,10 @@ export default function LoginPage() {
 
     const handleQuickSocialLogin = async (preset) => {
         if (!socialProvider) return;
+        const currentProvider = socialProvider;
         const res = await dispatch(
             socialLoginUser({
-                provider: socialProvider,
+                provider: currentProvider,
                 name: preset.name,
                 email: preset.email,
                 sekolah: preset.sekolah,
@@ -140,23 +145,30 @@ export default function LoginPage() {
             })
         );
         if (socialLoginUser.fulfilled.match(res)) {
+            toast.success(`Berhasil masuk via ${currentProvider === 'google' ? 'Google' : 'Facebook'}.`);
             setSocialProvider(null);
+        } else {
+            toast.error(res.payload || 'Gagal masuk akun sosial.');
         }
     };
 
     const handleCustomSocialSubmit = async (e) => {
         e.preventDefault();
         if (!socialProvider || !socialForm.email.trim() || !socialForm.name.trim()) return;
+        const currentProvider = socialProvider;
         const res = await dispatch(
             socialLoginUser({
-                provider: socialProvider,
+                provider: currentProvider,
                 name: socialForm.name.trim(),
                 email: socialForm.email.trim(),
                 sekolah: socialForm.sekolah.trim() || 'Alumni SMA Double Track',
             })
         );
         if (socialLoginUser.fulfilled.match(res)) {
+            toast.success(`Berhasil masuk via ${currentProvider === 'google' ? 'Google' : 'Facebook'}.`);
             setSocialProvider(null);
+        } else {
+            toast.error(res.payload || 'Gagal masuk akun sosial.');
         }
     };
 

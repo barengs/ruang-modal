@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AlertCircle, CheckCircle2, Eye, History, Send } from 'lucide-react';
+import { toast } from 'react-toastify';
 import {
     fetchPublicMasterOptions,
     fetchPublicModal,
@@ -126,6 +127,7 @@ export default function RuangModalPage() {
 
         const res = await dispatch(submitModalApplication(formData));
         if (submitModalApplication.fulfilled.match(res)) {
+            toast.success(res.payload?.message || 'Pengajuan Ruang Modal berhasil dikirim!');
             setForm(INITIAL_FORM);
             const newKode = res.payload?.kode;
             if (newKode) {
@@ -137,6 +139,8 @@ export default function RuangModalPage() {
                     // ignore storage error
                 }
             }
+        } else {
+            toast.error(res.payload || 'Gagal mengirim pengajuan Ruang Modal.');
         }
     };
 

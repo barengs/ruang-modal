@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const api = axios.create({
     baseURL: '/api',
@@ -25,9 +26,16 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response?.status === 401) {
+        const status = error.response?.status;
+        if (status === 401) {
             localStorage.removeItem('dt_jwt_token');
             localStorage.removeItem('dt_jwt_user');
+        } else if (status === 403) {
+            toast.error(error.response?.data?.message || 'Akses ditolak: Anda tidak memiliki izin.');
+        } else if (status >= 500) {
+            toast.error(error.response?.data?.message || 'Terjadi kesalahan pada server (500). Silakan coba lagi.');
+        } else if (!error.response && error.message) {
+            toast.error('Gagal terhubung ke server. Periksa koneksi internet Anda.');
         }
         return Promise.reject(error);
     }

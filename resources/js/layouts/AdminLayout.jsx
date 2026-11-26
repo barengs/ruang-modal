@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
 import {
     Activity,
     Bell,
@@ -29,8 +30,21 @@ export default function AdminLayout() {
     const [totalUnreadChat, setTotalUnreadChat] = useState(0);
     const bellRef = useRef(null);
     const { user } = useSelector((state) => state.auth);
+    const { flash: adminFlash, error: adminError } = useSelector((state) => state.admin);
     const dispatch = useDispatch();
     const navigate = useNavigate();
+
+    useEffect(() => {
+        if (adminFlash) {
+            toast.success(adminFlash);
+        }
+    }, [adminFlash]);
+
+    useEffect(() => {
+        if (adminError) {
+            toast.error(adminError);
+        }
+    }, [adminError]);
 
     const canManageChat = hasPermission(user, 'chat.manage');
 
@@ -95,6 +109,7 @@ export default function AdminLayout() {
 
     const handleLogout = async () => {
         await dispatch(logoutUser());
+        toast.info('Anda telah keluar.');
         navigate('/login');
     };
 
