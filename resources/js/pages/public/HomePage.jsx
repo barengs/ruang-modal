@@ -602,18 +602,18 @@ export default function HomePage() {
                 )}
             </section>
 
-            {/* Section Testimoni Alumni — Auto-Running Slider tanpa Card Tegas */}
+            {/* Section Testimoni Alumni — Auto-Running Slider dengan Stiker Siswi SMA di Samping */}
             <section
-                className="py-6 px-2"
+                className="py-10 px-2 sm:px-4"
                 onMouseEnter={() => setIsPaused(true)}
                 onMouseLeave={() => setIsPaused(false)}
             >
-                <div className="text-center max-w-2xl mx-auto space-y-1.5 mb-6">
+                <div className="text-center max-w-2xl mx-auto space-y-1.5 mb-8">
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#eef4ff] text-[#203880] text-xs font-bold">
                         <Sparkles className="w-3.5 h-3.5 text-[#f8a000]" />
                         Kisah Sukses Alumni
                     </span>
-                    <h2 className="text-lg sm:text-xl font-bold text-[#203880]">
+                    <h2 className="text-xl sm:text-2xl font-bold text-[#203880]">
                         Testimoni Penerima Manfaat Ruang Modal &amp; Ruang Tumbuh
                     </h2>
                     <p className="text-xs sm:text-sm text-[#64748b]">
@@ -621,98 +621,123 @@ export default function HomePage() {
                     </p>
                 </div>
 
-                <div className="relative max-w-4xl mx-auto overflow-hidden">
-                    {/* Sliding Track */}
-                    <div
-                        className="flex transition-transform duration-700 ease-in-out"
-                        style={{ transform: `translateX(-${activeSlide * 100}%)` }}
-                    >
-                        {testimonials.map((item) => (
-                            <div key={item.id} className="w-full shrink-0 px-4 sm:px-10 py-2">
-                                <div className="text-center space-y-4">
-                                    <div className="flex items-center justify-center gap-2 flex-wrap">
-                                        <span className={`bs-badge ${item.badgeClass}`}>
-                                            {item.program}
-                                        </span>
-                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#fff4db] text-[#9a5b00] text-xs font-bold">
-                                            <Award className="w-3.5 h-3.5 text-[#f8a000]" />
-                                            {item.capaian}
-                                        </span>
-                                    </div>
+                <div className="max-w-5xl mx-auto bg-gradient-to-br from-[#f8fbff] via-white to-[#f0f7ff] rounded-3xl border border-[#dbeafe]/80 shadow-[0_10px_35px_-10px_rgba(32,56,128,0.08)] p-6 sm:p-8 relative overflow-hidden">
+                    {/* Ambient soft glow */}
+                    <div className="pointer-events-none absolute -top-12 -right-12 w-64 h-64 bg-[#38bdf8]/10 rounded-full blur-3xl" />
+                    <div className="pointer-events-none absolute -bottom-12 -left-12 w-64 h-64 bg-[#203880]/5 rounded-full blur-3xl" />
 
-                                    <div className="relative max-w-2xl mx-auto">
-                                        <Quote className="w-8 h-8 text-[#0068b0]/15 mx-auto mb-2" />
-                                        <p className="text-sm sm:text-base text-[#1e293b] italic leading-relaxed font-medium">
-                                            &ldquo;{item.kutipan}&rdquo;
-                                        </p>
-                                    </div>
-
-                                    <div className="pt-2 flex flex-col items-center justify-center gap-1">
-                                        <div className="w-11 h-11 rounded-full bg-[#203880] text-[#ffc010] font-bold text-sm flex items-center justify-center shadow-xs">
-                                            {item.nama
-                                                .split(' ')
-                                                .slice(0, 2)
-                                                .map((n) => n[0])
-                                                .join('')}
-                                        </div>
-                                        <div className="font-bold text-sm text-[#203880] mt-1">
-                                            {item.nama}
-                                        </div>
-                                        <div className="text-xs text-[#64748b]">
-                                            {item.sekolah} (Lulusan {item.angkatan}) •{' '}
-                                            <span className="text-[#0068b0] font-semibold">
-                                                {item.usaha} ({item.kompetensi})
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Prev / Next Controls & Dots Indicator */}
-                    <div className="flex items-center justify-center gap-3 mt-5">
-                        <button
-                            type="button"
-                            onClick={() =>
-                                setActiveSlide(
-                                    (prev) =>
-                                        (prev - 1 + testimonials.length) %
-                                        testimonials.length
-                                )
-                            }
-                            className="p-1.5 rounded-full text-[#203880] hover:bg-[#eef4ff] transition-colors cursor-pointer"
-                            aria-label="Testimoni Sebelumnya"
-                        >
-                            <ChevronLeft className="w-4 h-4" />
-                        </button>
-
-                        <div className="flex items-center gap-1.5">
-                            {testimonials.map((item, idx) => (
-                                <button
-                                    key={item.id}
-                                    type="button"
-                                    onClick={() => setActiveSlide(idx)}
-                                    aria-label={`Slide ${idx + 1}`}
-                                    className={`h-2 rounded-full transition-all cursor-pointer ${
-                                        activeSlide === idx
-                                            ? 'w-7 bg-[#203880]'
-                                            : 'w-2 bg-[#cbd5e1] hover:bg-[#94a3b8]'
-                                    }`}
+                    <div className="grid grid-cols-12 items-center gap-6 lg:gap-8 relative z-10">
+                        {/* Kolom Kiri: Stiker Siswi SMA Double Track */}
+                        <div className="col-span-12 md:col-span-4 lg:col-span-4 flex justify-center items-end">
+                            <div className="relative group max-w-[260px] sm:max-w-[290px] md:max-w-full">
+                                <img
+                                    src="/images/stiker-siswi-sma.webp"
+                                    alt="Siswi Berjilbab Memegang Buku SMA Double Track"
+                                    className="w-full h-auto max-h-[340px] sm:max-h-[380px] md:max-h-[420px] object-contain drop-shadow-xl select-none transition-transform duration-300 group-hover:scale-105"
+                                    loading="lazy"
                                 />
-                            ))}
+                            </div>
                         </div>
 
-                        <button
-                            type="button"
-                            onClick={() =>
-                                setActiveSlide((prev) => (prev + 1) % testimonials.length)
-                            }
-                            className="p-1.5 rounded-full text-[#203880] hover:bg-[#eef4ff] transition-colors cursor-pointer"
-                            aria-label="Testimoni Berikutnya"
-                        >
-                            <ChevronRight className="w-4 h-4" />
-                        </button>
+                        {/* Kolom Kanan: Slider Testimoni */}
+                        <div className="col-span-12 md:col-span-8 lg:col-span-8 overflow-hidden">
+                            <div
+                                className="flex transition-transform duration-700 ease-in-out"
+                                style={{ transform: `translateX(-${activeSlide * 100}%)` }}
+                            >
+                                {testimonials.map((item) => (
+                                    <div key={item.id} className="w-full shrink-0 px-2 sm:px-4 py-2">
+                                        <div className="text-center md:text-left space-y-4">
+                                            <div className="flex items-center justify-center md:justify-start gap-2 flex-wrap">
+                                                <span className={`bs-badge ${item.badgeClass}`}>
+                                                    {item.program}
+                                                </span>
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#fff4db] text-[#9a5b00] text-xs font-bold">
+                                                    <Award className="w-3.5 h-3.5 text-[#f8a000]" />
+                                                    {item.capaian}
+                                                </span>
+                                            </div>
+
+                                            <div className="relative">
+                                                <Quote className="w-8 h-8 text-[#0068b0]/20 mx-auto md:mx-0 mb-2" />
+                                                <p className="text-sm sm:text-base lg:text-[17px] text-[#1e293b] italic leading-relaxed font-medium">
+                                                    &ldquo;{item.kutipan}&rdquo;
+                                                </p>
+                                            </div>
+
+                                            <div className="pt-2 flex items-center justify-center md:justify-start gap-3.5">
+                                                <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#203880] to-[#0068b0] text-[#ffc010] font-bold text-base flex items-center justify-center shadow-sm shrink-0">
+                                                    {item.nama
+                                                        .split(' ')
+                                                        .slice(0, 2)
+                                                        .map((n) => n[0])
+                                                        .join('')}
+                                                </div>
+                                                <div className="text-left">
+                                                    <div className="font-bold text-base text-[#203880]">
+                                                        {item.nama}
+                                                    </div>
+                                                    <div className="text-xs text-[#64748b]">
+                                                        {item.sekolah} (Lulusan {item.angkatan}) •{' '}
+                                                        <span className="text-[#0068b0] font-semibold">
+                                                            {item.usaha}
+                                                        </span>{' '}
+                                                        <span className="text-[#64748b]/80 hidden sm:inline">
+                                                            ({item.kompetensi})
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Prev / Next Controls & Dots Indicator */}
+                            <div className="flex items-center justify-center md:justify-start gap-3 mt-6 pt-4 border-t border-[#e2e8f0]/60">
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setActiveSlide(
+                                            (prev) =>
+                                                (prev - 1 + testimonials.length) %
+                                                testimonials.length
+                                        )
+                                    }
+                                    className="p-1.5 rounded-full text-[#203880] hover:bg-[#dbeafe] transition-colors cursor-pointer"
+                                    aria-label="Testimoni Sebelumnya"
+                                >
+                                    <ChevronLeft className="w-4 h-4" />
+                                </button>
+
+                                <div className="flex items-center gap-1.5">
+                                    {testimonials.map((item, idx) => (
+                                        <button
+                                            key={item.id}
+                                            type="button"
+                                            onClick={() => setActiveSlide(idx)}
+                                            aria-label={`Slide ${idx + 1}`}
+                                            className={`h-2 rounded-full transition-all cursor-pointer ${
+                                                activeSlide === idx
+                                                    ? 'w-7 bg-[#203880]'
+                                                    : 'w-2 bg-[#cbd5e1] hover:bg-[#94a3b8]'
+                                            }`}
+                                        />
+                                    ))}
+                                </div>
+
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setActiveSlide((prev) => (prev + 1) % testimonials.length)
+                                    }
+                                    className="p-1.5 rounded-full text-[#203880] hover:bg-[#dbeafe] transition-colors cursor-pointer"
+                                    aria-label="Testimoni Berikutnya"
+                                >
+                                    <ChevronRight className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
