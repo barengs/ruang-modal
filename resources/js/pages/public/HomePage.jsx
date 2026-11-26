@@ -602,18 +602,18 @@ export default function HomePage() {
                 )}
             </section>
 
-            {/* Section Testimoni Alumni — Auto-Running Slider dengan Stiker Siswi SMA di Samping */}
+            {/* Section Testimoni Alumni — Clean Seamless Layout (Tanpa Card) */}
             <section
-                className="py-10 px-2 sm:px-4"
+                className="py-12 px-2 sm:px-4"
                 onMouseEnter={() => setIsPaused(true)}
                 onMouseLeave={() => setIsPaused(false)}
             >
-                <div className="text-center max-w-2xl mx-auto space-y-1.5 mb-8">
+                <div className="text-center max-w-2xl mx-auto space-y-1.5 mb-10">
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#eef4ff] text-[#203880] text-xs font-bold">
                         <Sparkles className="w-3.5 h-3.5 text-[#f8a000]" />
                         Kisah Sukses Alumni
                     </span>
-                    <h2 className="text-xl sm:text-2xl font-bold text-[#203880]">
+                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#203880]">
                         Testimoni Penerima Manfaat Ruang Modal &amp; Ruang Tumbuh
                     </h2>
                     <p className="text-xs sm:text-sm text-[#64748b]">
@@ -621,14 +621,10 @@ export default function HomePage() {
                     </p>
                 </div>
 
-                <div className="max-w-5xl mx-auto bg-gradient-to-br from-[#f8fbff] via-white to-[#f0f7ff] rounded-3xl border border-[#dbeafe]/80 shadow-[0_10px_35px_-10px_rgba(32,56,128,0.08)] p-6 sm:p-8 relative overflow-hidden">
-                    {/* Ambient soft glow */}
-                    <div className="pointer-events-none absolute -top-12 -right-12 w-64 h-64 bg-[#38bdf8]/10 rounded-full blur-3xl" />
-                    <div className="pointer-events-none absolute -bottom-12 -left-12 w-64 h-64 bg-[#203880]/5 rounded-full blur-3xl" />
-
-                    <div className="grid grid-cols-12 items-center gap-6 lg:gap-8 relative z-10">
-                        {/* Kolom Kiri: Stiker Siswi SMA Double Track */}
-                        <div className="col-span-12 md:col-span-4 lg:col-span-4 flex justify-center items-end">
+                <div className="max-w-5xl mx-auto relative">
+                    <div className="grid grid-cols-12 items-center gap-6 lg:gap-12 relative z-10">
+                        {/* Kolom Kiri: Stiker Siswi SMA Double Track berdiri bebas */}
+                        <div className="col-span-12 md:col-span-5 lg:col-span-4 flex justify-center items-end">
                             <div className="relative group max-w-[260px] sm:max-w-[290px] md:max-w-full">
                                 <img
                                     src="/images/stiker-siswi-sma.webp"
@@ -639,8 +635,8 @@ export default function HomePage() {
                             </div>
                         </div>
 
-                        {/* Kolom Kanan: Slider Testimoni */}
-                        <div className="col-span-12 md:col-span-8 lg:col-span-8 overflow-hidden">
+                        {/* Kolom Kanan: Slider Testimoni Langsung di Halaman */}
+                        <div className="col-span-12 md:col-span-7 lg:col-span-8 overflow-hidden">
                             <div
                                 className="flex transition-transform duration-700 ease-in-out"
                                 style={{ transform: `translateX(-${activeSlide * 100}%)` }}
@@ -659,14 +655,14 @@ export default function HomePage() {
                                             </div>
 
                                             <div className="relative">
-                                                <Quote className="w-8 h-8 text-[#0068b0]/20 mx-auto md:mx-0 mb-2" />
-                                                <p className="text-sm sm:text-base lg:text-[17px] text-[#1e293b] italic leading-relaxed font-medium">
+                                                <Quote className="w-10 h-10 text-[#0068b0]/20 mx-auto md:mx-0 mb-2" />
+                                                <p className="text-base sm:text-lg lg:text-[19px] text-[#1e293b] italic leading-relaxed font-medium">
                                                     &ldquo;{item.kutipan}&rdquo;
                                                 </p>
                                             </div>
 
-                                            <div className="pt-2 flex items-center justify-center md:justify-start gap-3.5">
-                                                <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#203880] to-[#0068b0] text-[#ffc010] font-bold text-base flex items-center justify-center shadow-sm shrink-0">
+                                            <div className="pt-3 flex items-center justify-center md:justify-start gap-3.5">
+                                                <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#203880] to-[#0068b0] text-[#ffc010] font-bold text-base flex items-center justify-center shadow-xs shrink-0">
                                                     {item.nama
                                                         .split(' ')
                                                         .slice(0, 2)
@@ -694,7 +690,7 @@ export default function HomePage() {
                             </div>
 
                             {/* Prev / Next Controls & Dots Indicator */}
-                            <div className="flex items-center justify-center md:justify-start gap-3 mt-6 pt-4 border-t border-[#e2e8f0]/60">
+                            <div className="flex items-center justify-center md:justify-start gap-3 mt-6 pt-2">
                                 <button
                                     type="button"
                                     onClick={() =>
@@ -704,7 +700,7 @@ export default function HomePage() {
                                                 testimonials.length
                                         )
                                     }
-                                    className="p-1.5 rounded-full text-[#203880] hover:bg-[#dbeafe] transition-colors cursor-pointer"
+                                    className="p-1.5 rounded-full text-[#203880] hover:bg-[#eef4ff] transition-colors cursor-pointer"
                                     aria-label="Testimoni Sebelumnya"
                                 >
                                     <ChevronLeft className="w-4 h-4" />
@@ -731,7 +727,7 @@ export default function HomePage() {
                                     onClick={() =>
                                         setActiveSlide((prev) => (prev + 1) % testimonials.length)
                                     }
-                                    className="p-1.5 rounded-full text-[#203880] hover:bg-[#dbeafe] transition-colors cursor-pointer"
+                                    className="p-1.5 rounded-full text-[#203880] hover:bg-[#eef4ff] transition-colors cursor-pointer"
                                     aria-label="Testimoni Berikutnya"
                                 >
                                     <ChevronRight className="w-4 h-4" />
