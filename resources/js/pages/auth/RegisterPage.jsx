@@ -1,15 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { AlertCircle, LogIn, UserPlus } from 'lucide-react';
+import {
+    AlertCircle,
+    CheckCircle2,
+    Eye,
+    EyeOff,
+    LogIn,
+    ShieldAlert,
+    ShieldCheck,
+    UserPlus,
+    XCircle,
+} from 'lucide-react';
 import { toast } from 'react-toastify';
 import { clearAuthError, registerUser } from '../../store/slices/authSlice';
 import { fetchPublicMasterOptions } from '../../store/slices/publicSlice';
+import PasswordStrengthMeter, { evaluatePasswordStrength } from '../../components/PasswordStrengthMeter';
 
 const INITIAL_REGISTER = {
     name: '',
     email: '',
     password: '',
+    password_confirmation: '',
     whatsapp: '',
     sekolah: '',
     tahun_lulus: '',
@@ -25,6 +37,8 @@ export default function RegisterPage() {
     const { token, loading, error } = useSelector((state) => state.auth);
     const { masterOptions } = useSelector((state) => state.publicData);
     const [form, setForm] = useState(INITIAL_REGISTER);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
 
     useEffect(() => {
         dispatch(fetchPublicMasterOptions());
@@ -43,6 +57,23 @@ export default function RegisterPage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (form.password.length < 8) {
+            toast.error('Kata sandi harus terdiri dari minimal 8 karakter.');
+            return;
+        }
+
+        if (form.password !== form.password_confirmation) {
+            toast.error('Konfirmasi kata sandi tidak cocok. Harap periksa kembali.');
+            return;
+        }
+
+        const strength = evaluatePasswordStrength(form.password);
+        if (strength.score < 2) {
+            toast.warning('Kata sandi terlalu lemah. Gunakan kombinasi huruf besar, huruf kecil, dan angka demi keamanan akun Anda.');
+            return;
+        }
+
         const res = await dispatch(registerUser(form));
         if (registerUser.fulfilled.match(res)) {
             toast.success('Pendaftaran akun alumni berhasil! Selamat datang.');
@@ -104,18 +135,90 @@ export default function RegisterPage() {
                                     className="bs-form-control"
                                 />
                             </div>
+                            {/* Baris Kata Sandi & Konfirmasi */}
                             <div className="col-span-12 md:col-span-6">
-                                <label className="bs-form-label">Kata Sandi (min. 8 karakter) *</label>
-                                <input
-                                    name="password"
-                                    type="password"
-                                    minLength={8}
-                                    value={form.password}
-                                    onChange={handleChange}
-                                    required
-                                    placeholder="Minimal 8 karakter"
-                                    className="bs-form-control"
-                                />
+                                <label className="bs-form-label flex items-center justify-between">
+                                    <span>Kata Sandi Baru *</span>
+                                    <span className="text-[11px] text-[#64748b] font-normal">Min. 8 karakter</span>
+                                </label>
+                                <div className="relative">
+                                    <input
+                                        name="password"
+                                        type={showPassword ? 'text' : 'password'}
+                                        minLength={8}
+                                        value={form.password}
+                                        onChange={handleChange}
+                                        required
+                                        placeholder="Kombinasi huruf, angka & simbol"
+                                        className="bs-form-control pr-10"
+                                        autoComplete="new-password"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none p-1"
+                                        tabIndex={-1}
+                                        title={showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
+                                    >
+                                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                    </button>
+                                </div>
+                                <PasswordStrengthMeter password={form.password} />
+                            </div>
+
+                            <div className="col-span-12 md:col-span-6">
+                                <label className="bs-form-label flex items-center justify-between">
+                                    <span>Konfirmasi Kata Sandi *</span>
+                                    {form.password_confirmation && (
+                                        <span className="text-[11px] font-semibold">
+                                            {form.password === form.password_confirmation ? (
+                                                <span className="text-emerald-700 inline-flex items-center gap-1">
+                                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                                    Cocok
+                                                </span>
+                                            ) : (
+                                                <span className="text-rose-600 inline-flex items-center gap-1">
+                                                    <XCircle className="w-3.5 h-3.5" />
+                                                    Belum cocok
+                                                </span>
+                                            )}
+                                        </span>
+                                    )}
+                                </label>
+                                <div className="relative">
+                                    <input
+                                        name="password_confirmation"
+                                        type={showPasswordConfirm ? 'text' : 'password'}
+                                        minLength={8}
+                                        value={form.password_confirmation}
+                                        onChange={handleChange}
+                                        required
+                                        placeholder="Ulangi kata sandi di atas"
+                                        className={`bs-form-control pr-10 ${
+                                            form.password_confirmation
+                                                ? form.password === form.password_confirmation
+                                                    ? 'border-emerald-500 focus:border-emerald-600 focus:ring-emerald-200'
+                                                    : 'border-rose-400 focus:border-rose-500 focus:ring-rose-200'
+                                                : ''
+                                        }`}
+                                        autoComplete="new-password"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
+                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none p-1"
+                                        tabIndex={-1}
+                                        title={showPasswordConfirm ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
+                                    >
+                                        {showPasswordConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                    </button>
+                                </div>
+                                {form.password_confirmation && form.password !== form.password_confirmation && (
+                                    <div className="text-[11px] text-rose-600 mt-1 flex items-center gap-1">
+                                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                                        Kata sandi konfirmasi belum sama dengan kata sandi di samping.
+                                    </div>
+                                )}
                             </div>
                             <div className="col-span-12 md:col-span-6">
                                 <label className="bs-form-label">Nomor WhatsApp Aktif *</label>

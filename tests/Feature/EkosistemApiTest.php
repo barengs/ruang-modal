@@ -286,4 +286,39 @@ class EkosistemApiTest extends TestCase
         $this->assertNotNull($history);
         $this->assertStringContainsString('Revisi spesifikasi solder station', $history->catatan);
     }
+
+    public function test_registration_validates_password_confirmation(): void
+    {
+        // 1. Password confirmation mismatch should fail with 422
+        $resMismatch = $this->postJson('/api/auth/register', [
+            'name' => 'Calon Alumni Baru',
+            'email' => 'calon@alumni.sch.id',
+            'password' => 'Password123!',
+            'password_confirmation' => 'PasswordBeda456!',
+            'whatsapp' => '081234567899',
+            'sekolah' => 'SMAN 2 Madiun',
+            'tahun_lulus' => '2025',
+            'kompetensi' => 'Multimedia',
+        ]);
+        $resMismatch->assertStatus(422)
+            ->assertJsonValidationErrors(['password']);
+
+        // 2. Matching password and confirmation should register successfully
+        $resSuccess = $this->postJson('/api/auth/register', [
+            'name' => 'Calon Alumni Baru',
+            'email' => 'calon@alumni.sch.id',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+            'whatsapp' => '081234567899',
+            'sekolah' => 'SMAN 2 Madiun',
+            'tahun_lulus' => '2025',
+            'kompetensi' => 'Multimedia',
+        ]);
+        $resSuccess->assertStatus(201)
+            ->assertJsonStructure(['access_token', 'user', 'message']);
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'calon@alumni.sch.id',
+        ]);
+    }
 }

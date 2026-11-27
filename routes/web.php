@@ -28,5 +28,5 @@ Route::get('/uploads/{path}', function ($path) {
 })->where('path', '.*');
 
 // Hybrid Monolith: serve React SPA via Blade + Vite for all non-API routes
-Route::view('/{any?}', 'app')->where('any', '^(?!api|up|uploads).*$');
+Route::view('/{any?}', 'app')->where('any', '^(?!api|up|uploads|storage).*$');
 
