@@ -13,6 +13,7 @@ import StatusBadge from '../../components/StatusBadge';
 import AlumniAuthGate from '../../components/AlumniAuthGate';
 import TumbuhRequestDetailModal from '../../components/TumbuhRequestDetailModal';
 import { formatDateTime } from '../../utils/format';
+import { validateEmail } from '../../utils/validation';
 
 const MY_TUMBUH_STORAGE_KEY = 'rt_my_submitted_codes';
 const STATUS_OPTIONS = ['Menunggu', 'Disetujui', 'Perlu Perbaikan', 'Selesai', 'Ditolak'];
@@ -99,6 +100,13 @@ export default function RuangTumbuhPage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        const emailCheck = validateEmail(form.email);
+        if (!emailCheck.valid) {
+            toast.error(emailCheck.message || 'Alamat email pemohon tidak valid.');
+            return;
+        }
+
         const res = await dispatch(submitTumbuhRequest(form));
         if (submitTumbuhRequest.fulfilled.match(res)) {
             toast.success(res.payload?.message || 'Permintaan pendampingan Ruang Tumbuh berhasil dikirim!');

@@ -3,12 +3,8 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { AlertCircle, KeyRound, Lock, Mail, UserPlus, X } from 'lucide-react';
 import { toast } from 'react-toastify';
-import {
-    clearAuthError,
-    isAlumniUser,
-    loginUser,
-    socialLoginUser,
-} from '../../store/slices/authSlice';
+import { clearAuthError, isAlumniUser, loginUser, socialLoginUser } from '../../store/slices/authSlice';
+import { validateEmail } from '../../utils/validation';
 
 const DEMO_ALUMNI = [
     { label: 'Rina Sari (Alumni Boga)', email: 'rina.sari@alumni.sch.id', password: 'password123' },
@@ -111,6 +107,11 @@ export default function LoginPage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        const emailCheck = validateEmail(email);
+        if (!emailCheck.valid) {
+            toast.error(emailCheck.message || 'Format alamat email tidak valid.');
+            return;
+        }
         const res = await dispatch(loginUser({ email, password }));
         if (loginUser.fulfilled.match(res)) {
             const loggedUser = res.payload?.user;

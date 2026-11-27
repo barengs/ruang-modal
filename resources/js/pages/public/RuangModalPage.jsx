@@ -14,6 +14,7 @@ import CurrencyInput from '../../components/CurrencyInput';
 import AlumniAuthGate from '../../components/AlumniAuthGate';
 import ModalApplicationDetailModal from '../../components/ModalApplicationDetailModal';
 import { formatDateTime, formatRupiah } from '../../utils/format';
+import { validateEmail } from '../../utils/validation';
 
 const MY_CODES_STORAGE_KEY = 'rm_my_submitted_codes';
 const STATUS_OPTIONS = ['Menunggu Seleksi', 'Disetujui', 'Disalurkan', 'Perlu Perbaikan', 'Ditolak'];
@@ -106,6 +107,13 @@ export default function RuangModalPage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        const emailCheck = validateEmail(form.email);
+        if (!emailCheck.valid) {
+            toast.error(emailCheck.message || 'Alamat email pemohon tidak valid.');
+            return;
+        }
+
         const formData = new FormData();
         formData.append('nama', form.nama);
         formData.append('email', form.email);

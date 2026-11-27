@@ -107,6 +107,24 @@ class AuthController extends Controller
         ], 201);
     }
 
+    public function checkEmail(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'email' => ['required', 'string', 'email', 'max:150'],
+        ]);
+
+        $email = strtolower(trim($validated['email']));
+        $exists = User::where('email', $email)->exists();
+
+        return response()->json([
+            'valid' => true,
+            'available' => ! $exists,
+            'message' => $exists
+                ? 'Email ini sudah terdaftar. Silakan login atau gunakan email lain.'
+                : 'Email valid dan siap digunakan untuk pendaftaran.',
+        ]);
+    }
+
     public function login(Request $request): JsonResponse
     {
         $credentials = $request->validate([

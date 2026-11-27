@@ -19,6 +19,7 @@ import {
     getCategoryThumbnail,
     getProductThumbnail,
 } from '../../utils/format';
+import { validateEmail } from '../../utils/validation';
 
 const MY_PASAR_STORAGE_KEY = 'rp_my_submitted_codes';
 const STATUS_OPTIONS = ['Menunggu Moderasi', 'Tayang', 'Perlu Perbaikan', 'Ditolak'];
@@ -134,6 +135,13 @@ export default function RuangPasarPage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        const emailCheck = validateEmail(form.email);
+        if (!emailCheck.valid) {
+            toast.error(emailCheck.message || 'Alamat email pemohon tidak valid.');
+            return;
+        }
+
         const formData = new FormData();
         Object.entries(form).forEach(([key, val]) => {
             formData.append(key, val ?? '');

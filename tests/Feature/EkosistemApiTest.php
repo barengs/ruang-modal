@@ -321,4 +321,36 @@ class EkosistemApiTest extends TestCase
             'email' => 'calon@alumni.sch.id',
         ]);
     }
+
+    public function test_check_email_availability(): void
+    {
+        // 1. Invalid email format fails validation
+        $this->postJson('/api/auth/check-email', [
+            'email' => 'bukan-email',
+        ])->assertStatus(422)
+            ->assertJsonValidationErrors(['email']);
+
+        // 2. Unregistered email is available
+        $resAvail = $this->postJson('/api/auth/check-email', [
+            'email' => 'email.baru.unik@alumni.sch.id',
+        ]);
+        $resAvail->assertOk()
+            ->assertJson([
+                'valid' => true,
+                'available' => true,
+            ]);
+
+        // 3. Registered email returns available=false
+        \App\Models\User::factory()->create([
+            'email' => 'email.sudah.ada@alumni.sch.id',
+        ]);
+        $resTaken = $this->postJson('/api/auth/check-email', [
+            'email' => 'email.sudah.ada@alumni.sch.id',
+        ]);
+        $resTaken->assertOk()
+            ->assertJson([
+                'valid' => true,
+                'available' => false,
+            ]);
+    }
 }

@@ -6,6 +6,7 @@ import {
     CheckCircle2,
     Eye,
     EyeOff,
+    Loader2,
     LogIn,
     ShieldAlert,
     ShieldCheck,
@@ -13,9 +14,11 @@ import {
     XCircle,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
+import api from '../../api/axios';
 import { clearAuthError, registerUser } from '../../store/slices/authSlice';
 import { fetchPublicMasterOptions } from '../../store/slices/publicSlice';
 import PasswordStrengthMeter, { evaluatePasswordStrength } from '../../components/PasswordStrengthMeter';
+import { validateEmail } from '../../utils/validation';
 
 const INITIAL_REGISTER = {
     name: '',
@@ -39,11 +42,64 @@ export default function RegisterPage() {
     const [form, setForm] = useState(INITIAL_REGISTER);
     const [showPassword, setShowPassword] = useState(false);
     const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+    const [emailTouched, setEmailTouched] = useState(false);
+    const [emailStatus, setEmailStatus] = useState({
+        checking: false,
+        available: null,
+        message: '',
+        suggestion: '',
+    });
 
     useEffect(() => {
         dispatch(fetchPublicMasterOptions());
         return () => dispatch(clearAuthError());
     }, [dispatch]);
+
+    useEffect(() => {
+        if (!form.email) {
+            setEmailStatus({ checking: false, available: null, message: '', suggestion: '' });
+            return;
+        }
+
+        const res = validateEmail(form.email);
+        if (!res.valid) {
+            setEmailStatus({
+                checking: false,
+                available: false,
+                message: res.message,
+                suggestion: res.suggestion || '',
+            });
+            return;
+        }
+
+        // Format email valid: cek ketersediaan email ke server (debounced)
+        setEmailStatus((prev) => ({
+            ...prev,
+            checking: true,
+            suggestion: res.suggestion || '',
+        }));
+
+        const timer = setTimeout(async () => {
+            try {
+                const { data } = await api.post('/auth/check-email', { email: form.email });
+                setEmailStatus({
+                    checking: false,
+                    available: data.available,
+                    message: data.message,
+                    suggestion: res.suggestion || '',
+                });
+            } catch (err) {
+                setEmailStatus({
+                    checking: false,
+                    available: null,
+                    message: 'Format email valid.',
+                    suggestion: res.suggestion || '',
+                });
+            }
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [form.email]);
 
     useEffect(() => {
         if (token) {
@@ -58,6 +114,21 @@ export default function RegisterPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        // 1. Validasi Alamat Email
+        const emailCheck = validateEmail(form.email);
+        if (!emailCheck.valid) {
+            setEmailTouched(true);
+            toast.error(emailCheck.message || 'Alamat email tidak valid. Harap periksa kembali.');
+            return;
+        }
+
+        if (emailStatus.available === false && emailStatus.message.includes('terdaftar')) {
+            setEmailTouched(true);
+            toast.error('Email ini sudah terdaftar. Silakan login atau gunakan alamat email lain.');
+            return;
+        }
+
+        // 2. Validasi Kata Sandi
         if (form.password.length < 8) {
             toast.error('Kata sandi harus terdiri dari minimal 8 karakter.');
             return;
@@ -124,16 +195,103 @@ export default function RegisterPage() {
                                 />
                             </div>
                             <div className="col-span-12 md:col-span-6">
-                                <label className="bs-form-label">Alamat Email *</label>
-                                <input
-                                    name="email"
-                                    type="email"
-                                    value={form.email}
-                                    onChange={handleChange}
-                                    required
-                                    placeholder="nama@alumni.sch.id"
-                                    className="bs-form-control"
-                                />
+                                <label className="bs-form-label flex items-center justify-between">
+                                    <span>Alamat Email *</span>
+                                    {emailTouched && form.email && (
+                                        <span className="text-[11px] font-semibold">
+                                            {emailStatus.checking ? (
+                                                <span className="text-slate-500 inline-flex items-center gap-1">
+                                                    <Loader2 className="w-3 h-3 animate-spin text-[#0068b0]" />
+                                                    Memeriksa...
+                                                </span>
+                                            ) : emailStatus.available === true ? (
+                                                <span className="text-emerald-700 inline-flex items-center gap-1">
+                                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                                    Email Tersedia
+                                                </span>
+                                            ) : emailStatus.available === false ? (
+                                                <span className="text-rose-600 inline-flex items-center gap-1">
+                                                    <XCircle className="w-3.5 h-3.5" />
+                                                    Tidak Valid / Terpakai
+                                                </span>
+                                            ) : null}
+                                        </span>
+                                    )}
+                                </label>
+                                <div className="relative">
+                                    <input
+                                        name="email"
+                                        type="email"
+                                        value={form.email}
+                                        onChange={handleChange}
+                                        onBlur={() => setEmailTouched(true)}
+                                        required
+                                        placeholder="nama@alumni.sch.id"
+                                        className={`bs-form-control pr-8 ${
+                                            emailTouched && form.email
+                                                ? emailStatus.available === true
+                                                    ? 'border-emerald-500 focus:border-emerald-600 focus:ring-emerald-200'
+                                                    : emailStatus.available === false
+                                                        ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-200'
+                                                        : ''
+                                                : ''
+                                        }`}
+                                    />
+                                    {emailTouched && form.email && (
+                                        <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                                            {emailStatus.checking ? (
+                                                <Loader2 className="w-4 h-4 animate-spin text-[#0068b0]" />
+                                            ) : emailStatus.available === true ? (
+                                                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                                            ) : emailStatus.available === false ? (
+                                                <AlertCircle className="w-4 h-4 text-rose-500" />
+                                            ) : null}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Pesan status atau saran perbaikan typo */}
+                                {emailTouched && form.email && (
+                                    <div className="space-y-1 mt-1 text-[11px]">
+                                        {emailStatus.message && (
+                                            <p
+                                                className={`flex items-center gap-1 ${
+                                                    emailStatus.available === true
+                                                        ? 'text-emerald-700'
+                                                        : emailStatus.available === false
+                                                            ? 'text-rose-600 font-medium'
+                                                            : 'text-slate-500'
+                                                }`}
+                                            >
+                                                {emailStatus.message}
+                                                {emailStatus.available === false && emailStatus.message.includes('terdaftar') && (
+                                                    <Link
+                                                        to={`/login?redirect=${encodeURIComponent(redirectTo)}`}
+                                                        className="text-[#0068b0] underline ml-1 font-bold hover:text-[#203880]"
+                                                    >
+                                                        Login di sini &rarr;
+                                                    </Link>
+                                                )}
+                                            </p>
+                                        )}
+                                        {emailStatus.suggestion && (
+                                            <p className="text-amber-800 bg-amber-50 p-1.5 rounded border border-amber-200 flex items-center justify-between">
+                                                <span>
+                                                    Apakah maksud Anda: <strong>{emailStatus.suggestion}</strong>?
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setForm((prev) => ({ ...prev, email: emailStatus.suggestion }));
+                                                    }}
+                                                    className="text-xs text-[#0068b0] underline hover:text-[#203880] font-semibold ml-2"
+                                                >
+                                                    Gunakan
+                                                </button>
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                             {/* Baris Kata Sandi & Konfirmasi */}
                             <div className="col-span-12 md:col-span-6">
