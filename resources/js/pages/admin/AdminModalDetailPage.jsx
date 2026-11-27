@@ -39,6 +39,7 @@ import {
 import { hasPermission } from '../../store/slices/authSlice';
 import StatusBadge from '../../components/StatusBadge';
 import ConfirmModal from '../../components/ConfirmModal';
+import DocumentPreviewModal from '../../components/DocumentPreviewModal';
 import CurrencyInput from '../../components/CurrencyInput';
 import { formatDateTime, formatRupiah } from '../../utils/format';
 import { exportBastPdf, exportToPdfReport } from '../../utils/reportExporter';
@@ -86,6 +87,7 @@ export default function AdminModalDetailPage() {
 
     const [loading, setLoading] = useState(false);
     const [imgLoadFailed, setImgLoadFailed] = useState(false);
+    const [showPreviewModal, setShowPreviewModal] = useState(false);
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [showUploadLampiranModal, setShowUploadLampiranModal] = useState(false);
     const [adminLampiranFile, setAdminLampiranFile] = useState(null);
@@ -707,36 +709,57 @@ export default function AdminModalDetailPage() {
                                             Proposal Usaha & Rincian Anggaran Biaya (RAB)
                                         </td>
                                         <td className="py-3 px-5 font-mono text-[#334155]">
-                                            {lampiranFilename}
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPreviewModal(true)}
+                                                className="text-[#0068b0] hover:text-[#203880] hover:underline font-mono text-left font-medium inline-flex items-center gap-1.5"
+                                                title="Klik untuk membuka pratinjau dokumen"
+                                            >
+                                                <FileText className="w-3.5 h-3.5 text-[#0068b0] shrink-0" />
+                                                <span>{lampiranFilename}</span>
+                                            </button>
                                         </td>
                                         <td className="py-3 px-5 uppercase font-bold text-[#0068b0]">
-                                            {lampiranFilename.split('.').pop() || 'File'}
+                                            <span className="px-2 py-0.5 rounded bg-blue-50 border border-blue-200 text-[11px]">
+                                                {lampiranFilename.split('.').pop() || 'FILE'}
+                                            </span>
                                         </td>
                                         <td className="py-3 px-5">
                                             {imgLoadFailed ? (
-                                                <span className="text-rose-600 font-medium">
+                                                <span className="text-rose-600 font-medium text-xs">
                                                     Berkas fisik tidak ditemukan di server (404)
                                                 </span>
                                             ) : (
-                                                <span className="text-emerald-700 font-medium">
+                                                <span className="text-emerald-700 font-medium text-xs">
                                                     Tersimpan di server
                                                 </span>
                                             )}
                                         </td>
-                                        <td className="py-3 px-5 text-right space-x-2">
+                                        <td className="py-3 px-5 text-right space-x-1.5">
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPreviewModal(true)}
+                                                className="bs-btn bs-btn-sm bs-btn-primary inline-flex items-center gap-1.5 shadow-xs"
+                                                title="Buka pratinjau berkas dokumen dalam bentuk modal pop-up"
+                                            >
+                                                <Eye className="w-3.5 h-3.5" />
+                                                Pratinjau Pop-up
+                                            </button>
                                             <a
                                                 href={item.dokumen_lampiran}
                                                 target="_blank"
                                                 rel="noreferrer"
-                                                className="bs-btn bs-btn-sm bs-btn-primary inline-flex items-center gap-1.5"
+                                                className="bs-btn bs-btn-sm bs-btn-outline-secondary inline-flex items-center gap-1.5"
+                                                title="Buka berkas di jendela / tab baru"
                                             >
                                                 <ExternalLink className="w-3.5 h-3.5" />
-                                                Buka Berkas
+                                                Tab Baru
                                             </a>
                                             <a
                                                 href={item.dokumen_lampiran}
                                                 download
                                                 className="bs-btn bs-btn-sm bs-btn-outline-secondary inline-flex items-center gap-1.5"
+                                                title="Unduh berkas dokumen"
                                             >
                                                 <Download className="w-3.5 h-3.5" />
                                                 Unduh
@@ -746,7 +769,7 @@ export default function AdminModalDetailPage() {
                                                     type="button"
                                                     onClick={() => setShowUploadLampiranModal(true)}
                                                     className="bs-btn bs-btn-sm bs-btn-outline-secondary inline-flex items-center gap-1.5"
-                                                    title="Ganti berkas lampiran"
+                                                    title="Ganti atau perbarui berkas lampiran"
                                                 >
                                                     <FileUp className="w-3.5 h-3.5" />
                                                     Ganti
@@ -777,58 +800,35 @@ export default function AdminModalDetailPage() {
                         </table>
                     </div>
 
-                    {/* Pratinjau Gambar atau PDF jika berkas ada */}
+                    {/* Banner Kotak Pratinjau Pop Up Dokumen Lampiran */}
                     {item.dokumen_lampiran && (
-                        <div className="p-4 bg-[#fcfcfd] border-t border-[#eef2f9]">
-                            {isImageLampiran && !imgLoadFailed && (
-                                <div className="space-y-1 text-center">
-                                    <div className="text-[11px] text-[#64748b] font-medium">
-                                        Pratinjau Gambar Dokumen Lampiran:
-                                    </div>
-                                    <img
-                                        src={item.dokumen_lampiran}
-                                        alt="Lampiran Dokumen Proposal Modal"
-                                        onError={() => setImgLoadFailed(true)}
-                                        className="max-h-96 w-auto mx-auto object-contain rounded border border-[#dbe3f0] shadow-xs"
-                                    />
+                        <div className="p-4 bg-[#f8fafc] border-t border-[#eef2f9] flex items-center justify-between flex-wrap gap-3">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 bg-white rounded-xl border border-[#dbe3f0] shadow-xs text-[#0068b0] shrink-0">
+                                    <FileText className="w-5 h-5" />
                                 </div>
-                            )}
-
-                            {isPdfLampiran && !imgLoadFailed && (
-                                <div className="space-y-1.5">
-                                    <div className="flex items-center justify-between text-[11px] text-[#64748b] font-medium">
-                                        <span>Pratinjau Dokumen PDF Lampiran:</span>
-                                        <a
-                                            href={item.dokumen_lampiran}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="text-[#0068b0] hover:underline flex items-center gap-1"
-                                        >
-                                            Buka di Jendela Baru <ExternalLink className="w-3 h-3" />
-                                        </a>
-                                    </div>
-                                    <iframe
-                                        src={item.dokumen_lampiran}
-                                        title="Pratinjau PDF Dokumen Lampiran"
-                                        onError={() => setImgLoadFailed(true)}
-                                        className="w-full h-96 rounded border border-[#dbe3f0]"
-                                    />
+                                <div>
+                                    <h4 className="text-xs font-bold text-[#203880] flex items-center gap-2">
+                                        <span>Pratinjau Dokumen Lampiran Interaktif</span>
+                                        <span className="px-1.5 py-0.5 rounded text-[10px] bg-blue-100 text-[#0068b0] uppercase font-bold font-mono">
+                                            {lampiranFilename.split('.').pop() || 'FILE'}
+                                        </span>
+                                    </h4>
+                                    <p className="text-[11px] text-[#64748b] mt-0.5">
+                                        Mendukung pratinjau pop-up untuk semua jenis lampiran (gambar WEBP/JPG/PNG, PDF, Spreadsheet/Excel, Word, dan dokumen lainnya).
+                                    </p>
                                 </div>
-                            )}
-
-                            {imgLoadFailed && (
-                                <div className="p-3 rounded bg-amber-50 border border-amber-200 text-xs text-amber-800 flex items-start gap-2">
-                                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
-                                    <div>
-                                        <strong>Berkas Lampiran Tidak Ditemukan di Server (404)</strong>
-                                        <p className="mt-0.5 text-[11px] text-amber-700 leading-relaxed">
-                                            File <code className="bg-amber-100 px-1 py-0.5 rounded font-mono text-[10px]">{lampiranFilename}</code> belum
-                                            tersedia di disk penyimpanan (kemungkinan terhapus saat deployment/restart sebelumnya).
-                                            Anda dapat meminta pemohon mengirimkan ulang melalui WhatsApp atau mengubah status menjadi "Perlu Perbaikan".
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPreviewModal(true)}
+                                    className="bs-btn bs-btn-sm bs-btn-primary inline-flex items-center gap-1.5 shadow-sm"
+                                >
+                                    <Eye className="w-3.5 h-3.5" />
+                                    Buka Pratinjau Dokumen (Pop-Up)
+                                </button>
+                            </div>
                         </div>
                     )}
                 </div>
@@ -1432,6 +1432,13 @@ export default function AdminModalDetailPage() {
                 message={`Apakah Anda yakin ingin menghapus pengajuan ${item?.kode} milik ${item?.nama}? Semua data penilaian, riwayat status, dan dokumen pengajuan ini akan dihapus permanen.`}
                 confirmText="Ya, Hapus"
                 variant="danger"
+            />
+
+            <DocumentPreviewModal
+                isOpen={showPreviewModal}
+                onClose={() => setShowPreviewModal(false)}
+                fileUrl={item?.dokumen_lampiran}
+                title={`Dokumen Lampiran Proposal - ${item?.kode || ''}`}
             />
         </div>
     );

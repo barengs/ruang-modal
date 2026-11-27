@@ -25,6 +25,7 @@ import { hasPermission } from '../../store/slices/authSlice';
 import DataTable from '../../components/DataTable';
 import StatusBadge from '../../components/StatusBadge';
 import ConfirmModal from '../../components/ConfirmModal';
+import DocumentPreviewModal from '../../components/DocumentPreviewModal';
 import CurrencyInput from '../../components/CurrencyInput';
 import { formatDateTime, formatRupiah } from '../../utils/format';
 import { exportBastPdf, exportToExcelFile, exportToPdfReport } from '../../utils/reportExporter';
@@ -84,6 +85,7 @@ export default function AdminModalPage() {
         tanggal_penyaluran: new Date().toISOString().slice(0, 10),
     });
     const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, item: null });
+    const [showPreviewModal, setShowPreviewModal] = useState(false);
 
     const canUpdate = hasPermission(user, 'modal.update');
     const canDelete = hasPermission(user, 'modal.delete');
@@ -509,15 +511,27 @@ export default function AdminModalPage() {
                                             </div>
                                         </div>
                                         {selected.dokumen_lampiran ? (
-                                            <a
-                                                href={selected.dokumen_lampiran}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="bs-btn bs-btn-sm bs-btn-outline-primary shrink-0 flex items-center gap-1"
-                                            >
-                                                <ExternalLink className="w-3.5 h-3.5" />
-                                                Buka Berkas
-                                            </a>
+                                            <div className="flex items-center gap-1.5 shrink-0">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPreviewModal(true)}
+                                                    className="bs-btn bs-btn-sm bs-btn-primary flex items-center gap-1 text-xs"
+                                                    title="Pratinjau Dokumen Pop-up"
+                                                >
+                                                    <Eye className="w-3.5 h-3.5" />
+                                                    Pratinjau
+                                                </button>
+                                                <a
+                                                    href={selected.dokumen_lampiran}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="bs-btn bs-btn-sm bs-btn-outline-secondary flex items-center gap-1 text-xs"
+                                                    title="Buka di tab baru"
+                                                >
+                                                    <ExternalLink className="w-3.5 h-3.5" />
+                                                    Tab Baru
+                                                </a>
+                                            </div>
                                         ) : (
                                             <span className="text-[11px] text-amber-600 font-medium">
                                                 (Tidak ada berkas)
@@ -716,6 +730,13 @@ export default function AdminModalPage() {
                 message={`Apakah Anda yakin ingin menghapus pengajuan ${confirmDelete.item?.kode} milik ${confirmDelete.item?.nama}? Semua data pengajuan ini akan dihapus permanen.`}
                 confirmText="Ya, Hapus"
                 variant="danger"
+            />
+
+            <DocumentPreviewModal
+                isOpen={showPreviewModal}
+                onClose={() => setShowPreviewModal(false)}
+                fileUrl={selected?.dokumen_lampiran}
+                title={`Dokumen Lampiran Proposal - ${selected?.kode || ''}`}
             />
         </div>
     );

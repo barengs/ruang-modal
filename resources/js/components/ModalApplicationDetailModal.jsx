@@ -10,6 +10,7 @@ import {
     Download,
     Edit3,
     ExternalLink,
+    Eye,
     FileCheck,
     FileText,
     FileUp,
@@ -26,6 +27,7 @@ import {
 import { toast } from 'react-toastify';
 import api from '../api/axios';
 import StatusBadge from './StatusBadge';
+import DocumentPreviewModal from './DocumentPreviewModal';
 import { formatDateTime, formatRupiah } from '../utils/format';
 import { exportBastPdf } from '../utils/reportExporter';
 
@@ -47,6 +49,7 @@ export default function ModalApplicationDetailModal({
 
     // State untuk form edit / upload ulang dokumen lampiran
     const [isEditingLampiran, setIsEditingLampiran] = useState(false);
+    const [showPreviewModal, setShowPreviewModal] = useState(false);
     const [selectedFile, setSelectedFile] = useState(null);
     const [catatanRevisi, setCatatanRevisi] = useState('');
     const [emailConfirm, setEmailConfirm] = useState(item.email || '');
@@ -314,14 +317,26 @@ export default function ModalApplicationDetailModal({
                                             <span className="text-[#6c757d] font-medium">Dokumen Lampiran (Proposal/RAB):</span>
                                             <div className="flex items-center gap-1.5">
                                                 {currentItem.dokumen_lampiran ? (
-                                                    <a
-                                                        href={currentItem.dokumen_lampiran}
-                                                        target="_blank"
-                                                        rel="noreferrer"
-                                                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#e7f1ff] text-[#0068b0] font-bold text-xs hover:bg-[#d0e3ff] transition-colors"
-                                                    >
-                                                        Buka Berkas <ExternalLink className="w-3 h-3" />
-                                                    </a>
+                                                    <>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setShowPreviewModal(true)}
+                                                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#0068b0] text-white font-bold text-xs hover:bg-[#203880] transition-colors shadow-xs"
+                                                            title="Pratinjau berkas dokumen (Pop-up)"
+                                                        >
+                                                            <Eye className="w-3 h-3" />
+                                                            Pratinjau
+                                                        </button>
+                                                        <a
+                                                            href={currentItem.dokumen_lampiran}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#e7f1ff] text-[#0068b0] font-bold text-xs hover:bg-[#d0e3ff] transition-colors"
+                                                            title="Buka berkas di jendela baru"
+                                                        >
+                                                            Tab Baru <ExternalLink className="w-3 h-3" />
+                                                        </a>
+                                                    </>
                                                 ) : (
                                                     <span className="text-[11px] text-[#856404] bg-[#fff3cd] px-2 py-0.5 rounded font-medium">
                                                         Tidak Ada Berkas
@@ -735,6 +750,13 @@ export default function ModalApplicationDetailModal({
                     </button>
                 </div>
             </div>
+
+            <DocumentPreviewModal
+                isOpen={showPreviewModal}
+                onClose={() => setShowPreviewModal(false)}
+                fileUrl={currentItem?.dokumen_lampiran}
+                title={`Dokumen Lampiran Proposal - ${currentItem?.kode || ''}`}
+            />
         </div>
     );
 }
