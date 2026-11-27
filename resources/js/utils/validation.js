@@ -119,3 +119,56 @@ export function validateEmail(email, { required = true } = {}) {
 export function isEmailValid(email) {
     return validateEmail(email).valid;
 }
+
+/**
+ * Validasi penulisan tahun kelulusan alumni
+ * @param {string|number} year
+ * @param {object} options { minYear?: number, maxYear?: number }
+ * @returns {{ valid: boolean, message: string }}
+ */
+export function validateGraduationYear(year, { minYear = 1990, maxYear = new Date().getFullYear() + 1 } = {}) {
+    const raw = String(year || '').trim();
+
+    if (!raw) {
+        return {
+            valid: false,
+            message: 'Tahun lulus wajib diisi.',
+        };
+    }
+
+    if (!/^\d+$/.test(raw)) {
+        return {
+            valid: false,
+            message: 'Tahun lulus hanya boleh berupa angka (tanpa huruf/spasi).',
+        };
+    }
+
+    if (raw.length !== 4) {
+        return {
+            valid: false,
+            message: 'Tahun lulus harus terdiri dari 4 digit angka (contoh: 2024).',
+        };
+    }
+
+    const num = parseInt(raw, 10);
+
+    if (num < minYear) {
+        return {
+            valid: false,
+            message: `Tahun lulus tidak boleh lebih awal dari tahun ${minYear}.`,
+        };
+    }
+
+    if (num > maxYear) {
+        return {
+            valid: false,
+            message: `Tahun lulus tidak boleh melebihi tahun ${maxYear}.`,
+        };
+    }
+
+    return {
+        valid: true,
+        message: 'Tahun lulus valid.',
+    };
+}
+

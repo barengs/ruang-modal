@@ -70,7 +70,7 @@ class AuthController extends Controller
             'password_confirmation' => ['nullable', 'string'],
             'whatsapp' => ['required', 'string', 'max:40'],
             'sekolah' => ['required', 'string', 'max:180'],
-            'tahun_lulus' => ['required', 'string', 'max:10'],
+            'tahun_lulus' => ['required', 'string', 'regex:/^\d{4}$/', 'integer', 'between:1990,'.(date('Y') + 1)],
             'kompetensi' => ['required', 'string', 'max:120'],
             'nama_usaha' => ['nullable', 'string', 'max:180'],
         ]);

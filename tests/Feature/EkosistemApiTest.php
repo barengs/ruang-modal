@@ -303,7 +303,21 @@ class EkosistemApiTest extends TestCase
         $resMismatch->assertStatus(422)
             ->assertJsonValidationErrors(['password']);
 
-        // 2. Matching password and confirmation should register successfully
+        // 2. Invalid tahun_lulus format should fail with 422
+        $resInvalidYear = $this->postJson('/api/auth/register', [
+            'name' => 'Calon Alumni Baru',
+            'email' => 'calon.tahun@alumni.sch.id',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+            'whatsapp' => '081234567899',
+            'sekolah' => 'SMAN 2 Madiun',
+            'tahun_lulus' => 'bukan_tahun',
+            'kompetensi' => 'Multimedia',
+        ]);
+        $resInvalidYear->assertStatus(422)
+            ->assertJsonValidationErrors(['tahun_lulus']);
+
+        // 3. Matching password and confirmation should register successfully
         $resSuccess = $this->postJson('/api/auth/register', [
             'name' => 'Calon Alumni Baru',
             'email' => 'calon@alumni.sch.id',

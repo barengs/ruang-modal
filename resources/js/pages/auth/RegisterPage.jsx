@@ -18,7 +18,7 @@ import api from '../../api/axios';
 import { clearAuthError, registerUser } from '../../store/slices/authSlice';
 import { fetchPublicMasterOptions } from '../../store/slices/publicSlice';
 import PasswordStrengthMeter, { evaluatePasswordStrength } from '../../components/PasswordStrengthMeter';
-import { validateEmail } from '../../utils/validation';
+import { validateEmail, validateGraduationYear } from '../../utils/validation';
 
 const INITIAL_REGISTER = {
     name: '',
@@ -43,6 +43,7 @@ export default function RegisterPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
     const [emailTouched, setEmailTouched] = useState(false);
+    const [yearTouched, setYearTouched] = useState(false);
     const [emailStatus, setEmailStatus] = useState({
         checking: false,
         available: null,
@@ -111,6 +112,11 @@ export default function RegisterPage() {
         setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
     };
 
+    const handleYearChange = (e) => {
+        const val = e.target.value.replace(/\D/g, '').slice(0, 4);
+        setForm((prev) => ({ ...prev, tahun_lulus: val }));
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -142,6 +148,14 @@ export default function RegisterPage() {
         const strength = evaluatePasswordStrength(form.password);
         if (strength.score < 2) {
             toast.warning('Kata sandi terlalu lemah. Gunakan kombinasi huruf besar, huruf kecil, dan angka demi keamanan akun Anda.');
+            return;
+        }
+
+        // 3. Validasi Penulisan Tahun Lulus
+        const yearCheck = validateGraduationYear(form.tahun_lulus);
+        if (!yearCheck.valid) {
+            setYearTouched(true);
+            toast.error(yearCheck.message || 'Tahun kelulusan tidak valid.');
             return;
         }
 
@@ -401,15 +415,60 @@ export default function RegisterPage() {
                                 />
                             </div>
                             <div className="col-span-12 md:col-span-6">
-                                <label className="bs-form-label">Tahun Lulus *</label>
-                                <input
-                                    name="tahun_lulus"
-                                    value={form.tahun_lulus}
-                                    onChange={handleChange}
-                                    required
-                                    placeholder="Contoh: 2025"
-                                    className="bs-form-control"
-                                />
+                                <label className="bs-form-label flex items-center justify-between">
+                                    <span>Tahun Lulus *</span>
+                                    {yearTouched && form.tahun_lulus && (
+                                        <span className="text-[11px] font-semibold">
+                                            {validateGraduationYear(form.tahun_lulus).valid ? (
+                                                <span className="text-emerald-700 inline-flex items-center gap-1">
+                                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                                    Tahun Valid
+                                                </span>
+                                            ) : (
+                                                <span className="text-rose-600 inline-flex items-center gap-1">
+                                                    <XCircle className="w-3.5 h-3.5" />
+                                                    Format Salah
+                                                </span>
+                                            )}
+                                        </span>
+                                    )}
+                                </label>
+                                <div className="relative">
+                                    <input
+                                        name="tahun_lulus"
+                                        type="text"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
+                                        maxLength={4}
+                                        value={form.tahun_lulus}
+                                        onChange={handleYearChange}
+                                        onBlur={() => setYearTouched(true)}
+                                        required
+                                        placeholder="Contoh: 2025 (4 digit)"
+                                        className={`bs-form-control pr-8 ${
+                                            yearTouched && form.tahun_lulus
+                                                ? validateGraduationYear(form.tahun_lulus).valid
+                                                    ? 'border-emerald-500 focus:border-emerald-600 focus:ring-emerald-200'
+                                                    : 'border-rose-400 focus:border-rose-500 focus:ring-rose-200'
+                                                : ''
+                                        }`}
+                                    />
+                                    {yearTouched && form.tahun_lulus && (
+                                        <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                                            {validateGraduationYear(form.tahun_lulus).valid ? (
+                                                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                                            ) : (
+                                                <AlertCircle className="w-4 h-4 text-rose-500" />
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                                {yearTouched && form.tahun_lulus && !validateGraduationYear(form.tahun_lulus).valid && (
+                                    <p className="text-[11px] text-rose-600 mt-1 flex items-center gap-1">
+                                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                                        {validateGraduationYear(form.tahun_lulus).message}
+                                    </p>
+                                )}
                             </div>
                             <div className="col-span-12 md:col-span-6">
                                 <label className="bs-form-label">Kompetensi Double Track *</label>
