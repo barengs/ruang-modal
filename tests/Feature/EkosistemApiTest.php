@@ -206,5 +206,28 @@ class EkosistemApiTest extends TestCase
         $this->assertContains('users.create', $allPerms);
         $this->assertContains('users.update', $allPerms);
         $this->assertContains('users.delete', $allPerms);
+
+        // Test updating role permissions succeeds without validation error
+        $adminRole = \Spatie\Permission\Models\Role::where('name', 'admin')->where('guard_name', 'api')->first();
+        $updateRes = $this->withHeader('Authorization', "Bearer {$superToken}")
+            ->patchJson("/api/admin/roles/{$adminRole->id}/permissions", [
+                'permissions' => [
+                    'dashboard.view',
+                    'alumni.view',
+                    'alumni.create',
+                    'alumni.update',
+                    'alumni.delete',
+                    'users.view',
+                ],
+            ]);
+        $updateRes->assertOk()
+            ->assertJsonPath('data.permissions', [
+                'dashboard.view',
+                'alumni.view',
+                'alumni.create',
+                'alumni.update',
+                'alumni.delete',
+                'users.view',
+            ]);
     }
 }

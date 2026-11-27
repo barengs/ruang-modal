@@ -212,6 +212,8 @@ class RoleUserController extends Controller
 
     public function roles(): JsonResponse
     {
+        $this->ensureDefaultSystemPermissions();
+
         $roles = Role::where('guard_name', 'api')
             ->where('name', '!=', 'alumni')
             ->with('permissions:id,name')
@@ -244,7 +246,7 @@ class RoleUserController extends Controller
                 Rule::unique('roles', 'name')->where('guard_name', 'api'),
             ],
             'permissions' => ['nullable', 'array'],
-            'permissions.*' => ['string', Rule::exists('permissions', 'name')->where('guard_name', 'api')],
+            'permissions.*' => ['string', 'max:100'],
         ]);
 
         $roleName = strtolower(trim(preg_replace('/\s+/', '-', $validated['name'])));
@@ -261,6 +263,7 @@ class RoleUserController extends Controller
         ]);
 
         if (! empty($validated['permissions'])) {
+            $this->ensurePermissionsExist($validated['permissions']);
             $role->syncPermissions($validated['permissions']);
         }
 
@@ -278,9 +281,10 @@ class RoleUserController extends Controller
     {
         $validated = $request->validate([
             'permissions' => ['present', 'array'],
-            'permissions.*' => ['string', Rule::exists('permissions', 'name')->where('guard_name', 'api')],
+            'permissions.*' => ['string', 'max:100'],
         ]);
 
+        $this->ensurePermissionsExist($validated['permissions']);
         $role->syncPermissions($validated['permissions']);
 
         return response()->json([
@@ -291,6 +295,52 @@ class RoleUserController extends Controller
             ],
             'message' => "Permission untuk role {$role->name} berhasil diperbarui.",
         ]);
+    }
+
+    protected function ensurePermissionsExist(array $permissions): void
+    {
+        foreach ($permissions as $permName) {
+            $name = trim((string) $permName);
+            if ($name !== '') {
+                Permission::firstOrCreate([
+                    'name' => $name,
+                    'guard_name' => 'api',
+                ]);
+            }
+        }
+    }
+
+    protected function ensureDefaultSystemPermissions(): void
+    {
+        $systemPermissions = [
+            'dashboard.view',
+            'modal.view',
+            'modal.update',
+            'modal.delete',
+            'tumbuh.view',
+            'tumbuh.update',
+            'tumbuh.delete',
+            'pasar.view',
+            'pasar.moderate',
+            'pasar.delete',
+            'monitoring.view',
+            'monitoring.create',
+            'monitoring.delete',
+            'chat.manage',
+            'master.manage',
+            'alumni.view',
+            'alumni.create',
+            'alumni.update',
+            'alumni.delete',
+            'users.view',
+            'users.create',
+            'users.update',
+            'users.delete',
+            'users.manage',
+            'roles.manage',
+        ];
+
+        $this->ensurePermissionsExist($systemPermissions);
     }
 
     public function deleteRole(Role $role): JsonResponse

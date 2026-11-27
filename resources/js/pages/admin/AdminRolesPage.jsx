@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
 import {
     Activity,
     AlertCircle,
@@ -269,13 +270,18 @@ export default function AdminRolesPage() {
     const handleSaveMatrix = async () => {
         if (!activeRole) return;
         setSaving(true);
-        await dispatch(
+        const res = await dispatch(
             updateRolePermissionsItem({
                 id: activeRole.id,
                 permissions: draftPerms,
             })
         );
         setSaving(false);
+        if (updateRolePermissionsItem.fulfilled.match(res)) {
+            toast.success(res.payload?.message || `Hak akses role "${activeRole.name}" berhasil disimpan.`);
+        } else {
+            toast.error(res.payload || 'Gagal menyimpan permission role.');
+        }
     };
 
     const handleCreateRole = async (e) => {
@@ -295,12 +301,15 @@ export default function AdminRolesPage() {
 
         setCreatingRole(false);
         if (createRoleItem.fulfilled.match(res)) {
+            toast.success(res.payload?.message || 'Role baru berhasil ditambahkan.');
             const created = res.payload.data;
             setNewRoleName('');
             setCopyFromRoleId('');
             setShowNewRoleModal(false);
             setActiveRoleId(created.id);
             setDraftPerms(created.permissions || []);
+        } else {
+            toast.error(res.payload || 'Gagal menambahkan role baru.');
         }
     };
 
@@ -309,12 +318,17 @@ export default function AdminRolesPage() {
         if (role.name === 'super-admin') return;
         if (!window.confirm(`Hapus role "${role.name}"?`)) return;
         const res = await dispatch(deleteRoleItem(role.id));
-        if (deleteRoleItem.fulfilled.match(res) && activeRoleId === role.id) {
-            const remaining = roles.filter((r) => r.id !== role.id);
-            if (remaining.length > 0) {
-                setActiveRoleId(remaining[0].id);
-                setDraftPerms(remaining[0].permissions || []);
+        if (deleteRoleItem.fulfilled.match(res)) {
+            toast.success(res.payload?.message || `Role "${role.name}" berhasil dihapus.`);
+            if (activeRoleId === role.id) {
+                const remaining = roles.filter((r) => r.id !== role.id);
+                if (remaining.length > 0) {
+                    setActiveRoleId(remaining[0].id);
+                    setDraftPerms(remaining[0].permissions || []);
+                }
             }
+        } else {
+            toast.error(res.payload || 'Gagal menghapus role.');
         }
     };
 
