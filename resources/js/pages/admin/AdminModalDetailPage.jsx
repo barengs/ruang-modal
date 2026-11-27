@@ -10,7 +10,6 @@ import {
     Calendar,
     CheckCircle2,
     Clock,
-    DollarSign,
     Download,
     Edit3,
     ExternalLink,
@@ -81,6 +80,7 @@ export default function AdminModalDetailPage() {
     const { user } = useSelector((state) => state.auth);
 
     const [loading, setLoading] = useState(false);
+    const [imgLoadFailed, setImgLoadFailed] = useState(false);
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [reviewForm, setReviewForm] = useState({
         status_seleksi: 'Disetujui',
@@ -99,7 +99,6 @@ export default function AdminModalDetailPage() {
     const canUpdate = hasPermission(user, 'modal.update');
     const canDelete = hasPermission(user, 'modal.delete');
 
-    // Find the application item in Redux store or fetch it
     const item = useMemo(
         () => modal.find((m) => String(m.id) === String(id)) || null,
         [modal, id]
@@ -111,7 +110,6 @@ export default function AdminModalDetailPage() {
             dispatch(fetchModalItem(id))
                 .unwrap()
                 .catch(() => {
-                    // Fallback to fetchModalList if fetchModalItem fails
                     dispatch(fetchModalList());
                 })
                 .finally(() => setLoading(false));
@@ -119,7 +117,6 @@ export default function AdminModalDetailPage() {
         return () => dispatch(clearAdminNotice());
     }, [dispatch, id, item]);
 
-    // Chronological timeline
     const timeline = useMemo(() => {
         if (!item) return [];
         if (Array.isArray(item.histories) && item.histories.length > 0) {
@@ -148,7 +145,6 @@ export default function AdminModalDetailPage() {
         return entries;
     }, [item]);
 
-    // Submissions from the same applicant
     const applicantSubmissions = useMemo(() => {
         if (!item || !Array.isArray(modal)) return [];
         const normEmail = (item.email || '').trim().toLowerCase();
@@ -252,12 +248,13 @@ export default function AdminModalDetailPage() {
     };
 
     const isEligibleBast = item && ['Disetujui', 'Disalurkan'].includes(item.status_seleksi);
+    const lampiranFilename = item?.dokumen_lampiran ? item.dokumen_lampiran.split('/').pop() : '';
     const isImageLampiran = item?.dokumen_lampiran && /\.(jpg|jpeg|png|webp)$/i.test(item.dokumen_lampiran);
     const isPdfLampiran = item?.dokumen_lampiran && /\.pdf$/i.test(item.dokumen_lampiran);
 
     if (loading && !item) {
         return (
-            <div className="bs-card p-12 text-center text-[#64748b]">
+            <div className="bg-white border border-[#dbe3f0] rounded-lg p-12 text-center text-[#64748b]">
                 <div className="w-8 h-8 border-3 border-[#203880] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
                 <p className="text-sm font-medium">Memuat detail pengajuan Ruang Modal...</p>
             </div>
@@ -266,7 +263,7 @@ export default function AdminModalDetailPage() {
 
     if (!item) {
         return (
-            <div className="bs-card p-8 text-center space-y-3">
+            <div className="bg-white border border-[#dbe3f0] rounded-lg p-8 text-center space-y-3">
                 <AlertCircle className="w-10 h-10 text-amber-500 mx-auto" />
                 <h2 className="text-base font-bold text-[#203880]">Pengajuan Tidak Ditemukan</h2>
                 <p className="text-xs text-[#64748b]">
@@ -284,12 +281,12 @@ export default function AdminModalDetailPage() {
 
     return (
         <div className="space-y-4">
-            {/* Top Navigation Bar / Breadcrumb */}
-            <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3.5 rounded-lg border border-[#dbe3f0] shadow-xs">
+            {/* Navigasi & Tombol Aksi Atas */}
+            <div className="bg-white p-3.5 rounded-lg border border-[#dbe3f0] flex flex-wrap items-center justify-between gap-3 shadow-xs">
                 <div className="flex items-center gap-2">
                     <Link
                         to="/admin/modal"
-                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0068b0] hover:text-[#203880] px-2.5 py-1.5 rounded hover:bg-[#eef4ff] transition-colors"
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0068b0] hover:text-[#203880] px-2 py-1 rounded hover:bg-[#eef4ff] transition-colors"
                     >
                         <ArrowLeft className="w-4 h-4" />
                         Daftar Ruang Modal
@@ -353,514 +350,657 @@ export default function AdminModalDetailPage() {
                 </div>
             )}
 
-            {/* Header Hero Card */}
-            <div className="bs-card border-l-4 border-l-[#203880]">
-                <div className="bs-card-body p-4 sm:p-5">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="space-y-1.5">
-                            <div className="flex items-center gap-2.5 flex-wrap">
-                                <h1 className="text-lg sm:text-xl font-bold text-[#203880]">{item.nama}</h1>
-                                <code className="px-2 py-0.5 rounded bg-[#e7f1ff] text-[#203880] text-xs font-bold border border-[#b6d4fe]">
-                                    {item.kode}
-                                </code>
-                                <StatusBadge status={item.status_seleksi} />
-                            </div>
-                            <p className="text-xs text-[#64748b] flex flex-wrap items-center gap-2">
-                                <span className="font-medium text-[#334155]">{item.sekolah}</span>
-                                <span>•</span>
-                                <span>Tahun Lulus {item.tahun_lulus}</span>
-                                <span>•</span>
-                                <span className="font-semibold text-[#0068b0]">{item.kompetensi}</span>
-                                <span>•</span>
-                                <span className="bs-badge bs-badge-info">Jalur {item.jalur}</span>
-                            </p>
+            {/* LEMBAR DETAIL DOKUMEN: Penyajian Bersih Berbentuk Tabel & Kotak Terstruktur */}
+            <div className="bg-white border border-[#dbe3f0] rounded-lg shadow-xs overflow-hidden">
+                {/* Header Dokumen */}
+                <div className="bg-[#f8fafd] border-b border-[#dbe3f0] px-5 py-4 flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <div className="flex items-center gap-2.5 flex-wrap">
+                            <h1 className="text-base sm:text-lg font-bold text-[#203880]">
+                                Lembar Pengajuan Fasilitasi Ruang Modal
+                            </h1>
+                            <code className="px-2.5 py-0.5 rounded bg-[#e7f1ff] text-[#203880] text-xs font-bold border border-[#b6d4fe]">
+                                {item.kode}
+                            </code>
+                            <StatusBadge status={item.status_seleksi} />
                         </div>
-
-                        {/* Top Meta Details */}
-                        <div className="flex flex-wrap items-center gap-2 text-xs text-[#64748b]">
-                            <div className="px-3 py-1.5 bg-[#f8fafd] rounded border border-[#dbe3f0] flex items-center gap-1.5">
-                                <Calendar className="w-3.5 h-3.5 text-[#0068b0]" />
-                                <span>
-                                    Diajukan: <strong>{formatDateTime(item.created_at)}</strong>
-                                </span>
-                            </div>
+                        <p className="text-xs text-[#64748b] mt-1">
+                            Diajukan pada: <strong>{formatDateTime(item.created_at)}</strong>
                             {item.reviewer?.name && (
-                                <div className="px-3 py-1.5 bg-[#f8fafd] rounded border border-[#dbe3f0] flex items-center gap-1.5">
-                                    <ShieldCheck className="w-3.5 h-3.5 text-[#198754]" />
-                                    <span>
-                                        Peninjau: <strong>{item.reviewer.name}</strong>
-                                    </span>
-                                </div>
+                                <span className="ml-3">
+                                    • Ditinjau oleh: <strong className="text-[#203880]">{item.reviewer.name}</strong>
+                                </span>
                             )}
-                        </div>
+                        </p>
                     </div>
 
-                    {/* KPI Quick Stats Grid */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 mt-4 border-t border-[#eef2f9]">
-                        <div className="p-3 bg-[#f8fafd] rounded-lg border border-[#dbe3f0]">
-                            <div className="text-[11px] font-medium text-[#64748b]">Estimasi Bantuan</div>
-                            <div className="text-sm sm:text-base font-extrabold text-[#008a75] mt-0.5">
-                                {formatRupiah(item.estimasi_biaya)}
-                            </div>
-                            <div className="text-[10px] text-[#64748b]">{item.jenis_bantuan}</div>
-                        </div>
-
-                        <div className="p-3 bg-[#f8fafd] rounded-lg border border-[#dbe3f0]">
-                            <div className="text-[11px] font-medium text-[#64748b]">Nominal Disetujui</div>
-                            <div className="text-sm sm:text-base font-extrabold text-[#203880] mt-0.5">
-                                {item.nominal_disetujui != null ? formatRupiah(item.nominal_disetujui) : '-'}
-                            </div>
-                            <div className="text-[10px] text-[#64748b]">
-                                {item.nominal_disetujui != null ? 'Telah diverifikasi' : 'Menunggu seleksi'}
-                            </div>
-                        </div>
-
-                        <div className="p-3 bg-[#f8fafd] rounded-lg border border-[#dbe3f0]">
-                            <div className="text-[11px] font-medium text-[#64748b]">Skor Rubrik 5 Indikator</div>
-                            <div className="text-sm sm:text-base font-extrabold text-[#203880] mt-0.5 flex items-center gap-1">
-                                <Award className="w-4 h-4 text-[#f8a000]" />
-                                {item.skor_total != null ? `${item.skor_total} / 100` : 'Belum dinilai'}
-                            </div>
-                            <div className="text-[10px] text-[#64748b]">
-                                {item.skor_total != null
-                                    ? item.skor_total >= 75
-                                        ? 'Memenuhi syarat'
-                                        : 'Di bawah batas'
-                                    : 'Standar kelayakan 75+'}
-                            </div>
-                        </div>
-
-                        <div className="p-3 bg-[#f8fafd] rounded-lg border border-[#dbe3f0]">
-                            <div className="text-[11px] font-medium text-[#64748b]">Nomor BAST</div>
-                            <div className="text-xs sm:text-sm font-mono font-bold text-[#203880] mt-0.5 truncate">
-                                {item.nomor_bast || '-'}
-                            </div>
-                            <div className="text-[10px] text-[#64748b]">
-                                {item.tanggal_penyaluran ? `Salur: ${item.tanggal_penyaluran}` : 'Belum disalurkan'}
-                            </div>
-                        </div>
+                    <div className="text-right">
+                        <span className="text-[11px] text-[#64748b] block">Estimasi Nilai Pengajuan</span>
+                        <span className="text-base sm:text-lg font-extrabold text-[#008a75]">
+                            {formatRupiah(item.estimasi_biaya)}
+                        </span>
                     </div>
                 </div>
-            </div>
 
-            {/* Main Content Layout: Left 8 cols, Right 4 cols */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-                {/* Left Column */}
-                <div className="lg:col-span-8 space-y-4">
-                    {/* CARD 1: DOKUMEN LAMPIRAN PROPOSAL & RAB (PROMINENT) */}
-                    <div className="bs-card border-2 border-[#0068b0]/30 shadow-xs">
-                        <div className="bs-card-header bg-[#f0f6ff] border-b border-[#dbe3f0] flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <FileText className="w-4 h-4 text-[#0068b0]" />
-                                <h2 className="text-sm font-bold text-[#203880]">
-                                    Dokumen Lampiran Proposal & RAB
-                                </h2>
-                            </div>
-                            {item.dokumen_lampiran ? (
-                                <span className="bs-badge bs-badge-success flex items-center gap-1">
-                                    <CheckCircle2 className="w-3 h-3" /> Berkas Terlampir
-                                </span>
-                            ) : (
-                                <span className="bs-badge bs-badge-warning">Tidak Ada Berkas</span>
-                            )}
+                {/* TABEL 1: DATA IDENTITAS PEMOHON ALUMNI */}
+                <div className="border-b border-[#dbe3f0]">
+                    <div className="bg-[#f1f5f9] px-5 py-2.5 border-b border-[#e2e8f0] flex items-center gap-2">
+                        <User className="w-4 h-4 text-[#0068b0]" />
+                        <h2 className="text-xs font-bold text-[#203880] uppercase tracking-wider">
+                            I. Data Identitas Pemohon Alumni
+                        </h2>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-xs text-left border-collapse">
+                            <tbody>
+                                <tr className="border-b border-[#f1f5f9]">
+                                    <th className="w-1/4 sm:w-1/5 py-2.5 px-5 font-semibold text-[#475569] bg-[#fcfcfd]">
+                                        Nama Lengkap
+                                    </th>
+                                    <td className="w-1/4 sm:w-3/10 py-2.5 px-5 font-bold text-[#203880]">
+                                        {item.nama}
+                                    </td>
+                                    <th className="w-1/4 sm:w-1/5 py-2.5 px-5 font-semibold text-[#475569] bg-[#fcfcfd]">
+                                        Asal Sekolah
+                                    </th>
+                                    <td className="w-1/4 sm:w-3/10 py-2.5 px-5 text-[#1e293b]">
+                                        {item.sekolah} (Lulusan {item.tahun_lulus})
+                                    </td>
+                                </tr>
+                                <tr className="border-b border-[#f1f5f9]">
+                                    <th className="py-2.5 px-5 font-semibold text-[#475569] bg-[#fcfcfd]">
+                                        Kompetensi DT
+                                    </th>
+                                    <td className="py-2.5 px-5 font-semibold text-[#0068b0]">
+                                        {item.kompetensi}
+                                    </td>
+                                    <th className="py-2.5 px-5 font-semibold text-[#475569] bg-[#fcfcfd]">
+                                        Status Aktivitas
+                                    </th>
+                                    <td className="py-2.5 px-5 text-[#1e293b]">
+                                        {item.status_aktivitas || '-'}
+                                    </td>
+                                </tr>
+                                <tr className="border-b border-[#f1f5f9]">
+                                    <th className="py-2.5 px-5 font-semibold text-[#475569] bg-[#fcfcfd]">
+                                        No. WhatsApp
+                                    </th>
+                                    <td className="py-2.5 px-5">
+                                        {item.whatsapp ? (
+                                            <a
+                                                href={`https://wa.me/${item.whatsapp.replace(/\D/g, '')}`}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="font-semibold text-[#198754] hover:underline inline-flex items-center gap-1"
+                                            >
+                                                <Phone className="w-3 h-3" /> {item.whatsapp}
+                                            </a>
+                                        ) : (
+                                            '-'
+                                        )}
+                                    </td>
+                                    <th className="py-2.5 px-5 font-semibold text-[#475569] bg-[#fcfcfd]">
+                                        Alamat Email
+                                    </th>
+                                    <td className="py-2.5 px-5 text-[#1e293b]">
+                                        {item.email || '-'}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th className="py-2.5 px-5 font-semibold text-[#475569] bg-[#fcfcfd]">
+                                        Guru Pendamping DT
+                                    </th>
+                                    <td className="py-2.5 px-5 text-[#1e293b]">
+                                        {item.guru_pendamping || '-'}
+                                    </td>
+                                    <th className="py-2.5 px-5 font-semibold text-[#475569] bg-[#fcfcfd]">
+                                        Komitmen Binaan
+                                    </th>
+                                    <td className="py-2.5 px-5 text-emerald-700 font-semibold inline-flex items-center gap-1.5">
+                                        <CheckCircle2 className="w-3.5 h-3.5" />
+                                        Bersedia Didampingi & Dimonitor Berkala
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {/* TABEL 2: DATA FASILITASI & PENYALURAN MODAL */}
+                <div className="border-b border-[#dbe3f0]">
+                    <div className="bg-[#f1f5f9] px-5 py-2.5 border-b border-[#e2e8f0] flex items-center gap-2">
+                        <Briefcase className="w-4 h-4 text-[#198754]" />
+                        <h2 className="text-xs font-bold text-[#203880] uppercase tracking-wider">
+                            II. Data Fasilitasi & Penyaluran Ruang Modal
+                        </h2>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-xs text-left border-collapse">
+                            <tbody>
+                                <tr className="border-b border-[#f1f5f9]">
+                                    <th className="w-1/4 sm:w-1/5 py-2.5 px-5 font-semibold text-[#475569] bg-[#fcfcfd]">
+                                        Jalur Pengajuan
+                                    </th>
+                                    <td className="w-1/4 sm:w-3/10 py-2.5 px-5">
+                                        <span className="bs-badge bs-badge-info">Jalur {item.jalur}</span>
+                                    </td>
+                                    <th className="w-1/4 sm:w-1/5 py-2.5 px-5 font-semibold text-[#475569] bg-[#fcfcfd]">
+                                        Jenis Bantuan
+                                    </th>
+                                    <td className="w-1/4 sm:w-3/10 py-2.5 px-5 font-semibold text-[#203880]">
+                                        {item.jenis_bantuan}
+                                    </td>
+                                </tr>
+                                <tr className="border-b border-[#f1f5f9]">
+                                    <th className="py-2.5 px-5 font-semibold text-[#475569] bg-[#fcfcfd]">
+                                        Estimasi Pengajuan
+                                    </th>
+                                    <td className="py-2.5 px-5 font-bold text-[#008a75]">
+                                        {formatRupiah(item.estimasi_biaya)}
+                                    </td>
+                                    <th className="py-2.5 px-5 font-semibold text-[#475569] bg-[#fcfcfd]">
+                                        Nominal Disetujui
+                                    </th>
+                                    <td className="py-2.5 px-5 font-bold text-[#203880]">
+                                        {item.nominal_disetujui != null ? (
+                                            formatRupiah(item.nominal_disetujui)
+                                        ) : (
+                                            <span className="text-[#94a3b8] font-normal italic">Belum ditetapkan</span>
+                                        )}
+                                    </td>
+                                </tr>
+                                <tr className="border-b border-[#f1f5f9]">
+                                    <th className="py-2.5 px-5 font-semibold text-[#475569] bg-[#fcfcfd]">
+                                        Status Seleksi
+                                    </th>
+                                    <td className="py-2.5 px-5">
+                                        <StatusBadge status={item.status_seleksi} />
+                                    </td>
+                                    <th className="py-2.5 px-5 font-semibold text-[#475569] bg-[#fcfcfd]">
+                                        Skor Akhir Rubrik
+                                    </th>
+                                    <td className="py-2.5 px-5">
+                                        {item.skor_total != null ? (
+                                            <span className="font-bold text-[#203880]">
+                                                {item.skor_total} / 100{' '}
+                                                <span className="text-[11px] font-normal text-[#64748b]">
+                                                    ({item.skor_total >= 75 ? 'Memenuhi Syarat' : 'Perlu Evaluasi'})
+                                                </span>
+                                            </span>
+                                        ) : (
+                                            <span className="text-[#94a3b8] italic">Belum dinilai</span>
+                                        )}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th className="py-2.5 px-5 font-semibold text-[#475569] bg-[#fcfcfd]">
+                                        Nomor BAST
+                                    </th>
+                                    <td className="py-2.5 px-5">
+                                        {item.nomor_bast ? (
+                                            <code className="font-bold text-[#008a75]">{item.nomor_bast}</code>
+                                        ) : (
+                                            <span className="text-[#94a3b8] italic">Belum terbit</span>
+                                        )}
+                                    </td>
+                                    <th className="py-2.5 px-5 font-semibold text-[#475569] bg-[#fcfcfd]">
+                                        Tanggal Penyaluran
+                                    </th>
+                                    <td className="py-2.5 px-5 text-[#1e293b]">
+                                        {item.tanggal_penyaluran || (
+                                            <span className="text-[#94a3b8] italic">Belum disalurkan</span>
+                                        )}
+                                    </td>
+                                </tr>
+                                {item.rincian_bantuan_disalurkan && (
+                                    <tr className="border-t border-[#f1f5f9]">
+                                        <th className="py-2.5 px-5 font-semibold text-[#475569] bg-[#fcfcfd]">
+                                            Rincian Bantuan BAST
+                                        </th>
+                                        <td colSpan="3" className="py-2.5 px-5 text-[#1e293b] whitespace-pre-line">
+                                            {item.rincian_bantuan_disalurkan}
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {/* TABEL 3: RINCIAN KEBUTUHAN & RENCANA PEMANFAATAN */}
+                <div className="border-b border-[#dbe3f0]">
+                    <div className="bg-[#f1f5f9] px-5 py-2.5 border-b border-[#e2e8f0] flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-[#0068b0]" />
+                        <h2 className="text-xs font-bold text-[#203880] uppercase tracking-wider">
+                            III. Rincian Kebutuhan Peralatan & Rencana Usaha
+                        </h2>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-xs text-left border-collapse">
+                            <tbody>
+                                <tr className="border-b border-[#f1f5f9]">
+                                    <th className="w-1/4 sm:w-1/5 py-3 px-5 font-semibold text-[#475569] bg-[#fcfcfd] align-top">
+                                        Rincian Peralatan / Kebutuhan Modal
+                                    </th>
+                                    <td className="py-3 px-5 text-[#1e293b] leading-relaxed whitespace-pre-line">
+                                        {item.rincian_kebutuhan}
+                                    </td>
+                                </tr>
+                                <tr className="border-b border-[#f1f5f9]">
+                                    <th className="py-3 px-5 font-semibold text-[#475569] bg-[#fcfcfd] align-top">
+                                        Rencana Pemanfaatan & Target Omzet
+                                    </th>
+                                    <td className="py-3 px-5 text-[#1e293b] leading-relaxed whitespace-pre-line">
+                                        {item.rencana_deskripsi}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th className="py-3 px-5 font-semibold text-[#475569] bg-[#fcfcfd] align-top">
+                                        Catatan Evaluasi Verifikator
+                                    </th>
+                                    <td className="py-3 px-5 text-[#1e293b] leading-relaxed whitespace-pre-line">
+                                        {item.catatan_admin || (
+                                            <span className="text-[#94a3b8] italic">
+                                                Belum ada catatan evaluasi dari tim pengelola.
+                                            </span>
+                                        )}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {/* TABEL 4: BERKAS DOKUMEN LAMPIRAN PROPOSAL & RAB */}
+                <div className="border-b border-[#dbe3f0]">
+                    <div className="bg-[#f1f5f9] px-5 py-2.5 border-b border-[#e2e8f0] flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <FileCheck className="w-4 h-4 text-[#0068b0]" />
+                            <h2 className="text-xs font-bold text-[#203880] uppercase tracking-wider">
+                                IV. Dokumen Lampiran Pengajuan (Proposal & RAB)
+                            </h2>
                         </div>
-                        <div className="bs-card-body p-4">
-                            {item.dokumen_lampiran ? (
-                                <div className="space-y-3">
-                                    <div className="p-3.5 rounded-lg border border-[#b6d4fe] bg-[#f8fafd] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-lg bg-[#e7f1ff] border border-[#b6d4fe] flex items-center justify-center shrink-0">
-                                                {isPdfLampiran ? (
-                                                    <FileText className="w-5 h-5 text-red-600" />
-                                                ) : isImageLampiran ? (
-                                                    <FileText className="w-5 h-5 text-emerald-600" />
-                                                ) : (
-                                                    <FileText className="w-5 h-5 text-[#0068b0]" />
-                                                )}
-                                            </div>
-                                            <div className="space-y-0.5 min-w-0">
-                                                <div className="font-semibold text-xs text-[#203880] truncate max-w-sm">
-                                                    {item.dokumen_lampiran.split('/').pop()}
-                                                </div>
-                                                <p className="text-[11px] text-[#64748b]">
-                                                    Format:{' '}
-                                                    <span className="uppercase font-bold text-[#334155]">
-                                                        {item.dokumen_lampiran.split('.').pop()}
-                                                    </span>{' '}
-                                                    • Berkas proposal/RAB pengajuan bantuan modal alumni
-                                                </p>
-                                            </div>
-                                        </div>
+                        {item.dokumen_lampiran ? (
+                            <span className="bs-badge bs-badge-success">Berkas Terlampir</span>
+                        ) : (
+                            <span className="bs-badge bs-badge-warning">Tidak Ada Berkas</span>
+                        )}
+                    </div>
 
-                                        <div className="flex items-center gap-2 shrink-0">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-xs text-left border-collapse">
+                            <thead>
+                                <tr className="border-b border-[#e2e8f0] bg-[#f8fafd] text-[#475569]">
+                                    <th className="py-2.5 px-5 font-semibold">Jenis Dokumen</th>
+                                    <th className="py-2.5 px-5 font-semibold">Nama File</th>
+                                    <th className="py-2.5 px-5 font-semibold">Format</th>
+                                    <th className="py-2.5 px-5 font-semibold">Status Penyimpanan</th>
+                                    <th className="py-2.5 px-5 font-semibold text-right">Aksi Dokumen</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {item.dokumen_lampiran ? (
+                                    <tr>
+                                        <td className="py-3 px-5 font-medium text-[#203880]">
+                                            Proposal Usaha & Rincian Anggaran Biaya (RAB)
+                                        </td>
+                                        <td className="py-3 px-5 font-mono text-[#334155]">
+                                            {lampiranFilename}
+                                        </td>
+                                        <td className="py-3 px-5 uppercase font-bold text-[#0068b0]">
+                                            {lampiranFilename.split('.').pop() || 'File'}
+                                        </td>
+                                        <td className="py-3 px-5">
+                                            {imgLoadFailed ? (
+                                                <span className="text-rose-600 font-medium">
+                                                    Berkas fisik tidak ditemukan di server (404)
+                                                </span>
+                                            ) : (
+                                                <span className="text-emerald-700 font-medium">
+                                                    Tersimpan di server
+                                                </span>
+                                            )}
+                                        </td>
+                                        <td className="py-3 px-5 text-right space-x-2">
                                             <a
                                                 href={item.dokumen_lampiran}
                                                 target="_blank"
                                                 rel="noreferrer"
-                                                className="bs-btn bs-btn-sm bs-btn-primary flex items-center gap-1.5"
+                                                className="bs-btn bs-btn-sm bs-btn-primary inline-flex items-center gap-1.5"
                                             >
                                                 <ExternalLink className="w-3.5 h-3.5" />
-                                                Buka Berkas (Tab Baru)
+                                                Buka Berkas
                                             </a>
                                             <a
                                                 href={item.dokumen_lampiran}
                                                 download
-                                                className="bs-btn bs-btn-sm bs-btn-outline-secondary flex items-center gap-1.5"
-                                                title="Unduh Berkas Lampiran"
+                                                className="bs-btn bs-btn-sm bs-btn-outline-secondary inline-flex items-center gap-1.5"
                                             >
                                                 <Download className="w-3.5 h-3.5" />
                                                 Unduh
                                             </a>
-                                        </div>
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    <tr>
+                                        <td colSpan="5" className="py-4 px-5 text-center text-[#94a3b8] italic">
+                                            Pemohon tidak menyertakan berkas lampiran proposal/RAB pada pengajuan ini.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Pratinjau Gambar atau PDF jika berkas ada */}
+                    {item.dokumen_lampiran && (
+                        <div className="p-4 bg-[#fcfcfd] border-t border-[#eef2f9]">
+                            {isImageLampiran && !imgLoadFailed && (
+                                <div className="space-y-1 text-center">
+                                    <div className="text-[11px] text-[#64748b] font-medium">
+                                        Pratinjau Gambar Dokumen Lampiran:
                                     </div>
-
-                                    {/* Preview if Image */}
-                                    {isImageLampiran && (
-                                        <div className="rounded-lg border border-[#dbe3f0] overflow-hidden bg-slate-50 p-2 text-center">
-                                            <div className="text-[11px] text-[#64748b] mb-1 font-medium">
-                                                Pratinjau Gambar Lampiran:
-                                            </div>
-                                            <img
-                                                src={item.dokumen_lampiran}
-                                                alt="Lampiran Proposal Modal"
-                                                className="max-h-80 w-auto mx-auto object-contain rounded border border-[#e2e8f0]"
-                                            />
-                                        </div>
-                                    )}
-
-                                    {/* Embed if PDF */}
-                                    {isPdfLampiran && (
-                                        <div className="rounded-lg border border-[#dbe3f0] overflow-hidden bg-slate-50 p-2">
-                                            <div className="flex items-center justify-between text-[11px] text-[#64748b] mb-1.5 font-medium px-1">
-                                                <span>Pratinjau Dokumen PDF:</span>
-                                                <a
-                                                    href={item.dokumen_lampiran}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                    className="text-[#0068b0] hover:underline flex items-center gap-1"
-                                                >
-                                                    Perbesar Tampilan <ExternalLink className="w-3 h-3" />
-                                                </a>
-                                            </div>
-                                            <iframe
-                                                src={item.dokumen_lampiran}
-                                                title="Pratinjau PDF Dokumen Lampiran"
-                                                className="w-full h-96 rounded border border-[#e2e8f0]"
-                                            />
-                                        </div>
-                                    )}
+                                    <img
+                                        src={item.dokumen_lampiran}
+                                        alt="Lampiran Dokumen Proposal Modal"
+                                        onError={() => setImgLoadFailed(true)}
+                                        className="max-h-96 w-auto mx-auto object-contain rounded border border-[#dbe3f0] shadow-xs"
+                                    />
                                 </div>
-                            ) : (
-                                <div className="p-4 rounded-lg bg-[#fff8e6] border border-[#ffe082] text-xs text-[#8a5b00] flex items-start gap-2.5">
-                                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-[#f8a000]" />
+                            )}
+
+                            {isPdfLampiran && !imgLoadFailed && (
+                                <div className="space-y-1.5">
+                                    <div className="flex items-center justify-between text-[11px] text-[#64748b] font-medium">
+                                        <span>Pratinjau Dokumen PDF Lampiran:</span>
+                                        <a
+                                            href={item.dokumen_lampiran}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="text-[#0068b0] hover:underline flex items-center gap-1"
+                                        >
+                                            Buka di Jendela Baru <ExternalLink className="w-3 h-3" />
+                                        </a>
+                                    </div>
+                                    <iframe
+                                        src={item.dokumen_lampiran}
+                                        title="Pratinjau PDF Dokumen Lampiran"
+                                        onError={() => setImgLoadFailed(true)}
+                                        className="w-full h-96 rounded border border-[#dbe3f0]"
+                                    />
+                                </div>
+                            )}
+
+                            {imgLoadFailed && (
+                                <div className="p-3 rounded bg-amber-50 border border-amber-200 text-xs text-amber-800 flex items-start gap-2">
+                                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
                                     <div>
-                                        <div className="font-bold">Pemohon Tidak Menyertakan Dokumen Lampiran</div>
-                                        <p className="mt-0.5 text-[11px] leading-relaxed">
-                                            Pemohon alumni belum mengunggah file proposal atau RAB terperinci pada
-                                            pengajuan ini. Anda dapat meminta pemohon untuk mengirimkan dokumen
-                                            pendukung melalui status "Perlu Perbaikan" atau menghubungi via WhatsApp.
+                                        <strong>Berkas Lampiran Tidak Ditemukan di Server (404)</strong>
+                                        <p className="mt-0.5 text-[11px] text-amber-700 leading-relaxed">
+                                            File <code className="bg-amber-100 px-1 py-0.5 rounded font-mono text-[10px]">{lampiranFilename}</code> belum
+                                            tersedia di disk penyimpanan (kemungkinan terhapus saat deployment/restart sebelumnya).
+                                            Anda dapat meminta pemohon mengirimkan ulang melalui WhatsApp atau mengubah status menjadi "Perlu Perbaikan".
                                         </p>
                                     </div>
                                 </div>
                             )}
                         </div>
-                    </div>
+                    )}
+                </div>
 
-                    {/* CARD 2: Rincian Kebutuhan & Rencana Kerja / Usaha */}
-                    <div className="bs-card">
-                        <div className="bs-card-header">
-                            <h2 className="text-sm font-bold text-[#203880] flex items-center gap-1.5">
-                                <Briefcase className="w-4 h-4 text-[#0068b0]" />
-                                Rincian Kebutuhan Bantuan & Rencana Pemanfaatan
-                            </h2>
-                        </div>
-                        <div className="bs-card-body p-4 space-y-3">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                                <div className="p-3.5 rounded-lg bg-[#f8fafd] border border-[#dbe3f0] space-y-1.5">
-                                    <div className="font-bold text-[#203880] flex items-center gap-1.5">
-                                        <DollarSign className="w-3.5 h-3.5 text-[#008a75]" />
-                                        Rincian Peralatan / Kebutuhan Modal:
-                                    </div>
-                                    <p className="text-[#334155] leading-relaxed whitespace-pre-line font-normal">
-                                        {item.rincian_kebutuhan}
-                                    </p>
-                                </div>
-
-                                <div className="p-3.5 rounded-lg bg-[#f8fafd] border border-[#dbe3f0] space-y-1.5">
-                                    <div className="font-bold text-[#203880] flex items-center gap-1.5">
-                                        <GraduationCap className="w-3.5 h-3.5 text-[#0068b0]" />
-                                        Rencana Pemanfaatan & Target Omzet:
-                                    </div>
-                                    <p className="text-[#334155] leading-relaxed whitespace-pre-line font-normal">
-                                        {item.rencana_deskripsi}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {item.guru_pendamping && (
-                                <div className="p-3 rounded-lg bg-[#f1f5f9] border border-[#e2e8f0] text-xs flex items-center justify-between gap-2">
-                                    <span className="text-[#64748b]">Guru Pendamping Sekolah SMA DT:</span>
-                                    <strong className="text-[#203880] font-semibold">
-                                        {item.guru_pendamping}
-                                    </strong>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* CARD 3: Hasil Rubrik Penilaian 5 Indikator */}
-                    {item.skor_total != null && (
-                        <div className="bs-card">
-                            <div className="bs-card-header flex items-center justify-between">
-                                <h2 className="text-sm font-bold text-[#203880] flex items-center gap-1.5">
-                                    <Award className="w-4 h-4 text-[#f8a000]" />
-                                    Hasil Rubrik Penilaian Seleksi (5 Indikator Blueprint)
+                {/* TABEL 5: EVALUASI RUBRIK PENILAIAN 5 INDIKATOR (JIKA SUDAH DINILAI) */}
+                {item.skor_total != null && (
+                    <div className="border-b border-[#dbe3f0]">
+                        <div className="bg-[#f1f5f9] px-5 py-2.5 border-b border-[#e2e8f0] flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Award className="w-4 h-4 text-[#f8a000]" />
+                                <h2 className="text-xs font-bold text-[#203880] uppercase tracking-wider">
+                                    V. Evaluasi Rubrik Penilaian Seleksi (5 Indikator Blueprint)
                                 </h2>
-                                <span className="bs-badge bs-badge-primary">
-                                    Nilai Akhir: {item.skor_total} / 100
-                                </span>
                             </div>
-                            <div className="bs-card-body p-4">
-                                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs text-center">
-                                    <div className="p-2.5 rounded-lg bg-[#f8fafd] border border-[#dbe3f0]">
-                                        <div className="text-[11px] text-[#64748b]">Kompetensi (20%)</div>
-                                        <div className="font-bold text-base text-[#203880] mt-1">
+                            <span className="bs-badge bs-badge-primary">
+                                Nilai Akhir: {item.skor_total} / 100
+                            </span>
+                        </div>
+
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-xs text-left border-collapse">
+                                <thead>
+                                    <tr className="border-b border-[#e2e8f0] bg-[#f8fafd] text-[#475569]">
+                                        <th className="w-12 py-2.5 px-5 font-semibold text-center">No</th>
+                                        <th className="py-2.5 px-5 font-semibold">Indikator Penilaian Blueprint</th>
+                                        <th className="w-24 py-2.5 px-5 font-semibold text-center">Bobot</th>
+                                        <th className="w-28 py-2.5 px-5 font-semibold text-center">Skor (0-100)</th>
+                                        <th className="w-36 py-2.5 px-5 font-semibold text-right">Kontribusi Skor</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr className="border-b border-[#f1f5f9]">
+                                        <td className="py-2.5 px-5 text-center text-[#64748b]">1</td>
+                                        <td className="py-2.5 px-5 font-medium text-[#1e293b]">
+                                            Kesesuaian Kompetensi DT dengan Kebutuhan
+                                        </td>
+                                        <td className="py-2.5 px-5 text-center text-[#475569]">20%</td>
+                                        <td className="py-2.5 px-5 text-center font-bold text-[#203880]">
                                             {item.skor_kompetensi ?? '-'}
-                                        </div>
-                                    </div>
-                                    <div className="p-2.5 rounded-lg bg-[#f8fafd] border border-[#dbe3f0]">
-                                        <div className="text-[11px] text-[#64748b]">Rencana (25%)</div>
-                                        <div className="font-bold text-base text-[#203880] mt-1">
+                                        </td>
+                                        <td className="py-2.5 px-5 text-right font-semibold text-[#0068b0]">
+                                            {item.skor_kompetensi != null
+                                                ? (item.skor_kompetensi * 0.2).toFixed(1)
+                                                : '-'}
+                                        </td>
+                                    </tr>
+                                    <tr className="border-b border-[#f1f5f9]">
+                                        <td className="py-2.5 px-5 text-center text-[#64748b]">2</td>
+                                        <td className="py-2.5 px-5 font-medium text-[#1e293b]">
+                                            Kejelasan Rencana Kerja / Usaha
+                                        </td>
+                                        <td className="py-2.5 px-5 text-center text-[#475569]">25%</td>
+                                        <td className="py-2.5 px-5 text-center font-bold text-[#203880]">
                                             {item.skor_rencana ?? '-'}
-                                        </div>
-                                    </div>
-                                    <div className="p-2.5 rounded-lg bg-[#f8fafd] border border-[#dbe3f0]">
-                                        <div className="text-[11px] text-[#64748b]">Ketepatan Alat (25%)</div>
-                                        <div className="font-bold text-base text-[#203880] mt-1">
+                                        </td>
+                                        <td className="py-2.5 px-5 text-right font-semibold text-[#0068b0]">
+                                            {item.skor_rencana != null
+                                                ? (item.skor_rencana * 0.25).toFixed(1)
+                                                : '-'}
+                                        </td>
+                                    </tr>
+                                    <tr className="border-b border-[#f1f5f9]">
+                                        <td className="py-2.5 px-5 text-center text-[#64748b]">3</td>
+                                        <td className="py-2.5 px-5 font-medium text-[#1e293b]">
+                                            Urgensi & Ketepatan Kebutuhan Bantuan Alat/Modal
+                                        </td>
+                                        <td className="py-2.5 px-5 text-center text-[#475569]">25%</td>
+                                        <td className="py-2.5 px-5 text-center font-bold text-[#203880]">
                                             {item.skor_kebutuhan ?? '-'}
-                                        </div>
-                                    </div>
-                                    <div className="p-2.5 rounded-lg bg-[#f8fafd] border border-[#dbe3f0]">
-                                        <div className="text-[11px] text-[#64748b]">Dampak Ekonomi (20%)</div>
-                                        <div className="font-bold text-base text-[#203880] mt-1">
+                                        </td>
+                                        <td className="py-2.5 px-5 text-right font-semibold text-[#0068b0]">
+                                            {item.skor_kebutuhan != null
+                                                ? (item.skor_kebutuhan * 0.25).toFixed(1)
+                                                : '-'}
+                                        </td>
+                                    </tr>
+                                    <tr className="border-b border-[#f1f5f9]">
+                                        <td className="py-2.5 px-5 text-center text-[#64748b]">4</td>
+                                        <td className="py-2.5 px-5 font-medium text-[#1e293b]">
+                                            Potensi Dampak Ekonomi & Penghasilan
+                                        </td>
+                                        <td className="py-2.5 px-5 text-center text-[#475569]">20%</td>
+                                        <td className="py-2.5 px-5 text-center font-bold text-[#203880]">
                                             {item.skor_dampak ?? '-'}
-                                        </div>
-                                    </div>
-                                    <div className="p-2.5 rounded-lg bg-[#f8fafd] border border-[#dbe3f0]">
-                                        <div className="text-[11px] text-[#64748b]">Komitmen (10%)</div>
-                                        <div className="font-bold text-base text-[#203880] mt-1">
+                                        </td>
+                                        <td className="py-2.5 px-5 text-right font-semibold text-[#0068b0]">
+                                            {item.skor_dampak != null
+                                                ? (item.skor_dampak * 0.2).toFixed(1)
+                                                : '-'}
+                                        </td>
+                                    </tr>
+                                    <tr className="border-b border-[#f1f5f9]">
+                                        <td className="py-2.5 px-5 text-center text-[#64748b]">5</td>
+                                        <td className="py-2.5 px-5 font-medium text-[#1e293b]">
+                                            Kesiapan & Komitmen Pendampingan/Pelaporan
+                                        </td>
+                                        <td className="py-2.5 px-5 text-center text-[#475569]">10%</td>
+                                        <td className="py-2.5 px-5 text-center font-bold text-[#203880]">
                                             {item.skor_komitmen ?? '-'}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                                        </td>
+                                        <td className="py-2.5 px-5 text-right font-semibold text-[#0068b0]">
+                                            {item.skor_komitmen != null
+                                                ? (item.skor_komitmen * 0.1).toFixed(1)
+                                                : '-'}
+                                        </td>
+                                    </tr>
+                                    <tr className="bg-[#f8fafd] font-bold text-[#203880]">
+                                        <td colSpan="2" className="py-3 px-5 text-right uppercase tracking-wider">
+                                            Total Skor Akhir
+                                        </td>
+                                        <td className="py-3 px-5 text-center">100%</td>
+                                        <td className="py-3 px-5 text-center text-sm">{item.skor_total}</td>
+                                        <td className="py-3 px-5 text-right text-sm text-[#008a75]">
+                                            {item.skor_total} / 100
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
-                    )}
+                    </div>
+                )}
 
-                    {/* CARD 4: Catatan Evaluasi Admin */}
-                    <div className="bs-card">
-                        <div className="bs-card-header">
-                            <h2 className="text-sm font-bold text-[#203880]">
-                                Catatan Evaluasi & Rekomendasi Verifikator
+                {/* TABEL 6: RIWAYAT PERUBAHAN STATUS & LOG AKTIVITAS */}
+                <div className="border-b border-[#dbe3f0]">
+                    <div className="bg-[#f1f5f9] px-5 py-2.5 border-b border-[#e2e8f0] flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <History className="w-4 h-4 text-[#0068b0]" />
+                            <h2 className="text-xs font-bold text-[#203880] uppercase tracking-wider">
+                                VI. Riwayat Status & Log Aktivitas
                             </h2>
                         </div>
-                        <div className="bs-card-body p-4 text-xs">
-                            <div className="p-3 rounded-lg bg-[#f8fafd] border border-[#dbe3f0] text-[#334155] leading-relaxed">
-                                {item.catatan_admin || 'Belum ada catatan evaluasi dari tim pengelola.'}
-                            </div>
-                        </div>
+                        <span className="bs-badge bs-badge-secondary">{timeline.length} Log</span>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-xs text-left border-collapse">
+                            <thead>
+                                <tr className="border-b border-[#e2e8f0] bg-[#f8fafd] text-[#475569]">
+                                    <th className="w-12 py-2.5 px-5 font-semibold text-center">No</th>
+                                    <th className="w-40 py-2.5 px-5 font-semibold">Tanggal & Waktu</th>
+                                    <th className="w-36 py-2.5 px-5 font-semibold">Status Seleksi</th>
+                                    <th className="w-36 py-2.5 px-5 font-semibold">Oleh</th>
+                                    <th className="w-28 py-2.5 px-5 font-semibold">Peran</th>
+                                    <th className="py-2.5 px-5 font-semibold">Catatan / Keterangan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {timeline.map((log, idx) => (
+                                    <tr key={log.id || idx} className="border-b border-[#f1f5f9] hover:bg-[#fafafa]">
+                                        <td className="py-2.5 px-5 text-center text-[#64748b]">{idx + 1}</td>
+                                        <td className="py-2.5 px-5 text-[#334155] whitespace-nowrap">
+                                            {formatDateTime(log.created_at)}
+                                        </td>
+                                        <td className="py-2.5 px-5">
+                                            <StatusBadge status={log.status_seleksi} />
+                                        </td>
+                                        <td className="py-2.5 px-5 font-semibold text-[#203880]">
+                                            {log.actor_name}
+                                        </td>
+                                        <td className="py-2.5 px-5">
+                                            <span className="px-1.5 py-0.5 rounded bg-[#f1f5f9] text-[10px] font-medium text-[#475569] border border-[#e2e8f0]">
+                                                {log.actor_type === 'admin' ? 'Pengelola / Admin' : 'Pemohon Alumni'}
+                                            </span>
+                                        </td>
+                                        <td className="py-2.5 px-5 text-[#334155]">
+                                            {log.catatan || '-'}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
-                {/* Right Column */}
-                <div className="lg:col-span-4 space-y-4">
-                    {/* CARD 1: Data Pemohon Alumni */}
-                    <div className="bs-card">
-                        <div className="bs-card-header">
-                            <h2 className="text-sm font-bold text-[#203880] flex items-center gap-1.5">
-                                <User className="w-4 h-4 text-[#0068b0]" />
-                                Data Alumni Pemohon
-                            </h2>
-                        </div>
-                        <div className="bs-card-body p-4 space-y-2.5 text-xs">
-                            <div className="flex justify-between items-center gap-2 pb-2 border-b border-[#f1f5f9]">
-                                <span className="text-[#64748b]">Nama Lengkap</span>
-                                <span className="font-bold text-[#203880] text-right">{item.nama}</span>
-                            </div>
-                            <div className="flex justify-between gap-2 pb-2 border-b border-[#f1f5f9]">
-                                <span className="text-[#64748b]">Asal Sekolah</span>
-                                <span className="font-medium text-[#334155] text-right">
-                                    {item.sekolah} ({item.tahun_lulus})
-                                </span>
-                            </div>
-                            <div className="flex justify-between gap-2 pb-2 border-b border-[#f1f5f9]">
-                                <span className="text-[#64748b]">Kompetensi DT</span>
-                                <span className="font-semibold text-[#0068b0] text-right">
-                                    {item.kompetensi}
-                                </span>
-                            </div>
-                            <div className="flex justify-between gap-2 pb-2 border-b border-[#f1f5f9]">
-                                <span className="text-[#64748b]">Status Aktivitas</span>
-                                <span className="font-medium text-[#334155] text-right">
-                                    {item.status_aktivitas || '-'}
-                                </span>
-                            </div>
-                            <div className="flex justify-between items-center gap-2 pb-2 border-b border-[#f1f5f9]">
-                                <span className="text-[#64748b] flex items-center gap-1">
-                                    <Mail className="w-3.5 h-3.5" /> Email
-                                </span>
-                                <span className="font-medium text-[#334155] text-right">
-                                    {item.email || '-'}
-                                </span>
-                            </div>
-                            <div className="flex justify-between items-center gap-2 pb-2 border-b border-[#f1f5f9]">
-                                <span className="text-[#64748b] flex items-center gap-1">
-                                    <Phone className="w-3.5 h-3.5" /> WhatsApp
-                                </span>
-                                {item.whatsapp ? (
-                                    <a
-                                        href={`https://wa.me/${item.whatsapp.replace(/\D/g, '')}`}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="font-semibold text-[#198754] hover:underline text-right"
-                                    >
-                                        {item.whatsapp}
-                                    </a>
-                                ) : (
-                                    <span className="font-medium text-[#334155]">-</span>
-                                )}
-                            </div>
-                            <div className="flex justify-between items-center gap-2">
-                                <span className="text-[#64748b]">Komitmen Binaan</span>
-                                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#198754]">
-                                    <CheckCircle2 className="w-3.5 h-3.5" /> Bersedia Didampingi
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* CARD 2: Detail Penyaluran BAST */}
-                    <div className="bs-card">
-                        <div className="bs-card-header">
-                            <h2 className="text-sm font-bold text-[#203880] flex items-center gap-1.5">
-                                <FileCheck className="w-4 h-4 text-[#198754]" />
-                                Informasi Penyaluran & BAST
-                            </h2>
-                        </div>
-                        <div className="bs-card-body p-4 space-y-2.5 text-xs">
-                            <div className="flex justify-between items-center gap-2 pb-2 border-b border-[#f1f5f9]">
-                                <span className="text-[#64748b]">Status Terakhir</span>
-                                <StatusBadge status={item.status_seleksi} />
-                            </div>
-                            <div className="flex justify-between items-center gap-2 pb-2 border-b border-[#f1f5f9]">
-                                <span className="text-[#64748b]">Nomor BAST</span>
-                                <code className="font-bold text-[#008a75] text-right">
-                                    {item.nomor_bast || '-'}
-                                </code>
-                            </div>
-                            <div className="flex justify-between items-center gap-2 pb-2 border-b border-[#f1f5f9]">
-                                <span className="text-[#64748b]">Tanggal Penyaluran</span>
-                                <span className="font-medium text-[#334155]">
-                                    {item.tanggal_penyaluran || '-'}
-                                </span>
-                            </div>
-                            {item.rincian_bantuan_disalurkan && (
-                                <div className="pt-1">
-                                    <span className="text-[#64748b] block mb-1">Rincian Bantuan Disalurkan:</span>
-                                    <div className="p-2.5 rounded bg-[#f8fafd] border border-[#dbe3f0] text-[#334155]">
-                                        {item.rincian_bantuan_disalurkan}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* CARD 3: Timeline Riwayat Status */}
-                    <div className="bs-card">
-                        <div className="bs-card-header flex items-center justify-between">
-                            <h2 className="text-sm font-bold text-[#203880] flex items-center gap-1.5">
-                                <History className="w-4 h-4 text-[#0068b0]" />
-                                Riwayat Status Pengajuan
-                            </h2>
-                            <span className="bs-badge bs-badge-secondary">{timeline.length} Log</span>
-                        </div>
-                        <div className="bs-card-body p-4">
-                            <div className="relative pl-5 space-y-3 before:content-[''] before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-[#dee2e6]">
-                                {timeline.map((log, idx) => (
-                                    <div
-                                        key={log.id || idx}
-                                        className="relative p-2.5 rounded border border-[#e9ecef] bg-[#fcfcfd] text-xs space-y-1"
-                                    >
-                                        <span
-                                            className={`absolute -left-[19px] top-3 w-2.5 h-2.5 rounded-full border-2 border-white ${
-                                                log.actor_type === 'admin' ? 'bg-[#198754]' : 'bg-[#0068b0]'
-                                            }`}
-                                        />
-                                        <div className="flex items-center justify-between gap-1 flex-wrap">
-                                            <StatusBadge status={log.status_seleksi} />
-                                            <span className="text-[10px] text-[#64748b]">
-                                                {formatDateTime(log.created_at)}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center gap-1.5 text-[11px] text-[#334155]">
-                                            <span className="font-semibold text-[#203880]">{log.actor_name}</span>
-                                            <span className="text-[10px] text-[#64748b]">
-                                                ({log.actor_type === 'admin' ? 'Pengelola' : 'Pemohon'})
-                                            </span>
-                                        </div>
-                                        {log.catatan && (
-                                            <p className="text-[#64748b] text-[11px] leading-relaxed pt-0.5">
-                                                {log.catatan}
-                                            </p>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* CARD 4: Riwayat Pengajuan Lain oleh Pemohon yang Sama */}
-                    {applicantSubmissions.length > 1 && (
-                        <div className="bs-card">
-                            <div className="bs-card-header flex items-center justify-between">
-                                <h2 className="text-sm font-bold text-[#203880] flex items-center gap-1.5">
-                                    <GraduationCap className="w-4 h-4 text-[#198754]" />
-                                    Pengajuan Lain ({applicantSubmissions.length})
+                {/* TABEL 7: RIWAYAT PENGAJUAN LAIN DARI PEMOHON YANG SAMA (JIKA ADA) */}
+                {applicantSubmissions.length > 1 && (
+                    <div>
+                        <div className="bg-[#f1f5f9] px-5 py-2.5 border-b border-[#e2e8f0] flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <GraduationCap className="w-4 h-4 text-[#198754]" />
+                                <h2 className="text-xs font-bold text-[#203880] uppercase tracking-wider">
+                                    VII. Pengajuan Lain oleh Pemohon ({item.nama})
                                 </h2>
                             </div>
-                            <div className="bs-card-body p-3 space-y-2">
-                                {applicantSubmissions.map((sub) => {
-                                    const isCurrent = sub.id === item.id;
-                                    return (
-                                        <div
-                                            key={sub.id}
-                                            onClick={() => (!isCurrent ? navigate(`/admin/modal/${sub.id}`) : null)}
-                                            className={`p-2.5 rounded border text-xs transition-colors ${
-                                                isCurrent
-                                                    ? 'bg-[#e7f1ff]/60 border-[#b6d4fe]'
-                                                    : 'bg-white border-[#e2e8f0] hover:bg-[#f8fafd] cursor-pointer'
-                                            }`}
-                                        >
-                                            <div className="flex items-center justify-between gap-2">
-                                                <code className="font-bold text-[#203880]">{sub.kode}</code>
-                                                <StatusBadge status={sub.status_seleksi} />
-                                            </div>
-                                            <div className="text-[11px] text-[#64748b] mt-1 flex justify-between">
-                                                <span>{sub.jenis_bantuan}</span>
-                                                <span className="font-semibold text-[#334155]">
-                                                    {formatRupiah(sub.estimasi_biaya)}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
+                            <span className="bs-badge bs-badge-info">
+                                Total: {applicantSubmissions.length} Pengajuan
+                            </span>
                         </div>
-                    )}
-                </div>
+
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-xs text-left border-collapse">
+                                <thead>
+                                    <tr className="border-b border-[#e2e8f0] bg-[#f8fafd] text-[#475569]">
+                                        <th className="py-2.5 px-5 font-semibold">Kode Pengajuan</th>
+                                        <th className="py-2.5 px-5 font-semibold">Tanggal Diajukan</th>
+                                        <th className="py-2.5 px-5 font-semibold">Jalur & Jenis Bantuan</th>
+                                        <th className="py-2.5 px-5 font-semibold text-right">Estimasi Biaya</th>
+                                        <th className="py-2.5 px-5 font-semibold">Status Seleksi</th>
+                                        <th className="py-2.5 px-5 font-semibold text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {applicantSubmissions.map((sub) => {
+                                        const isCurrent = sub.id === item.id;
+                                        return (
+                                            <tr
+                                                key={sub.id}
+                                                className={`border-b border-[#f1f5f9] ${
+                                                    isCurrent ? 'bg-[#e7f1ff]/50 font-medium' : 'hover:bg-[#fafafa]'
+                                                }`}
+                                            >
+                                                <td className="py-2.5 px-5">
+                                                    <code className="font-bold text-[#203880]">{sub.kode}</code>
+                                                    {isCurrent && (
+                                                        <span className="ml-2 text-[10px] text-[#0068b0] font-bold">
+                                                            (Sedang dibuka)
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                <td className="py-2.5 px-5 text-[#475569]">
+                                                    {formatDateTime(sub.created_at)}
+                                                </td>
+                                                <td className="py-2.5 px-5 text-[#1e293b]">
+                                                    {sub.jalur} — {sub.jenis_bantuan}
+                                                </td>
+                                                <td className="py-2.5 px-5 text-right font-semibold text-[#008a75]">
+                                                    {formatRupiah(sub.estimasi_biaya)}
+                                                </td>
+                                                <td className="py-2.5 px-5">
+                                                    <StatusBadge status={sub.status_seleksi} />
+                                                </td>
+                                                <td className="py-2.5 px-5 text-center">
+                                                    {!isCurrent ? (
+                                                        <Link
+                                                            to={`/admin/modal/${sub.id}`}
+                                                            className="bs-btn bs-btn-sm bs-btn-outline-primary"
+                                                        >
+                                                            Buka
+                                                        </Link>
+                                                    ) : (
+                                                        <span className="text-[#94a3b8] text-[11px]">-</span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
             </div>
 
-            {/* Modal Rubrik Seleksi & Penetapan BAST (with prominent Dokumen Lampiran preview) */}
+            {/* MODAL PROSES SELEKSI & RUBRIK */}
             {showReviewModal && (
                 <div className="bs-modal-backdrop" onClick={() => setShowReviewModal(false)}>
                     <div className="bs-modal-dialog max-w-2xl" onClick={(e) => e.stopPropagation()}>
@@ -885,7 +1025,7 @@ export default function AdminModalDetailPage() {
                         <form onSubmit={handleSaveReview}>
                             <div className="bs-modal-body space-y-4 text-xs">
                                 {/* Ringkasan Proposal & DOKUMEN LAMPIRAN PREVIEW */}
-                                <div className="p-3 bg-[#f8fafd] rounded-lg border border-[#dbe3f0] space-y-2">
+                                <div className="p-3 bg-[#f8fafd] rounded border border-[#dbe3f0] space-y-2">
                                     <div className="flex flex-wrap justify-between gap-2">
                                         <span>
                                             <strong>Jalur & Jenis:</strong> Ruang Modal {item.jalur} —{' '}
@@ -914,9 +1054,7 @@ export default function AdminModalDetailPage() {
                                                     Dokumen Lampiran Proposal / RAB:
                                                 </div>
                                                 <div className="text-[11px] text-[#64748b]">
-                                                    {item.dokumen_lampiran
-                                                        ? item.dokumen_lampiran.split('/').pop()
-                                                        : 'Pemohon tidak menyertakan berkas'}
+                                                    {lampiranFilename || 'Pemohon tidak menyertakan berkas'}
                                                 </div>
                                             </div>
                                         </div>

@@ -145,8 +145,13 @@ class PublicController extends Controller
         if ($request->hasFile('dokumen_lampiran') && $request->file('dokumen_lampiran')->isValid()) {
             $file = $request->file('dokumen_lampiran');
             $uploadDir = public_path('uploads/modal');
+            $storageDir = storage_path('app/public/uploads/modal');
+
             if (! is_dir($uploadDir)) {
                 @mkdir($uploadDir, 0775, true);
+            }
+            if (! is_dir($storageDir)) {
+                @mkdir($storageDir, 0775, true);
             }
 
             $ext = strtolower($file->getClientOriginalExtension());
@@ -162,10 +167,12 @@ class PublicController extends Controller
                     $image = $manager->decodePath($file->getRealPath());
                     $image->scaleDown(1200, 1200);
                     $image->encodeUsingFileExtension('webp', quality: 85)->save($fullPath);
+                    @copy($fullPath, $storageDir.DIRECTORY_SEPARATOR.$filename);
                     $lampiranPath = '/uploads/modal/'.$filename;
                 } else {
                     $filename = "proposal-modal-{$timestamp}-{$randomSuffix}.{$ext}";
                     $file->move($uploadDir, $filename);
+                    @copy($uploadDir.DIRECTORY_SEPARATOR.$filename, $storageDir.DIRECTORY_SEPARATOR.$filename);
                     $lampiranPath = '/uploads/modal/'.$filename;
                 }
             } catch (\Throwable $e) {
@@ -173,6 +180,7 @@ class PublicController extends Controller
                 try {
                     $fallbackFilename = "lampiran-modal-{$timestamp}-{$randomSuffix}.{$ext}";
                     $file->move($uploadDir, $fallbackFilename);
+                    @copy($uploadDir.DIRECTORY_SEPARATOR.$fallbackFilename, $storageDir.DIRECTORY_SEPARATOR.$fallbackFilename);
                     $lampiranPath = '/uploads/modal/'.$fallbackFilename;
                 } catch (\Throwable $fallbackError) {
                     \Illuminate\Support\Facades\Log::error('Gagal menyimpan dokumen lampiran modal: '.$fallbackError->getMessage());

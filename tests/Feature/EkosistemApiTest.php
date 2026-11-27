@@ -229,5 +229,14 @@ class EkosistemApiTest extends TestCase
                 'alumni.delete',
                 'users.view',
             ]);
+
+        // Test GET /api/admin/modal/{id}
+        $app = \App\Models\ModalApplication::first();
+        if ($app) {
+            $this->withHeader('Authorization', "Bearer {$superToken}")
+                ->getJson("/api/admin/modal/{$app->id}")
+                ->assertOk()
+                ->assertJsonStructure(['data' => ['id', 'kode', 'nama', 'histories']]);
+        }
     }
 }

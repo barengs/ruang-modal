@@ -25,6 +25,7 @@ services:
       RUN_QUEUE_WORKER: "${RUN_QUEUE_WORKER:-false}"
     volumes:
       - app_storage:/var/www/html/storage/app/public
+      - app_uploads:/var/www/html/public/uploads
       - app_sqlite:/var/www/html/database
     depends_on:
       db:
@@ -58,6 +59,7 @@ services:
 
 volumes:
   app_storage:
+  app_uploads:
   app_sqlite:
   db_data:
 
