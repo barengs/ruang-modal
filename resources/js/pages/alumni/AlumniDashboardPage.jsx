@@ -1063,6 +1063,10 @@ export default function AlumniDashboardPage() {
                     allItems={modal}
                     onClose={() => setSelectedModalItem(null)}
                     onSelectOther={(other) => setSelectedModalItem(other)}
+                    onUpdated={(updated) => {
+                        setSelectedModalItem(updated);
+                        fetchAlumniDashboard();
+                    }}
                     isAdmin={false}
                 />
             )}

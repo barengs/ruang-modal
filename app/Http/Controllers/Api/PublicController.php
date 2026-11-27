@@ -215,6 +215,113 @@ class PublicController extends Controller
         ], 201);
     }
 
+    public function updateModalLampiran(Request $request, ModalApplication $modal): JsonResponse
+    {
+        $request->validate([
+            'dokumen_lampiran' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:5120'],
+            'email' => ['nullable', 'string', 'email'],
+            'catatan' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $user = auth('api')->user();
+
+        if ($user) {
+            $isAdmin = $user->hasRole(['admin', 'super-admin']) || $user->can('modal.update');
+            $isOwner = ($modal->user_id && (int) $modal->user_id === (int) $user->id) ||
+                (strtolower(trim((string) $modal->email)) === strtolower(trim((string) $user->email)));
+
+            if (! $isAdmin && ! $isOwner) {
+                return response()->json([
+                    'message' => 'Anda tidak memiliki hak akses untuk memperbarui dokumen pengajuan ini.',
+                ], 403);
+            }
+
+            $actorType = $isAdmin && ! $isOwner ? 'admin' : 'pemohon';
+            $actorName = $user->name;
+        } else {
+            // Verifikasi email pemohon jika tidak login
+            $providedEmail = strtolower(trim((string) $request->input('email', '')));
+            if (! $providedEmail || $providedEmail !== strtolower(trim((string) $modal->email))) {
+                return response()->json([
+                    'message' => 'Verifikasi email tidak sesuai dengan email pemohon pengajuan ini.',
+                ], 403);
+            }
+
+            $actorType = 'pemohon';
+            $actorName = $modal->nama;
+        }
+
+        $file = $request->file('dokumen_lampiran');
+        $uploadDir = public_path('uploads/modal');
+        $storageDir = storage_path('app/public/uploads/modal');
+
+        if (! is_dir($uploadDir)) {
+            @mkdir($uploadDir, 0775, true);
+        }
+        if (! is_dir($storageDir)) {
+            @mkdir($storageDir, 0775, true);
+        }
+
+        $ext = strtolower($file->getClientOriginalExtension());
+        $randomSuffix = strtolower(Str::random(8));
+        $timestamp = now('Asia/Jakarta')->format('YmdHis');
+        $lampiranPath = null;
+
+        try {
+            if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
+                $filename = "lampiran-modal-{$timestamp}-{$randomSuffix}.webp";
+                $fullPath = $uploadDir.DIRECTORY_SEPARATOR.$filename;
+
+                $manager = ImageManager::usingDriver(Driver::class);
+                $image = $manager->decodePath($file->getRealPath());
+                $image->scaleDown(1200, 1200);
+                $image->encodeUsingFileExtension('webp', quality: 85)->save($fullPath);
+                @copy($fullPath, $storageDir.DIRECTORY_SEPARATOR.$filename);
+                $lampiranPath = '/uploads/modal/'.$filename;
+            } else {
+                $filename = "proposal-modal-{$timestamp}-{$randomSuffix}.{$ext}";
+                $file->move($uploadDir, $filename);
+                @copy($uploadDir.DIRECTORY_SEPARATOR.$filename, $storageDir.DIRECTORY_SEPARATOR.$filename);
+                $lampiranPath = '/uploads/modal/'.$filename;
+            }
+        } catch (\Throwable $e) {
+            try {
+                $fallbackFilename = "lampiran-modal-{$timestamp}-{$randomSuffix}.{$ext}";
+                $file->move($uploadDir, $fallbackFilename);
+                @copy($uploadDir.DIRECTORY_SEPARATOR.$fallbackFilename, $storageDir.DIRECTORY_SEPARATOR.$fallbackFilename);
+                $lampiranPath = '/uploads/modal/'.$fallbackFilename;
+            } catch (\Throwable $fallbackError) {
+                \Illuminate\Support\Facades\Log::error('Gagal menyimpan dokumen lampiran modal: '.$fallbackError->getMessage());
+
+                return response()->json([
+                    'message' => 'Gagal mengunggah berkas dokumen lampiran ke server.',
+                ], 500);
+            }
+        }
+
+        $modal->dokumen_lampiran = $lampiranPath;
+        $modal->save();
+
+        $catatanTambahan = trim((string) $request->input('catatan', ''));
+        $historyText = "Dokumen lampiran proposal/RAB diperbarui oleh {$actorName}.";
+        if ($catatanTambahan !== '') {
+            $historyText .= " Catatan: {$catatanTambahan}";
+        }
+
+        $modal->histories()->create([
+            'status_seleksi' => $modal->status_seleksi,
+            'catatan' => $historyText,
+            'actor_type' => $actorType,
+            'actor_name' => $actorName,
+        ]);
+
+        return response()->json([
+            'message' => 'Dokumen lampiran berhasil diperbarui.',
+            'dokumen_lampiran' => $lampiranPath,
+            'data' => $modal->fresh(['reviewer:id,name', 'histories']),
+        ]);
+    }
+
     public function tumbuhList(Request $request): JsonResponse
     {
         $query = TumbuhRequest::with('reviewer:id,name')

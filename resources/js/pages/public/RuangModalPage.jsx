@@ -559,6 +559,9 @@ export default function RuangModalPage() {
                     allItems={modalApplications}
                     onClose={() => setDetailId(null)}
                     onSelectOther={(other) => setDetailId(other.id)}
+                    onUpdated={() => {
+                        dispatch(fetchPublicModal());
+                    }}
                     isAdmin={false}
                 />
             )}

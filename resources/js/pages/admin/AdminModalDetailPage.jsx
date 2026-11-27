@@ -15,16 +15,20 @@ import {
     ExternalLink,
     FileCheck,
     FileText,
+    FileUp,
     GraduationCap,
     History,
+    Loader2,
     Mail,
     Phone,
     Printer,
     ShieldCheck,
     Trash2,
+    UploadCloud,
     User,
     X,
 } from 'lucide-react';
+import api from '../../api/axios';
 import {
     clearAdminNotice,
     deleteModalItem,
@@ -82,6 +86,10 @@ export default function AdminModalDetailPage() {
     const [loading, setLoading] = useState(false);
     const [imgLoadFailed, setImgLoadFailed] = useState(false);
     const [showReviewModal, setShowReviewModal] = useState(false);
+    const [showUploadLampiranModal, setShowUploadLampiranModal] = useState(false);
+    const [adminLampiranFile, setAdminLampiranFile] = useState(null);
+    const [adminLampiranCatatan, setAdminLampiranCatatan] = useState('');
+    const [adminUploading, setAdminUploading] = useState(false);
     const [reviewForm, setReviewForm] = useState({
         status_seleksi: 'Disetujui',
         catatan_admin: '',
@@ -223,6 +231,37 @@ export default function AdminModalDetailPage() {
             navigate('/admin/modal');
         } else {
             toast.error(res.payload || 'Gagal menghapus pengajuan.');
+        }
+    };
+
+    const handleAdminUploadLampiran = async (e) => {
+        e.preventDefault();
+        if (!adminLampiranFile) {
+            toast.error('Pilih berkas dokumen lampiran terlebih dahulu.');
+            return;
+        }
+        setAdminUploading(true);
+        const formData = new FormData();
+        formData.append('dokumen_lampiran', adminLampiranFile);
+        if (adminLampiranCatatan.trim()) {
+            formData.append('catatan', adminLampiranCatatan.trim());
+        }
+        try {
+            const { data } = await api.post(`/admin/modal/${item.id}/lampiran`, formData);
+            toast.success(data.message || 'Dokumen lampiran berhasil diperbarui.');
+            setShowUploadLampiranModal(false);
+            setAdminLampiranFile(null);
+            setAdminLampiranCatatan('');
+            setImgLoadFailed(false);
+            dispatch(fetchModalItem(item.id));
+        } catch (err) {
+            toast.error(
+                err.response?.data?.message ||
+                err.response?.data?.errors?.dokumen_lampiran?.[0] ||
+                'Gagal memperbarui dokumen lampiran.'
+            );
+        } finally {
+            setAdminUploading(false);
         }
     };
 
@@ -616,18 +655,31 @@ export default function AdminModalDetailPage() {
 
                 {/* TABEL 4: BERKAS DOKUMEN LAMPIRAN PROPOSAL & RAB */}
                 <div className="border-b border-[#dbe3f0]">
-                    <div className="bg-[#f1f5f9] px-5 py-2.5 border-b border-[#e2e8f0] flex items-center justify-between">
+                    <div className="bg-[#f1f5f9] px-5 py-2.5 border-b border-[#e2e8f0] flex items-center justify-between flex-wrap gap-2">
                         <div className="flex items-center gap-2">
                             <FileCheck className="w-4 h-4 text-[#0068b0]" />
                             <h2 className="text-xs font-bold text-[#203880] uppercase tracking-wider">
                                 IV. Dokumen Lampiran Pengajuan (Proposal & RAB)
                             </h2>
                         </div>
-                        {item.dokumen_lampiran ? (
-                            <span className="bs-badge bs-badge-success">Berkas Terlampir</span>
-                        ) : (
-                            <span className="bs-badge bs-badge-warning">Tidak Ada Berkas</span>
-                        )}
+                        <div className="flex items-center gap-2">
+                            {item.dokumen_lampiran ? (
+                                <span className="bs-badge bs-badge-success">Berkas Terlampir</span>
+                            ) : (
+                                <span className="bs-badge bs-badge-warning">Tidak Ada Berkas</span>
+                            )}
+                            {canUpdate && (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowUploadLampiranModal(true)}
+                                    className="bs-btn bs-btn-sm bs-btn-outline-primary inline-flex items-center gap-1.5"
+                                    title="Unggah atau perbarui berkas dokumen lampiran"
+                                >
+                                    <FileUp className="w-3.5 h-3.5" />
+                                    {item.dokumen_lampiran ? 'Ganti / Perbarui Berkas' : 'Unggah Berkas'}
+                                </button>
+                            )}
+                        </div>
                     </div>
 
                     <div className="overflow-x-auto">
@@ -682,12 +734,35 @@ export default function AdminModalDetailPage() {
                                                 <Download className="w-3.5 h-3.5" />
                                                 Unduh
                                             </a>
+                                            {canUpdate && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowUploadLampiranModal(true)}
+                                                    className="bs-btn bs-btn-sm bs-btn-outline-secondary inline-flex items-center gap-1.5"
+                                                    title="Ganti berkas lampiran"
+                                                >
+                                                    <FileUp className="w-3.5 h-3.5" />
+                                                    Ganti
+                                                </button>
+                                            )}
                                         </td>
                                     </tr>
                                 ) : (
                                     <tr>
-                                        <td colSpan="5" className="py-4 px-5 text-center text-[#94a3b8] italic">
-                                            Pemohon tidak menyertakan berkas lampiran proposal/RAB pada pengajuan ini.
+                                        <td colSpan="5" className="py-5 px-5 text-center text-[#94a3b8] italic">
+                                            <div className="mb-2">
+                                                Pemohon tidak menyertakan berkas lampiran proposal/RAB pada pengajuan ini.
+                                            </div>
+                                            {canUpdate && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowUploadLampiranModal(true)}
+                                                    className="bs-btn bs-btn-sm bs-btn-primary inline-flex items-center gap-1.5 not-italic"
+                                                >
+                                                    <UploadCloud className="w-3.5 h-3.5" />
+                                                    Unggah Berkas Lampiran Sekarang
+                                                </button>
+                                            )}
                                         </td>
                                     </tr>
                                 )}
@@ -1247,6 +1322,94 @@ export default function AdminModalDetailPage() {
                                 </button>
                                 <button type="submit" className="bs-btn bs-btn-sm bs-btn-primary">
                                     Simpan Seleksi & Penyaluran
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Unggah / Ganti Berkas Dokumen Lampiran */}
+            {showUploadLampiranModal && (
+                <div className="bs-modal-backdrop" onClick={() => setShowUploadLampiranModal(false)}>
+                    <div
+                        className="bs-modal-dialog max-w-lg"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <form onSubmit={handleAdminUploadLampiran}>
+                            <div className="bs-modal-header">
+                                <h3 className="font-bold text-sm text-[#203880] flex items-center gap-1.5">
+                                    <FileUp className="w-4 h-4 text-[#0068b0]" />
+                                    Unggah / Perbarui Dokumen Lampiran
+                                </h3>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowUploadLampiranModal(false)}
+                                    className="text-slate-400 hover:text-slate-600"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+
+                            <div className="bs-modal-body space-y-3.5 text-xs">
+                                <div>
+                                    <label className="bs-form-label font-bold">
+                                        Pilih Berkas Dokumen Lampiran (PDF, JPG, PNG, WEBP — maks. 5MB) <span className="text-rose-500">*</span>
+                                    </label>
+                                    <input
+                                        type="file"
+                                        accept=".pdf,.jpg,.jpeg,.png,.webp"
+                                        onChange={(e) => setAdminLampiranFile(e.target.files?.[0] || null)}
+                                        disabled={adminUploading}
+                                        className="w-full text-xs text-slate-700 file:mr-2 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#0068b0] file:text-white hover:file:bg-[#203880] cursor-pointer border border-[#cbd5e1] rounded p-1.5 bg-white"
+                                    />
+                                    {adminLampiranFile && (
+                                        <div className="text-[11px] text-emerald-700 font-medium mt-1">
+                                            Berkas dipilih: {adminLampiranFile.name} ({(adminLampiranFile.size / 1024).toFixed(0)} KB)
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <label className="bs-form-label font-bold">
+                                        Catatan / Keterangan Pembaruan (Opsional)
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={adminLampiranCatatan}
+                                        onChange={(e) => setAdminLampiranCatatan(e.target.value)}
+                                        placeholder="Contoh: Berkas proposal/RAB pengganti yang diserahkan pemohon"
+                                        disabled={adminUploading}
+                                        className="bs-form-control text-xs"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="bs-modal-footer">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowUploadLampiranModal(false)}
+                                    disabled={adminUploading}
+                                    className="bs-btn bs-btn-sm bs-btn-outline-secondary"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={adminUploading || !adminLampiranFile}
+                                    className="bs-btn bs-btn-sm bs-btn-primary inline-flex items-center gap-1.5 disabled:opacity-50"
+                                >
+                                    {adminUploading ? (
+                                        <>
+                                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                            Mengunggah...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <UploadCloud className="w-3.5 h-3.5" />
+                                            Simpan & Unggah Berkas
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         </form>

@@ -24,6 +24,7 @@ Route::prefix('public')->group(function () {
     Route::get('/modal', [PublicController::class, 'modalList']);
     Route::get('/tumbuh', [PublicController::class, 'tumbuhList']);
     Route::post('/modal', [PublicController::class, 'submitModal']);
+    Route::post('/modal/{modal}/lampiran', [PublicController::class, 'updateModalLampiran']);
     Route::post('/tumbuh', [PublicController::class, 'submitTumbuh']);
     Route::post('/pasar', [PublicController::class, 'submitPasar']);
 
@@ -49,6 +50,7 @@ Route::prefix('auth')->group(function () {
 // Protected Alumni Portal endpoints (JWT Auth)
 Route::prefix('alumni')->middleware('auth:api')->group(function () {
     Route::get('/dashboard', [AlumniController::class, 'dashboard']);
+    Route::post('/modal/{modal}/lampiran', [PublicController::class, 'updateModalLampiran']);
     Route::post('/monitoring', [AlumniController::class, 'storeMonitoring']);
     Route::post('/testimonials', [AlumniController::class, 'storeTestimonial']);
     Route::patch('/profile', [AlumniController::class, 'updateProfile']);
@@ -65,6 +67,8 @@ Route::prefix('admin')->middleware('auth:api')->group(function () {
     Route::get('/modal/{modal}', [ModalController::class, 'show'])
         ->middleware('permission:modal.view');
     Route::patch('/modal/{modal}', [ModalController::class, 'update'])
+        ->middleware('permission:modal.update');
+    Route::post('/modal/{modal}/lampiran', [PublicController::class, 'updateModalLampiran'])
         ->middleware('permission:modal.update');
     Route::delete('/modal/{modal}', [ModalController::class, 'destroy'])
         ->middleware('permission:modal.delete');

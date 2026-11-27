@@ -239,4 +239,51 @@ class EkosistemApiTest extends TestCase
                 ->assertJsonStructure(['data' => ['id', 'kode', 'nama', 'histories']]);
         }
     }
+
+    public function test_applicant_and_admin_can_update_modal_attachment(): void
+    {
+        $app = \App\Models\ModalApplication::create([
+            'nama' => 'Ahmad Dahlan',
+            'email' => 'ahmad@alumni.sch.id',
+            'whatsapp' => '081234567899',
+            'sekolah' => 'SMAN 1 Tuban',
+            'tahun_lulus' => '2024',
+            'kompetensi' => 'Teknik Elektro',
+            'jalur' => 'Usaha',
+            'status_aktivitas' => 'Merintis usaha',
+            'jenis_bantuan' => 'Peralatan solder',
+            'estimasi_biaya' => 1500000,
+            'rincian_kebutuhan' => 'Solder station',
+            'rencana_deskripsi' => 'Servis elektronik',
+            'kode' => \App\Models\ModalApplication::generateKode(),
+            'status_seleksi' => 'Perlu Perbaikan',
+        ]);
+
+        \Illuminate\Support\Facades\Storage::fake('public');
+        $fakePdf = \Illuminate\Http\UploadedFile::fake()->create('revisi_rab.pdf', 300, 'application/pdf');
+
+        // 1. Guest update with wrong email should fail 403
+        $this->postJson("/api/public/modal/{$app->id}/lampiran", [
+            'dokumen_lampiran' => $fakePdf,
+            'email' => 'wrong@email.com',
+        ])->assertStatus(403);
+
+        // 2. Guest update with matching email should succeed
+        $resGuest = $this->postJson("/api/public/modal/{$app->id}/lampiran", [
+            'dokumen_lampiran' => $fakePdf,
+            'email' => 'ahmad@alumni.sch.id',
+            'catatan' => 'Revisi spesifikasi solder station dan invoice pembanding',
+        ]);
+        $resGuest->assertOk()
+            ->assertJsonPath('message', 'Dokumen lampiran berhasil diperbarui.');
+
+        $app->refresh();
+        $this->assertNotNull($app->dokumen_lampiran);
+        $this->assertStringContainsString('proposal-modal-', $app->dokumen_lampiran);
+
+        // History entry should exist
+        $history = $app->histories()->latest()->first();
+        $this->assertNotNull($history);
+        $this->assertStringContainsString('Revisi spesifikasi solder station', $history->catatan);
+    }
 }
