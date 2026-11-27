@@ -117,23 +117,23 @@ Route::prefix('admin')->middleware('auth:api')->group(function () {
 
     // Data Akun Alumni Management
     Route::get('/alumni', [RoleUserController::class, 'alumniList'])
-        ->middleware('permission:users.manage');
+        ->middleware('permission:alumni.view|users.manage');
     Route::post('/alumni', [RoleUserController::class, 'storeAlumni'])
-        ->middleware('permission:users.manage');
+        ->middleware('permission:alumni.create|users.manage');
     Route::patch('/alumni/{user}', [RoleUserController::class, 'updateAlumni'])
-        ->middleware('permission:users.manage');
+        ->middleware('permission:alumni.update|users.manage');
     Route::delete('/alumni/{user}', [RoleUserController::class, 'deleteUser'])
-        ->middleware('permission:users.manage');
+        ->middleware('permission:alumni.delete|users.manage');
 
     // User Pengelola & Role Management (Spatie Permission)
     Route::get('/users', [RoleUserController::class, 'users'])
-        ->middleware('permission:users.manage');
+        ->middleware('permission:users.view|users.manage');
     Route::post('/users', [RoleUserController::class, 'storeUser'])
-        ->middleware('permission:users.manage');
+        ->middleware('permission:users.create|users.manage');
     Route::patch('/users/{user}/role', [RoleUserController::class, 'updateUserRole'])
-        ->middleware('permission:users.manage');
+        ->middleware('permission:users.update|users.manage');
     Route::delete('/users/{user}', [RoleUserController::class, 'deleteUser'])
-        ->middleware('permission:users.manage');
+        ->middleware('permission:users.delete|users.manage');
 
     Route::get('/roles', [RoleUserController::class, 'roles'])
         ->middleware('permission:roles.manage');

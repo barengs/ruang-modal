@@ -18,6 +18,7 @@ import {
     fetchUsersList,
     updateUserRoleItem,
 } from '../../store/slices/adminSlice';
+import { hasPermission } from '../../store/slices/authSlice';
 import DataTable from '../../components/DataTable';
 import { formatDateTime } from '../../utils/format';
 
@@ -25,6 +26,11 @@ export default function AdminUsersPage() {
     const dispatch = useDispatch();
     const { users, roles, flash, error } = useSelector((state) => state.admin);
     const { user: currentUser } = useSelector((state) => state.auth);
+
+    const canCreate = hasPermission(currentUser, 'users.create');
+    const canUpdate = hasPermission(currentUser, 'users.update');
+    const canDelete = hasPermission(currentUser, 'users.delete');
+
     const [showNewUser, setShowNewUser] = useState(false);
     const [detailId, setDetailId] = useState(null);
     const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'admin' });
@@ -83,8 +89,9 @@ export default function AdminUsersPage() {
                     const currentRole = row.original.roles?.[0] || '';
                     return (
                         <select
-                            className="bs-form-select py-1 text-xs w-48"
+                            className="bs-form-select py-1 text-xs w-48 disabled:bg-gray-100 disabled:cursor-not-allowed"
                             value={currentRole}
+                            disabled={!canUpdate}
                             onChange={(e) => handleRoleChange(row.original.id, e.target.value)}
                         >
                             {roleOptions.map((rName) => (
@@ -128,7 +135,7 @@ export default function AdminUsersPage() {
                                 <Eye className="w-3.5 h-3.5" />
                                 Detail
                             </button>
-                            {!isSelf && (
+                            {canDelete && !isSelf && (
                                 <button
                                     type="button"
                                     onClick={() => handleDeleteUser(row.original)}
@@ -143,7 +150,7 @@ export default function AdminUsersPage() {
                 },
             },
         ],
-        [roleOptions, currentUser]
+        [roleOptions, currentUser, canUpdate, canDelete]
     );
 
     return (
@@ -166,14 +173,16 @@ export default function AdminUsersPage() {
                             akses.
                         </p>
                     </div>
-                    <button
-                        type="button"
-                        onClick={() => setShowNewUser(true)}
-                        className="bs-btn bs-btn-sm bs-btn-primary"
-                    >
-                        <UserPlus className="w-4 h-4" />
-                        Tambah Pengguna
-                    </button>
+                    {canCreate && (
+                        <button
+                            type="button"
+                            onClick={() => setShowNewUser(true)}
+                            className="bs-btn bs-btn-sm bs-btn-primary"
+                        >
+                            <UserPlus className="w-4 h-4" />
+                            Tambah Pengguna
+                        </button>
+                    )}
                 </div>
                 <div className="bs-card-body">
                     <DataTable

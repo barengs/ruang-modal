@@ -162,7 +162,22 @@ export const { clearAuthError } = authSlice.actions;
 export const hasPermission = (user, permission) => {
     if (!user) return false;
     if (user.roles?.includes('super-admin')) return true;
-    return user.permissions?.includes(permission) ?? false;
+    if (user.permissions?.includes(permission)) return true;
+    // Fallback kompatibilitas untuk token sesi lama yang memiliki users.manage
+    if (
+        user.permissions?.includes('users.manage') &&
+        (permission === 'alumni.view' ||
+            permission === 'alumni.create' ||
+            permission === 'alumni.update' ||
+            permission === 'alumni.delete' ||
+            permission === 'users.view' ||
+            permission === 'users.create' ||
+            permission === 'users.update' ||
+            permission === 'users.delete')
+    ) {
+        return true;
+    }
+    return false;
 };
 
 export const isAlumniUser = (user) => {

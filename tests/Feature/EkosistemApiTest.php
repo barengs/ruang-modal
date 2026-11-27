@@ -158,4 +158,53 @@ class EkosistemApiTest extends TestCase
             ->getJson('/api/admin/roles')
             ->assertOk();
     }
+
+    public function test_separated_alumni_and_users_permissions_in_role_management(): void
+    {
+        $adminLogin = $this->postJson('/api/auth/login', [
+            'email' => 'admin@doubletrack.sch.id',
+            'password' => 'password123',
+        ]);
+        $adminToken = $adminLogin->json('access_token');
+
+        // Admin CAN access Data Alumni
+        $this->withHeader('Authorization', "Bearer {$adminToken}")
+            ->getJson('/api/admin/alumni')
+            ->assertOk();
+
+        // Admin CANNOT access Data Pengelola (Users)
+        $this->withHeader('Authorization', "Bearer {$adminToken}")
+            ->getJson('/api/admin/users')
+            ->assertStatus(403);
+
+        $superLogin = $this->postJson('/api/auth/login', [
+            'email' => 'superadmin@doubletrack.sch.id',
+            'password' => 'password123',
+        ]);
+        $superToken = $superLogin->json('access_token');
+
+        // Super Admin CAN access both Data Alumni and Data Pengelola
+        $this->withHeader('Authorization', "Bearer {$superToken}")
+            ->getJson('/api/admin/alumni')
+            ->assertOk();
+
+        $this->withHeader('Authorization', "Bearer {$superToken}")
+            ->getJson('/api/admin/users')
+            ->assertOk();
+
+        // Check that permissions are present in roles endpoint
+        $rolesResponse = $this->withHeader('Authorization', "Bearer {$superToken}")
+            ->getJson('/api/admin/roles')
+            ->assertOk();
+
+        $allPerms = $rolesResponse->json('all_permissions');
+        $this->assertContains('alumni.view', $allPerms);
+        $this->assertContains('alumni.create', $allPerms);
+        $this->assertContains('alumni.update', $allPerms);
+        $this->assertContains('alumni.delete', $allPerms);
+        $this->assertContains('users.view', $allPerms);
+        $this->assertContains('users.create', $allPerms);
+        $this->assertContains('users.update', $allPerms);
+        $this->assertContains('users.delete', $allPerms);
+    }
 }

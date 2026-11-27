@@ -22,6 +22,7 @@ import {
     fetchMasterOptionsList,
     updateAlumniItem,
 } from '../../store/slices/adminSlice';
+import { hasPermission } from '../../store/slices/authSlice';
 import DataTable from '../../components/DataTable';
 import { formatDateTime } from '../../utils/format';
 import { exportToExcelFile, exportToPdfReport } from '../../utils/reportExporter';
@@ -40,6 +41,11 @@ const emptyAlumniForm = {
 export default function AdminAlumniPage() {
     const dispatch = useDispatch();
     const { alumni, masterOptions, flash, error } = useSelector((state) => state.admin);
+    const { user } = useSelector((state) => state.auth);
+
+    const canCreate = hasPermission(user, 'alumni.create');
+    const canUpdate = hasPermission(user, 'alumni.update');
+    const canDelete = hasPermission(user, 'alumni.delete');
 
     const [detailId, setDetailId] = useState(null);
     const [showFormModal, setShowFormModal] = useState(false);
@@ -251,27 +257,31 @@ export default function AdminAlumniPage() {
                             <Eye className="w-3.5 h-3.5" />
                             Detail
                         </button>
-                        <button
-                            type="button"
-                            onClick={() => openEditModal(row.original)}
-                            className="bs-btn bs-btn-sm bs-btn-outline-secondary"
-                            title="Edit Data Alumni"
-                        >
-                            <Edit3 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => handleDeleteAlumni(row.original)}
-                            className="bs-btn bs-btn-sm bs-btn-outline-danger"
-                            title="Hapus Akun Alumni"
-                        >
-                            <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        {canUpdate && (
+                            <button
+                                type="button"
+                                onClick={() => openEditModal(row.original)}
+                                className="bs-btn bs-btn-sm bs-btn-outline-secondary"
+                                title="Edit Data Alumni"
+                            >
+                                <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                        )}
+                        {canDelete && (
+                            <button
+                                type="button"
+                                onClick={() => handleDeleteAlumni(row.original)}
+                                className="bs-btn bs-btn-sm bs-btn-outline-danger"
+                                title="Hapus Akun Alumni"
+                            >
+                                <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                        )}
                     </div>
                 ),
             },
         ],
-        []
+        [canUpdate, canDelete]
     );
 
     const sekolahOptions = useMemo(
@@ -322,14 +332,16 @@ export default function AdminAlumniPage() {
                             <FileSpreadsheet className="w-3.5 h-3.5" />
                             Export Excel
                         </button>
-                        <button
-                            type="button"
-                            onClick={openCreateModal}
-                            className="bs-btn bs-btn-sm bs-btn-primary"
-                        >
-                            <UserPlus className="w-4 h-4" />
-                            Tambah Alumni
-                        </button>
+                        {canCreate && (
+                            <button
+                                type="button"
+                                onClick={openCreateModal}
+                                className="bs-btn bs-btn-sm bs-btn-primary"
+                            >
+                                <UserPlus className="w-4 h-4" />
+                                Tambah Alumni
+                            </button>
+                        )}
                     </div>
                 </div>
 

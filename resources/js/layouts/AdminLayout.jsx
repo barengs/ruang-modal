@@ -102,8 +102,8 @@ export default function AdminLayout() {
         { to: '/admin/monitoring', label: 'Monitoring', icon: Activity, perm: 'monitoring.view' },
         { to: '/admin/chat', label: 'Live Chat', icon: MessageCircle, perm: 'chat.manage' },
         { to: '/admin/master-data', label: 'Master Data', icon: Database, perm: 'master.manage' },
-        { to: '/admin/alumni', label: 'Data Alumni', icon: GraduationCap, perm: 'users.manage' },
-        { to: '/admin/users', label: 'Data Pengelola', icon: Users, perm: 'users.manage' },
+        { to: '/admin/alumni', label: 'Data Alumni', icon: GraduationCap, perm: 'alumni.view' },
+        { to: '/admin/users', label: 'Data Pengelola', icon: Users, perm: 'users.view' },
         { to: '/admin/roles', label: 'Role Management', icon: Shield, perm: 'roles.manage' },
     ].filter((item) => hasPermission(user, item.perm));
 

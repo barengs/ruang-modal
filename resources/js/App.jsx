@@ -149,7 +149,7 @@ export default function App() {
                 <Route
                     path="alumni"
                     element={
-                        <ProtectedRoute permission="users.manage">
+                        <ProtectedRoute permission="alumni.view">
                             <AdminAlumniPage />
                         </ProtectedRoute>
                     }
@@ -157,7 +157,7 @@ export default function App() {
                 <Route
                     path="users"
                     element={
-                        <ProtectedRoute permission="users.manage">
+                        <ProtectedRoute permission="users.view">
                             <AdminUsersPage />
                         </ProtectedRoute>
                     }
