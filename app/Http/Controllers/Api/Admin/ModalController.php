@@ -24,6 +24,19 @@ class ModalController extends Controller
         ]);
     }
 
+    public function show(ModalApplication $modal): JsonResponse
+    {
+        $modal->loadMissing([
+            'user:id,name,email,whatsapp,sekolah,tahun_lulus,kompetensi,nama_usaha',
+            'reviewer:id,name',
+            'histories',
+        ]);
+
+        return response()->json([
+            'data' => $modal,
+        ]);
+    }
+
     public function update(Request $request, ModalApplication $modal): JsonResponse
     {
         $validated = $request->validate([

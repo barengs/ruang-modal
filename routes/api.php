@@ -62,6 +62,8 @@ Route::prefix('admin')->middleware('auth:api')->group(function () {
     // Ruang Modal
     Route::get('/modal', [ModalController::class, 'index'])
         ->middleware('permission:modal.view');
+    Route::get('/modal/{modal}', [ModalController::class, 'show'])
+        ->middleware('permission:modal.view');
     Route::patch('/modal/{modal}', [ModalController::class, 'update'])
         ->middleware('permission:modal.update');
     Route::delete('/modal/{modal}', [ModalController::class, 'destroy'])

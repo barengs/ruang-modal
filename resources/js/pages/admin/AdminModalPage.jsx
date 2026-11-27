@@ -1,12 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import {
     Award,
     CheckCircle2,
     Edit3,
+    ExternalLink,
     Eye,
     FileCheck,
     FileSpreadsheet,
+    FileText,
     Printer,
     Trash2,
     X,
@@ -21,7 +25,6 @@ import { hasPermission } from '../../store/slices/authSlice';
 import DataTable from '../../components/DataTable';
 import StatusBadge from '../../components/StatusBadge';
 import CurrencyInput from '../../components/CurrencyInput';
-import ModalApplicationDetailModal from '../../components/ModalApplicationDetailModal';
 import { formatDateTime, formatRupiah } from '../../utils/format';
 import { exportBastPdf, exportToExcelFile, exportToPdfReport } from '../../utils/reportExporter';
 
@@ -61,10 +64,10 @@ const RUBRIK_INDIKATOR = [
 ];
 
 export default function AdminModalPage() {
+    const navigate = useNavigate();
     const dispatch = useDispatch();
     const { modal, flash } = useSelector((state) => state.admin);
     const { user } = useSelector((state) => state.auth);
-    const [detailId, setDetailId] = useState(null);
     const [selected, setSelected] = useState(null);
     const [reviewForm, setReviewForm] = useState({
         status_seleksi: 'Disetujui',
@@ -88,11 +91,6 @@ export default function AdminModalPage() {
         return () => dispatch(clearAdminNotice());
     }, [dispatch]);
 
-    const detailItem = useMemo(
-        () => modal.find((item) => item.id === detailId) || null,
-        [modal, detailId]
-    );
-
     const calculatedSkorTotal = useMemo(() => {
         const total = RUBRIK_INDIKATOR.reduce((acc, ind) => {
             const val = Number(reviewForm[ind.key] || 0);
@@ -102,7 +100,6 @@ export default function AdminModalPage() {
     }, [reviewForm]);
 
     const openReview = (row) => {
-        setDetailId(null);
         setSelected(row);
         const suffix = (row.kode || '').replace(/[^A-Z0-9]/gi, '').slice(-6);
         const defaultBast = row.nomor_bast || `BAST/DT-RM/${new Date().getFullYear()}/${suffix}`;
@@ -125,7 +122,7 @@ export default function AdminModalPage() {
         e.preventDefault();
         if (!selected) return;
         const targetId = selected.id;
-        await dispatch(
+        const res = await dispatch(
             updateModalItem({
                 id: targetId,
                 payload: {
@@ -142,13 +139,21 @@ export default function AdminModalPage() {
             })
         );
         setSelected(null);
-        setDetailId(targetId);
+        if (updateModalItem.fulfilled.match(res)) {
+            toast.success(res.payload?.message || 'Proses seleksi berhasil disimpan.');
+        } else {
+            toast.error(res.payload || 'Gagal menyimpan hasil seleksi.');
+        }
     };
 
     const handleDelete = async (row) => {
         if (!window.confirm(`Hapus pengajuan ${row.kode} milik ${row.nama}?`)) return;
-        if (detailId === row.id) setDetailId(null);
-        await dispatch(deleteModalItem(row.id));
+        const res = await dispatch(deleteModalItem(row.id));
+        if (deleteModalItem.fulfilled.match(res)) {
+            toast.success(`Pengajuan ${row.kode} berhasil dihapus.`);
+        } else {
+            toast.error(res.payload || 'Gagal menghapus pengajuan.');
+        }
     };
 
     const handlePrintPdf = () => {
@@ -329,9 +334,9 @@ export default function AdminModalPage() {
                         <div className="flex items-center gap-1.5 flex-wrap">
                             <button
                                 type="button"
-                                onClick={() => setDetailId(row.original.id)}
+                                onClick={() => navigate(`/admin/modal/${row.original.id}`)}
                                 className="bs-btn bs-btn-sm bs-btn-outline-primary"
-                                title="Lihat Detail & Riwayat"
+                                title="Lihat Detail Halaman & Riwayat"
                             >
                                 <Eye className="w-3.5 h-3.5" />
                                 Detail
@@ -426,22 +431,10 @@ export default function AdminModalPage() {
                         searchPlaceholder="Cari kode, nama alumni, sekolah, kompetensi, nomor BAST..."
                         filterColumn="status_seleksi"
                         filterOptions={STATUS_OPTIONS}
-                        onRowClick={(row) => setDetailId(row.id)}
+                        onRowClick={(row) => navigate(`/admin/modal/${row.id}`)}
                     />
                 </div>
             </div>
-
-            {/* Detail & History Modal on Row Click */}
-            {detailItem && (
-                <ModalApplicationDetailModal
-                    item={detailItem}
-                    allItems={modal}
-                    onClose={() => setDetailId(null)}
-                    onSelectOther={(other) => setDetailId(other.id)}
-                    onProcess={canUpdate ? openReview : null}
-                    isAdmin
-                />
-            )}
 
             {/* Modal Rubrik Seleksi 5 Indikator & Penyaluran BAST */}
             {selected && (
@@ -492,6 +485,38 @@ export default function AdminModalPage() {
                                             <strong>Guru Pendamping Sekolah:</strong> {selected.guru_pendamping}
                                         </div>
                                     )}
+
+                                    {/* DOKUMEN LAMPIRAN DI PROSES SELEKSI */}
+                                    <div className="p-2.5 rounded bg-white border border-[#b6d4fe] flex items-center justify-between gap-2 mt-2">
+                                        <div className="flex items-center gap-2">
+                                            <FileText className="w-4 h-4 text-[#0068b0] shrink-0" />
+                                            <div>
+                                                <div className="font-bold text-[#203880]">
+                                                    Dokumen Lampiran Proposal / RAB:
+                                                </div>
+                                                <div className="text-[11px] text-[#64748b]">
+                                                    {selected.dokumen_lampiran
+                                                        ? selected.dokumen_lampiran.split('/').pop()
+                                                        : 'Pemohon tidak menyertakan berkas lampiran'}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {selected.dokumen_lampiran ? (
+                                            <a
+                                                href={selected.dokumen_lampiran}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="bs-btn bs-btn-sm bs-btn-outline-primary shrink-0 flex items-center gap-1"
+                                            >
+                                                <ExternalLink className="w-3.5 h-3.5" />
+                                                Buka Berkas
+                                            </a>
+                                        ) : (
+                                            <span className="text-[11px] text-amber-600 font-medium">
+                                                (Tidak ada berkas)
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {/* Bagian 1: Rubrik Penilaian 5 Indikator */}

@@ -19,6 +19,15 @@ export const fetchModalList = createAsyncThunk('admin/fetchModal', async (_, { r
     }
 });
 
+export const fetchModalItem = createAsyncThunk('admin/fetchModalItem', async (id, { rejectWithValue }) => {
+    try {
+        const { data } = await api.get(`/admin/modal/${id}`);
+        return data.data;
+    } catch (err) {
+        return rejectWithValue(err.response?.data?.message || 'Gagal memuat detail pengajuan Ruang Modal.');
+    }
+});
+
 export const updateModalItem = createAsyncThunk('admin/updateModal', async ({ id, payload }, { rejectWithValue }) => {
     try {
         const { data } = await api.patch(`/admin/modal/${id}`, payload);
@@ -341,6 +350,15 @@ const adminSlice = createSlice({
             })
             .addCase(fetchModalList.fulfilled, (state, action) => {
                 state.modal = action.payload;
+            })
+            .addCase(fetchModalItem.fulfilled, (state, action) => {
+                const item = action.payload;
+                const idx = state.modal.findIndex((m) => m.id === item.id);
+                if (idx >= 0) {
+                    state.modal[idx] = item;
+                } else {
+                    state.modal.unshift(item);
+                }
             })
             .addCase(updateModalItem.fulfilled, (state, action) => {
                 state.modal = state.modal.map((item) =>

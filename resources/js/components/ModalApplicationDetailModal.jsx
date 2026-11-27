@@ -183,19 +183,23 @@ export default function ModalApplicationDetailModal({
                                             <CheckCircle2 className="w-3.5 h-3.5" /> Bersedia Didampingi
                                         </span>
                                     </div>
-                                    {item.dokumen_lampiran && (
-                                        <div className="pt-1 border-t border-[#e9ecef] flex justify-between items-center">
-                                            <span className="text-[#6c757d]">Lampiran Proposal/RAB</span>
+                                    <div className="pt-2 border-t border-[#e9ecef] flex justify-between items-center">
+                                        <span className="text-[#6c757d] font-medium">Dokumen Lampiran (Proposal/RAB):</span>
+                                        {item.dokumen_lampiran ? (
                                             <a
                                                 href={item.dokumen_lampiran}
                                                 target="_blank"
                                                 rel="noreferrer"
-                                                className="inline-flex items-center gap-1 text-[#0068b0] font-semibold hover:underline"
+                                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#e7f1ff] text-[#0068b0] font-bold text-xs hover:bg-[#d0e3ff] transition-colors"
                                             >
-                                                Lihat Lampiran <ExternalLink className="w-3 h-3" />
+                                                Buka Berkas <ExternalLink className="w-3.5 h-3.5" />
                                             </a>
-                                        </div>
-                                    )}
+                                        ) : (
+                                            <span className="text-[11px] text-[#856404] bg-[#fff3cd] px-2 py-0.5 rounded">
+                                                Tidak Ada Berkas
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>

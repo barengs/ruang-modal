@@ -18,6 +18,7 @@ import RegisterPage from './pages/auth/RegisterPage';
 import AlumniDashboardPage from './pages/alumni/AlumniDashboardPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminModalPage from './pages/admin/AdminModalPage';
+import AdminModalDetailPage from './pages/admin/AdminModalDetailPage';
 import AdminTumbuhPage from './pages/admin/AdminTumbuhPage';
 import AdminPasarPage from './pages/admin/AdminPasarPage';
 import AdminMonitoringPage from './pages/admin/AdminMonitoringPage';
@@ -103,6 +104,14 @@ export default function App() {
                     element={
                         <ProtectedRoute permission="modal.view">
                             <AdminModalPage />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="modal/:id"
+                    element={
+                        <ProtectedRoute permission="modal.view">
+                            <AdminModalDetailPage />
                         </ProtectedRoute>
                     }
                 />
