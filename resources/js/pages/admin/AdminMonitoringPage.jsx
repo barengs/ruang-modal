@@ -9,6 +9,7 @@ import {
 } from '../../store/slices/adminSlice';
 import { hasPermission } from '../../store/slices/authSlice';
 import DataTable from '../../components/DataTable';
+import ConfirmModal from '../../components/ConfirmModal';
 import CurrencyInput from '../../components/CurrencyInput';
 import MonitoringDetailModal from '../../components/MonitoringDetailModal';
 import { formatRupiah } from '../../utils/format';
@@ -35,6 +36,7 @@ export default function AdminMonitoringPage() {
     const [detailId, setDetailId] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [form, setForm] = useState(INITIAL_FORM);
+    const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, item: null });
 
     const canCreate = hasPermission(user, 'monitoring.create');
     const canDelete = hasPermission(user, 'monitoring.delete');
@@ -66,10 +68,15 @@ export default function AdminMonitoringPage() {
         }
     };
 
-    const handleDelete = async (row) => {
-        if (!window.confirm(`Hapus catatan monitoring ${row.kode}?`)) return;
-        if (detailId === row.id) setDetailId(null);
-        await dispatch(deleteMonitoringItem(row.id));
+    const handleDelete = (row) => {
+        setConfirmDelete({ isOpen: true, item: row });
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!confirmDelete.item) return;
+        if (detailId === confirmDelete.item.id) setDetailId(null);
+        await dispatch(deleteMonitoringItem(confirmDelete.item.id));
+        setConfirmDelete({ isOpen: false, item: null });
     };
 
     const handlePrintPdf = () => {
@@ -475,6 +482,16 @@ export default function AdminMonitoringPage() {
                     </div>
                 </div>
             )}
+
+            <ConfirmModal
+                isOpen={confirmDelete.isOpen}
+                onClose={() => setConfirmDelete({ isOpen: false, item: null })}
+                onConfirm={handleConfirmDelete}
+                title="Hapus Catatan Monitoring"
+                message={`Apakah Anda yakin ingin menghapus catatan monitoring ${confirmDelete.item?.kode}?`}
+                confirmText="Ya, Hapus"
+                variant="danger"
+            />
         </div>
     );
 }

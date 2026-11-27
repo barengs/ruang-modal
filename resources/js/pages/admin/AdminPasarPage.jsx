@@ -11,6 +11,7 @@ import { hasPermission } from '../../store/slices/authSlice';
 import DataTable from '../../components/DataTable';
 import StatusBadge from '../../components/StatusBadge';
 import PasarProductDetailModal from '../../components/PasarProductDetailModal';
+import ConfirmModal from '../../components/ConfirmModal';
 import { formatDateTime, getCategoryThumbnail, getProductThumbnail } from '../../utils/format';
 import { exportToExcelFile, exportToPdfReport } from '../../utils/reportExporter';
 
@@ -24,6 +25,7 @@ export default function AdminPasarPage() {
     const [selected, setSelected] = useState(null);
     const [status, setStatus] = useState('Tayang');
     const [catatan, setCatatan] = useState('');
+    const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, item: null });
 
     const canModerate = hasPermission(user, 'pasar.moderate');
     const canDelete = hasPermission(user, 'pasar.delete');
@@ -59,10 +61,15 @@ export default function AdminPasarPage() {
         setDetailId(targetId);
     };
 
-    const handleDelete = async (row) => {
-        if (!window.confirm(`Hapus produk "${row.nama_produk}"?`)) return;
-        if (detailId === row.id) setDetailId(null);
-        await dispatch(deletePasarItem(row.id));
+    const handleDelete = (row) => {
+        setConfirmDelete({ isOpen: true, item: row });
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!confirmDelete.item) return;
+        if (detailId === confirmDelete.item.id) setDetailId(null);
+        await dispatch(deletePasarItem(confirmDelete.item.id));
+        setConfirmDelete({ isOpen: false, item: null });
     };
 
     const handlePrintPdf = () => {
@@ -350,6 +357,16 @@ export default function AdminPasarPage() {
                     </div>
                 </div>
             )}
+
+            <ConfirmModal
+                isOpen={confirmDelete.isOpen}
+                onClose={() => setConfirmDelete({ isOpen: false, item: null })}
+                onConfirm={handleConfirmDelete}
+                title="Hapus Produk Pasar"
+                message={`Apakah Anda yakin ingin menghapus produk "${confirmDelete.item?.nama_produk}"? Data produk yang dihapus tidak dapat dipulihkan.`}
+                confirmText="Ya, Hapus"
+                variant="danger"
+            />
         </div>
     );
 }

@@ -11,6 +11,7 @@ import { hasPermission } from '../../store/slices/authSlice';
 import DataTable from '../../components/DataTable';
 import StatusBadge from '../../components/StatusBadge';
 import TumbuhRequestDetailModal from '../../components/TumbuhRequestDetailModal';
+import ConfirmModal from '../../components/ConfirmModal';
 import { formatDateTime } from '../../utils/format';
 import { exportToExcelFile, exportToPdfReport } from '../../utils/reportExporter';
 
@@ -24,6 +25,7 @@ export default function AdminTumbuhPage() {
     const [selected, setSelected] = useState(null);
     const [status, setStatus] = useState('Disetujui');
     const [catatan, setCatatan] = useState('');
+    const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, item: null });
 
     const canUpdate = hasPermission(user, 'tumbuh.update');
     const canDelete = hasPermission(user, 'tumbuh.delete');
@@ -59,10 +61,15 @@ export default function AdminTumbuhPage() {
         setDetailId(targetId);
     };
 
-    const handleDelete = async (row) => {
-        if (!window.confirm(`Hapus permintaan ${row.kode}?`)) return;
-        if (detailId === row.id) setDetailId(null);
-        await dispatch(deleteTumbuhItem(row.id));
+    const handleDelete = (row) => {
+        setConfirmDelete({ isOpen: true, item: row });
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!confirmDelete.item) return;
+        if (detailId === confirmDelete.item.id) setDetailId(null);
+        await dispatch(deleteTumbuhItem(confirmDelete.item.id));
+        setConfirmDelete({ isOpen: false, item: null });
     };
 
     const handlePrintPdf = () => {
@@ -338,6 +345,16 @@ export default function AdminTumbuhPage() {
                     </div>
                 </div>
             )}
+
+            <ConfirmModal
+                isOpen={confirmDelete.isOpen}
+                onClose={() => setConfirmDelete({ isOpen: false, item: null })}
+                onConfirm={handleConfirmDelete}
+                title="Hapus Permintaan Ruang Tumbuh"
+                message={`Apakah Anda yakin ingin menghapus permintaan ${confirmDelete.item?.kode}? Data permintaan yang dihapus tidak dapat dipulihkan.`}
+                confirmText="Ya, Hapus"
+                variant="danger"
+            />
         </div>
     );
 }

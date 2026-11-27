@@ -28,6 +28,7 @@ import {
     fetchRolesList,
     updateRolePermissionsItem,
 } from '../../store/slices/adminSlice';
+import ConfirmModal from '../../components/ConfirmModal';
 
 /**
  * Definisi Matriks Menu (Baris) x Permission (Kolom)
@@ -185,6 +186,7 @@ export default function AdminRolesPage() {
     const [newRoleName, setNewRoleName] = useState('');
     const [copyFromRoleId, setCopyFromRoleId] = useState('');
     const [creatingRole, setCreatingRole] = useState(false);
+    const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, role: null });
 
     useEffect(() => {
         dispatch(fetchRolesList());
@@ -313,10 +315,16 @@ export default function AdminRolesPage() {
         }
     };
 
-    const handleDeleteRole = async (role, e) => {
+    const handleDeleteRole = (role, e) => {
         e.stopPropagation();
         if (role.name === 'super-admin') return;
-        if (!window.confirm(`Hapus role "${role.name}"?`)) return;
+        setConfirmDelete({ isOpen: true, role });
+    };
+
+    const handleConfirmDeleteRole = async () => {
+        if (!confirmDelete.role) return;
+        const role = confirmDelete.role;
+        setConfirmDelete({ isOpen: false, role: null });
         const res = await dispatch(deleteRoleItem(role.id));
         if (deleteRoleItem.fulfilled.match(res)) {
             toast.success(res.payload?.message || `Role "${role.name}" berhasil dihapus.`);
@@ -682,6 +690,16 @@ export default function AdminRolesPage() {
                     </div>
                 </div>
             )}
+
+            <ConfirmModal
+                isOpen={confirmDelete.isOpen}
+                onClose={() => setConfirmDelete({ isOpen: false, role: null })}
+                onConfirm={handleConfirmDeleteRole}
+                title="Hapus Role"
+                message={`Apakah Anda yakin ingin menghapus role "${confirmDelete.role?.name}"? Pengguna dengan role ini akan kehilangan hak akses yang telah ditetapkan.`}
+                confirmText="Ya, Hapus"
+                variant="danger"
+            />
         </div>
     );
 }

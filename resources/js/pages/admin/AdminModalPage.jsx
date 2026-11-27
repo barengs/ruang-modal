@@ -24,6 +24,7 @@ import {
 import { hasPermission } from '../../store/slices/authSlice';
 import DataTable from '../../components/DataTable';
 import StatusBadge from '../../components/StatusBadge';
+import ConfirmModal from '../../components/ConfirmModal';
 import CurrencyInput from '../../components/CurrencyInput';
 import { formatDateTime, formatRupiah } from '../../utils/format';
 import { exportBastPdf, exportToExcelFile, exportToPdfReport } from '../../utils/reportExporter';
@@ -82,6 +83,7 @@ export default function AdminModalPage() {
         nomor_bast: '',
         tanggal_penyaluran: new Date().toISOString().slice(0, 10),
     });
+    const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, item: null });
 
     const canUpdate = hasPermission(user, 'modal.update');
     const canDelete = hasPermission(user, 'modal.delete');
@@ -146,11 +148,16 @@ export default function AdminModalPage() {
         }
     };
 
-    const handleDelete = async (row) => {
-        if (!window.confirm(`Hapus pengajuan ${row.kode} milik ${row.nama}?`)) return;
-        const res = await dispatch(deleteModalItem(row.id));
+    const handleDelete = (row) => {
+        setConfirmDelete({ isOpen: true, item: row });
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!confirmDelete.item) return;
+        const res = await dispatch(deleteModalItem(confirmDelete.item.id));
+        setConfirmDelete({ isOpen: false, item: null });
         if (deleteModalItem.fulfilled.match(res)) {
-            toast.success(`Pengajuan ${row.kode} berhasil dihapus.`);
+            toast.success(`Pengajuan ${confirmDelete.item.kode} berhasil dihapus.`);
         } else {
             toast.error(res.payload || 'Gagal menghapus pengajuan.');
         }
@@ -700,6 +707,16 @@ export default function AdminModalPage() {
                     </div>
                 </div>
             )}
+
+            <ConfirmModal
+                isOpen={confirmDelete.isOpen}
+                onClose={() => setConfirmDelete({ isOpen: false, item: null })}
+                onConfirm={handleConfirmDelete}
+                title="Hapus Pengajuan Ruang Modal"
+                message={`Apakah Anda yakin ingin menghapus pengajuan ${confirmDelete.item?.kode} milik ${confirmDelete.item?.nama}? Semua data pengajuan ini akan dihapus permanen.`}
+                confirmText="Ya, Hapus"
+                variant="danger"
+            />
         </div>
     );
 }

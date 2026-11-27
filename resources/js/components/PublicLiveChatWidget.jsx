@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../api/axios';
+import ConfirmModal from './ConfirmModal';
 
 const CHAT_TOKEN_KEY = 'dt_live_chat_session_token';
 const TOPIK_OPTIONS = ['Ruang Modal', 'Ruang Tumbuh', 'Ruang Pasar', 'Umum'];
@@ -48,6 +49,7 @@ export default function PublicLiveChatWidget() {
     const [session, setSession] = useState(null);
     const [starting, setStarting] = useState(false);
     const [sending, setSending] = useState(false);
+    const [confirmResetOpen, setConfirmResetOpen] = useState(false);
     const [inputMsg, setInputMsg] = useState('');
     const [startForm, setStartForm] = useState({
         guest_name: '',
@@ -168,7 +170,11 @@ export default function PublicLiveChatWidget() {
     };
 
     const handleResetSession = () => {
-        if (!window.confirm('Mulai sesi percakapan baru?')) return;
+        setConfirmResetOpen(true);
+    };
+
+    const executeResetSession = () => {
+        setConfirmResetOpen(false);
         setToken('');
         setSession(null);
         toast.info('Sesi percakapan baru disiapkan.');
@@ -415,6 +421,16 @@ export default function PublicLiveChatWidget() {
                     </span>
                 )}
             </button>
+
+            <ConfirmModal
+                isOpen={confirmResetOpen}
+                onClose={() => setConfirmResetOpen(false)}
+                onConfirm={executeResetSession}
+                title="Mulai Sesi Percakapan Baru"
+                message="Apakah Anda yakin ingin mengakhiri sesi chat saat ini dan memulai percakapan baru?"
+                confirmText="Mulai Baru"
+                variant="primary"
+            />
         </div>
     );
 }

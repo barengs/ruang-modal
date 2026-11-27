@@ -38,6 +38,7 @@ import {
 } from '../../store/slices/adminSlice';
 import { hasPermission } from '../../store/slices/authSlice';
 import StatusBadge from '../../components/StatusBadge';
+import ConfirmModal from '../../components/ConfirmModal';
 import CurrencyInput from '../../components/CurrencyInput';
 import { formatDateTime, formatRupiah } from '../../utils/format';
 import { exportBastPdf, exportToPdfReport } from '../../utils/reportExporter';
@@ -90,6 +91,7 @@ export default function AdminModalDetailPage() {
     const [adminLampiranFile, setAdminLampiranFile] = useState(null);
     const [adminLampiranCatatan, setAdminLampiranCatatan] = useState('');
     const [adminUploading, setAdminUploading] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [reviewForm, setReviewForm] = useState({
         status_seleksi: 'Disetujui',
         catatan_admin: '',
@@ -222,9 +224,14 @@ export default function AdminModalDetailPage() {
         }
     };
 
-    const handleDelete = async () => {
+    const handleDelete = () => {
         if (!item) return;
-        if (!window.confirm(`Hapus pengajuan ${item.kode} milik ${item.nama}?`)) return;
+        setShowDeleteConfirm(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!item) return;
+        setShowDeleteConfirm(false);
         const res = await dispatch(deleteModalItem(item.id));
         if (deleteModalItem.fulfilled.match(res)) {
             toast.success(`Pengajuan ${item.kode} berhasil dihapus.`);
@@ -1416,6 +1423,16 @@ export default function AdminModalDetailPage() {
                     </div>
                 </div>
             )}
+
+            <ConfirmModal
+                isOpen={showDeleteConfirm}
+                onClose={() => setShowDeleteConfirm(false)}
+                onConfirm={handleConfirmDelete}
+                title="Hapus Pengajuan Ruang Modal"
+                message={`Apakah Anda yakin ingin menghapus pengajuan ${item?.kode} milik ${item?.nama}? Semua data penilaian, riwayat status, dan dokumen pengajuan ini akan dihapus permanen.`}
+                confirmText="Ya, Hapus"
+                variant="danger"
+            />
         </div>
     );
 }

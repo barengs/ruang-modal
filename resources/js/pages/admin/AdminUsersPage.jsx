@@ -20,6 +20,7 @@ import {
 } from '../../store/slices/adminSlice';
 import { hasPermission } from '../../store/slices/authSlice';
 import DataTable from '../../components/DataTable';
+import ConfirmModal from '../../components/ConfirmModal';
 import { formatDateTime } from '../../utils/format';
 
 export default function AdminUsersPage() {
@@ -34,6 +35,7 @@ export default function AdminUsersPage() {
     const [showNewUser, setShowNewUser] = useState(false);
     const [detailId, setDetailId] = useState(null);
     const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'admin' });
+    const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, user: null });
 
     useEffect(() => {
         dispatch(fetchUsersList());
@@ -64,10 +66,15 @@ export default function AdminUsersPage() {
         await dispatch(updateUserRoleItem({ id: userId, role }));
     };
 
-    const handleDeleteUser = async (u) => {
-        if (!window.confirm(`Hapus pengguna "${u.name}" (${u.email})?`)) return;
-        if (detailId === u.id) setDetailId(null);
-        await dispatch(deleteUserItem(u.id));
+    const handleDeleteUser = (u) => {
+        setConfirmDelete({ isOpen: true, user: u });
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!confirmDelete.user) return;
+        if (detailId === confirmDelete.user.id) setDetailId(null);
+        await dispatch(deleteUserItem(confirmDelete.user.id));
+        setConfirmDelete({ isOpen: false, user: null });
     };
 
     const userColumns = useMemo(
@@ -344,6 +351,16 @@ export default function AdminUsersPage() {
                     </div>
                 </div>
             )}
+
+            <ConfirmModal
+                isOpen={confirmDelete.isOpen}
+                onClose={() => setConfirmDelete({ isOpen: false, user: null })}
+                onConfirm={handleConfirmDelete}
+                title="Hapus Pengguna"
+                message={`Apakah Anda yakin ingin menghapus pengguna "${confirmDelete.user?.name}" (${confirmDelete.user?.email})? Akses pengguna ini ke sistem akan dicabut permanen.`}
+                confirmText="Ya, Hapus"
+                variant="danger"
+            />
         </div>
     );
 }

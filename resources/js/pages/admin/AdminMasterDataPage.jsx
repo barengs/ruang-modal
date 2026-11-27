@@ -24,6 +24,7 @@ import {
     updateMasterOptionItem,
 } from '../../store/slices/adminSlice';
 import DataTable from '../../components/DataTable';
+import ConfirmModal from '../../components/ConfirmModal';
 
 export const MASTER_GROUPS = [
     {
@@ -93,6 +94,7 @@ export default function AdminMasterDataPage() {
     const [editingItem, setEditingItem] = useState(null);
     const [form, setForm] = useState(INITIAL_MODAL_FORM);
     const [saving, setSaving] = useState(false);
+    const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, item: null });
 
     useEffect(() => {
         dispatch(fetchMasterOptionsList());
@@ -161,9 +163,14 @@ export default function AdminMasterDataPage() {
         );
     };
 
-    const handleDelete = async (item) => {
-        if (!window.confirm(`Hapus pilihan master data "${item.label}"?`)) return;
-        await dispatch(deleteMasterOptionItem(item.id));
+    const handleDelete = (item) => {
+        setConfirmDelete({ isOpen: true, item });
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!confirmDelete.item) return;
+        await dispatch(deleteMasterOptionItem(confirmDelete.item.id));
+        setConfirmDelete({ isOpen: false, item: null });
     };
 
     const handleSubmit = async (e) => {
@@ -510,6 +517,16 @@ export default function AdminMasterDataPage() {
                     </div>
                 </div>
             )}
+
+            <ConfirmModal
+                isOpen={confirmDelete.isOpen}
+                onClose={() => setConfirmDelete({ isOpen: false, item: null })}
+                onConfirm={handleConfirmDelete}
+                title="Hapus Master Data"
+                message={`Apakah Anda yakin ingin menghapus pilihan "${confirmDelete.item?.label}"? Pilihan ini tidak akan muncul lagi di opsi formulir.`}
+                confirmText="Ya, Hapus"
+                variant="danger"
+            />
         </div>
     );
 }

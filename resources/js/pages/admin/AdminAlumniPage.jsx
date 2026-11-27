@@ -24,6 +24,7 @@ import {
 } from '../../store/slices/adminSlice';
 import { hasPermission } from '../../store/slices/authSlice';
 import DataTable from '../../components/DataTable';
+import ConfirmModal from '../../components/ConfirmModal';
 import { formatDateTime } from '../../utils/format';
 import { exportToExcelFile, exportToPdfReport } from '../../utils/reportExporter';
 
@@ -52,6 +53,7 @@ export default function AdminAlumniPage() {
     const [editingId, setEditingId] = useState(null);
     const [submitting, setSubmitting] = useState(false);
     const [form, setForm] = useState(emptyAlumniForm);
+    const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, item: null });
 
     useEffect(() => {
         dispatch(fetchAlumniList());
@@ -111,10 +113,15 @@ export default function AdminAlumniPage() {
         }
     };
 
-    const handleDeleteAlumni = async (item) => {
-        if (!window.confirm(`Hapus akun alumni "${item.name}" (${item.email})?`)) return;
-        if (detailId === item.id) setDetailId(null);
-        await dispatch(deleteAlumniItem(item.id));
+    const handleDeleteAlumni = (item) => {
+        setConfirmDelete({ isOpen: true, item });
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!confirmDelete.item) return;
+        if (detailId === confirmDelete.item.id) setDetailId(null);
+        await dispatch(deleteAlumniItem(confirmDelete.item.id));
+        setConfirmDelete({ isOpen: false, item: null });
     };
 
     const reportColumns = [
@@ -712,6 +719,16 @@ export default function AdminAlumniPage() {
                     </div>
                 </div>
             )}
+
+            <ConfirmModal
+                isOpen={confirmDelete.isOpen}
+                onClose={() => setConfirmDelete({ isOpen: false, item: null })}
+                onConfirm={handleConfirmDelete}
+                title="Hapus Akun Alumni"
+                message={`Apakah Anda yakin ingin menghapus akun alumni "${confirmDelete.item?.name}" (${confirmDelete.item?.email})? Data dan riwayat alumni ini akan dihapus.`}
+                confirmText="Ya, Hapus"
+                variant="danger"
+            />
         </div>
     );
 }

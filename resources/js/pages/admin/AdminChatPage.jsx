@@ -14,6 +14,7 @@ import {
     User,
 } from 'lucide-react';
 import api from '../../api/axios';
+import ConfirmModal from '../../components/ConfirmModal';
 import { formatDateTime, safeOrderUrl } from '../../utils/format';
 
 const QUICK_REPLIES = [
@@ -46,6 +47,7 @@ export default function AdminChatPage() {
     const [filterStatus, setFilterStatus] = useState('semua');
     const [replyText, setReplyText] = useState('');
     const [sending, setSending] = useState(false);
+    const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, session: null });
 
     const messagesEndRef = useRef(null);
 
@@ -191,10 +193,14 @@ export default function AdminChatPage() {
         }
     };
 
-    const handleDeleteSession = async (sessionToDelete) => {
-        if (!window.confirm(`Hapus percakapan live chat dengan "${sessionToDelete.guest_name}"?`)) {
-            return;
-        }
+    const handleDeleteSession = (sessionToDelete) => {
+        setConfirmDelete({ isOpen: true, session: sessionToDelete });
+    };
+
+    const handleConfirmDeleteSession = async () => {
+        if (!confirmDelete.session) return;
+        const sessionToDelete = confirmDelete.session;
+        setConfirmDelete({ isOpen: false, session: null });
         try {
             await api.delete(`/admin/chats/${sessionToDelete.id}`);
             const remaining = sessions.filter((s) => s.id !== sessionToDelete.id);
@@ -523,6 +529,16 @@ export default function AdminChatPage() {
                     </div>
                 </div>
             </div>
+
+            <ConfirmModal
+                isOpen={confirmDelete.isOpen}
+                onClose={() => setConfirmDelete({ isOpen: false, session: null })}
+                onConfirm={handleConfirmDeleteSession}
+                title="Hapus Percakapan Live Chat"
+                message={`Apakah Anda yakin ingin menghapus seluruh percakapan dengan "${confirmDelete.session?.guest_name}"? Riwayat pesan tidak dapat dikembalikan.`}
+                confirmText="Ya, Hapus"
+                variant="danger"
+            />
         </div>
     );
 }
