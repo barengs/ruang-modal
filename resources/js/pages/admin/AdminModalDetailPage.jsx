@@ -89,12 +89,15 @@ export default function AdminModalDetailPage() {
     const [loading, setLoading] = useState(false);
     const [imgLoadFailed, setImgLoadFailed] = useState(false);
     const [showPreviewModal, setShowPreviewModal] = useState(false);
+    const [selectedPreviewDoc, setSelectedPreviewDoc] = useState(null);
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [showUploadLampiranModal, setShowUploadLampiranModal] = useState(false);
-    const [adminLampiranFile, setAdminLampiranFile] = useState(null);
+    const [adminLampiranFiles, setAdminLampiranFiles] = useState([]);
+    const [adminUploadAction, setAdminUploadAction] = useState('append');
     const [adminLampiranCatatan, setAdminLampiranCatatan] = useState('');
     const [adminUploading, setAdminUploading] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deleteLampiranTarget, setDeleteLampiranTarget] = useState({ isOpen: false, item: null, index: null });
     const [reviewForm, setReviewForm] = useState({
         status_seleksi: 'Disetujui',
         catatan_admin: '',
@@ -246,32 +249,58 @@ export default function AdminModalDetailPage() {
 
     const handleAdminUploadLampiran = async (e) => {
         e.preventDefault();
-        if (!adminLampiranFile) {
-            toast.error('Pilih berkas dokumen lampiran terlebih dahulu.');
+        if (!adminLampiranFiles || adminLampiranFiles.length === 0) {
+            toast.error('Pilih minimal satu berkas dokumen lampiran.');
             return;
         }
         setAdminUploading(true);
         const formData = new FormData();
-        formData.append('dokumen_lampiran', adminLampiranFile);
+        adminLampiranFiles.forEach((file) => {
+            formData.append('dokumen_lampiran[]', file);
+        });
+        formData.append('action', adminUploadAction);
         if (adminLampiranCatatan.trim()) {
             formData.append('catatan', adminLampiranCatatan.trim());
         }
         try {
             const { data } = await api.post(`/admin/modal/${item.id}/lampiran`, formData);
-            toast.success(data.message || 'Dokumen lampiran berhasil diperbarui.');
+            toast.success(data.message || 'Dokumen lampiran berhasil disimpan.');
             setShowUploadLampiranModal(false);
-            setAdminLampiranFile(null);
+            setAdminLampiranFiles([]);
             setAdminLampiranCatatan('');
             setImgLoadFailed(false);
             dispatch(fetchModalItem(item.id));
         } catch (err) {
             toast.error(
                 err.response?.data?.message ||
+                err.response?.data?.errors?.['dokumen_lampiran.0']?.[0] ||
                 err.response?.data?.errors?.dokumen_lampiran?.[0] ||
                 'Gagal memperbarui dokumen lampiran.'
             );
         } finally {
             setAdminUploading(false);
+        }
+    };
+
+    const handleConfirmDeleteLampiran = async () => {
+        if (!item) return;
+        try {
+            const payload = {};
+            if (deleteLampiranTarget.item?.id) {
+                payload.document_id = deleteLampiranTarget.item.id;
+            } else if (deleteLampiranTarget.item?.url) {
+                payload.url = deleteLampiranTarget.item.url;
+            } else if (deleteLampiranTarget.index !== null) {
+                payload.index = deleteLampiranTarget.index;
+            }
+            const { data } = await api.delete(`/admin/modal/${item.id}/lampiran`, {
+                data: payload,
+            });
+            toast.success(data.message || 'Dokumen lampiran berhasil dihapus.');
+            setDeleteLampiranTarget({ isOpen: false, item: null, index: null });
+            dispatch(fetchModalItem(item.id));
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Gagal menghapus dokumen lampiran.');
         }
     };
 
@@ -297,9 +326,21 @@ export default function AdminModalDetailPage() {
     };
 
     const isEligibleBast = item && ['Disetujui', 'Disalurkan'].includes(item.status_seleksi);
-    const lampiranFilename = item?.dokumen_lampiran ? item.dokumen_lampiran.split('/').pop() : '';
-    const isImageLampiran = item?.dokumen_lampiran && /\.(jpg|jpeg|png|webp)$/i.test(item.dokumen_lampiran);
-    const isPdfLampiran = item?.dokumen_lampiran && /\.pdf$/i.test(item.dokumen_lampiran);
+    const lampiranList = useMemo(() => {
+        if (!item) return [];
+        if (Array.isArray(item.lampiran_list) && item.lampiran_list.length > 0) {
+            return item.lampiran_list;
+        }
+        if (item.dokumen_lampiran) {
+            return [{
+                url: item.dokumen_lampiran,
+                name: item.dokumen_lampiran.split('/').pop(),
+                type: item.dokumen_lampiran.split('.').pop()?.toLowerCase() || 'file',
+                uploaded_at: item.created_at ? formatDateTime(item.created_at) : 'Tersimpan di server',
+            }];
+        }
+        return [];
+    }, [item]);
 
     if (loading && !item) {
         return (
@@ -673,20 +714,24 @@ export default function AdminModalDetailPage() {
                             </h2>
                         </div>
                         <div className="flex items-center gap-2">
-                            {item.dokumen_lampiran ? (
-                                <span className="bs-badge bs-badge-success">Berkas Terlampir</span>
+                            {lampiranList.length > 0 ? (
+                                <span className="bs-badge bs-badge-success">{lampiranList.length} Berkas Terlampir</span>
                             ) : (
                                 <span className="bs-badge bs-badge-warning">Tidak Ada Berkas</span>
                             )}
                             {canUpdate && (
                                 <button
                                     type="button"
-                                    onClick={() => setShowUploadLampiranModal(true)}
+                                    onClick={() => {
+                                        setAdminUploadAction('append');
+                                        setAdminLampiranFiles([]);
+                                        setShowUploadLampiranModal(true);
+                                    }}
                                     className="bs-btn bs-btn-sm bs-btn-outline-primary inline-flex items-center gap-1.5"
-                                    title="Unggah atau perbarui berkas dokumen lampiran"
+                                    title="Tambah dokumen lampiran"
                                 >
                                     <FileUp className="w-3.5 h-3.5" />
-                                    {item.dokumen_lampiran ? 'Ganti / Perbarui Berkas' : 'Unggah Berkas'}
+                                    + Tambah Dokumen Lampiran
                                 </button>
                             )}
                         </div>
@@ -704,80 +749,94 @@ export default function AdminModalDetailPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {item.dokumen_lampiran ? (
-                                    <tr>
-                                        <td className="py-3 px-5 font-medium text-[#203880]">
-                                            Proposal Usaha & Rincian Anggaran Biaya (RAB)
-                                        </td>
-                                        <td className="py-3 px-5 font-mono text-[#334155]">
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowPreviewModal(true)}
-                                                className="text-[#0068b0] hover:text-[#203880] hover:underline font-mono text-left font-medium inline-flex items-center gap-1.5"
-                                                title="Klik untuk membuka pratinjau dokumen"
-                                            >
-                                                <FileText className="w-3.5 h-3.5 text-[#0068b0] shrink-0" />
-                                                <span>{lampiranFilename}</span>
-                                            </button>
-                                        </td>
-                                        <td className="py-3 px-5 uppercase font-bold text-[#0068b0]">
-                                            <span className="px-2 py-0.5 rounded bg-blue-50 border border-blue-200 text-[11px]">
-                                                {lampiranFilename.split('.').pop() || 'FILE'}
-                                            </span>
-                                        </td>
-                                        <td className="py-3 px-5">
-                                            {imgLoadFailed ? (
-                                                <span className="text-rose-600 font-medium text-xs">
-                                                    Berkas fisik tidak ditemukan di server (404)
-                                                </span>
-                                            ) : (
-                                                <span className="text-emerald-700 font-medium text-xs">
-                                                    Tersimpan di server
-                                                </span>
-                                            )}
-                                        </td>
-                                        <td className="py-3 px-5 text-right space-x-1.5">
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowPreviewModal(true)}
-                                                className="bs-btn bs-btn-sm bs-btn-primary inline-flex items-center gap-1.5 shadow-xs"
-                                                title="Buka pratinjau berkas dokumen dalam bentuk modal pop-up"
-                                            >
-                                                <Eye className="w-3.5 h-3.5" />
-                                                Pratinjau Pop-up
-                                            </button>
-                                            <a
-                                                href={item.dokumen_lampiran}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="bs-btn bs-btn-sm bs-btn-outline-secondary inline-flex items-center gap-1.5"
-                                                title="Buka berkas di jendela / tab baru"
-                                            >
-                                                <ExternalLink className="w-3.5 h-3.5" />
-                                                Tab Baru
-                                            </a>
-                                            <a
-                                                href={item.dokumen_lampiran}
-                                                download
-                                                className="bs-btn bs-btn-sm bs-btn-outline-secondary inline-flex items-center gap-1.5"
-                                                title="Unduh berkas dokumen"
-                                            >
-                                                <Download className="w-3.5 h-3.5" />
-                                                Unduh
-                                            </a>
-                                            {canUpdate && (
+                                {lampiranList.length > 0 ? (
+                                    lampiranList.map((doc, idx) => (
+                                        <tr key={idx} className="border-b border-[#f1f5f9] hover:bg-[#fafcff] transition-colors">
+                                            <td className="py-3 px-5 font-medium text-[#203880]">
+                                                {idx === 0
+                                                    ? 'Proposal Usaha & Rincian Anggaran Biaya (RAB Utama)'
+                                                    : `Dokumen Pendukung #${idx + 1}`}
+                                            </td>
+                                            <td className="py-3 px-5 font-mono text-[#334155]">
                                                 <button
                                                     type="button"
-                                                    onClick={() => setShowUploadLampiranModal(true)}
-                                                    className="bs-btn bs-btn-sm bs-btn-outline-secondary inline-flex items-center gap-1.5"
-                                                    title="Ganti atau perbarui berkas lampiran"
+                                                    onClick={() => {
+                                                        setSelectedPreviewDoc(doc);
+                                                        setShowPreviewModal(true);
+                                                    }}
+                                                    className="text-[#0068b0] hover:text-[#203880] hover:underline font-mono text-left font-medium inline-flex items-center gap-1.5 max-w-xs truncate"
+                                                    title={`Pratinjau ${doc.name || 'Dokumen'}`}
                                                 >
-                                                    <FileUp className="w-3.5 h-3.5" />
-                                                    Ganti
+                                                    <FileText className="w-3.5 h-3.5 text-[#0068b0] shrink-0" />
+                                                    <span className="truncate">{doc.name || doc.url?.split('/').pop()}</span>
                                                 </button>
-                                            )}
-                                        </td>
-                                    </tr>
+                                            </td>
+                                            <td className="py-3 px-5 uppercase font-bold text-[#0068b0]">
+                                                <span className="px-2 py-0.5 rounded bg-blue-50 border border-blue-200 text-[11px]">
+                                                    {doc.type || doc.url?.split('.').pop() || 'FILE'}
+                                                </span>
+                                            </td>
+                                            <td className="py-3 px-5">
+                                                <span className="text-emerald-700 font-medium text-xs">
+                                                    {doc.uploaded_at || 'Tersimpan di server'}
+                                                </span>
+                                                {doc.size && (
+                                                    <div className="text-[10px] text-slate-500">
+                                                        {(doc.size / 1024).toFixed(0)} KB
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td className="py-3 px-5 text-right space-x-1.5">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setSelectedPreviewDoc(doc);
+                                                        setShowPreviewModal(true);
+                                                    }}
+                                                    className="bs-btn bs-btn-sm bs-btn-primary inline-flex items-center gap-1.5 shadow-xs"
+                                                    title="Buka pratinjau berkas dokumen dalam bentuk modal pop-up"
+                                                >
+                                                    <Eye className="w-3.5 h-3.5" />
+                                                    Pratinjau Pop-up
+                                                </button>
+                                                <a
+                                                    href={doc.url}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="bs-btn bs-btn-sm bs-btn-outline-secondary inline-flex items-center gap-1.5"
+                                                    title="Buka berkas di jendela / tab baru"
+                                                >
+                                                    <ExternalLink className="w-3.5 h-3.5" />
+                                                    Tab Baru
+                                                </a>
+                                                <a
+                                                    href={doc.url}
+                                                    download
+                                                    className="bs-btn bs-btn-sm bs-btn-outline-secondary inline-flex items-center gap-1.5"
+                                                    title="Unduh berkas dokumen"
+                                                >
+                                                    <Download className="w-3.5 h-3.5" />
+                                                    Unduh
+                                                </a>
+                                                {canUpdate && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            setDeleteLampiranTarget({
+                                                                isOpen: true,
+                                                                item: doc,
+                                                                index: idx,
+                                                            })
+                                                        }
+                                                        className="bs-btn bs-btn-sm bs-btn-outline-danger inline-flex items-center gap-1"
+                                                        title="Hapus berkas ini"
+                                                    >
+                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                    </button>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))
                                 ) : (
                                     <tr>
                                         <td colSpan="5" className="py-5 px-5 text-center text-[#94a3b8] italic">
@@ -787,7 +846,11 @@ export default function AdminModalDetailPage() {
                                             {canUpdate && (
                                                 <button
                                                     type="button"
-                                                    onClick={() => setShowUploadLampiranModal(true)}
+                                                    onClick={() => {
+                                                        setAdminUploadAction('append');
+                                                        setAdminLampiranFiles([]);
+                                                        setShowUploadLampiranModal(true);
+                                                    }}
                                                     className="bs-btn bs-btn-sm bs-btn-primary inline-flex items-center gap-1.5 not-italic"
                                                 >
                                                     <UploadCloud className="w-3.5 h-3.5" />
@@ -800,38 +863,6 @@ export default function AdminModalDetailPage() {
                             </tbody>
                         </table>
                     </div>
-
-                    {/* Banner Kotak Pratinjau Pop Up Dokumen Lampiran */}
-                    {item.dokumen_lampiran && (
-                        <div className="p-4 bg-[#f8fafc] border-t border-[#eef2f9] flex items-center justify-between flex-wrap gap-3">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2.5 bg-white rounded-xl border border-[#dbe3f0] shadow-xs text-[#0068b0] shrink-0">
-                                    <FileText className="w-5 h-5" />
-                                </div>
-                                <div>
-                                    <h4 className="text-xs font-bold text-[#203880] flex items-center gap-2">
-                                        <span>Pratinjau Dokumen Lampiran Interaktif</span>
-                                        <span className="px-1.5 py-0.5 rounded text-[10px] bg-blue-100 text-[#0068b0] uppercase font-bold font-mono">
-                                            {lampiranFilename.split('.').pop() || 'FILE'}
-                                        </span>
-                                    </h4>
-                                    <p className="text-[11px] text-[#64748b] mt-0.5">
-                                        Mendukung pratinjau pop-up untuk semua jenis lampiran (gambar WEBP/JPG/PNG, PDF, Spreadsheet/Excel, Word, dan dokumen lainnya).
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPreviewModal(true)}
-                                    className="bs-btn bs-btn-sm bs-btn-primary inline-flex items-center gap-1.5 shadow-sm"
-                                >
-                                    <Eye className="w-3.5 h-3.5" />
-                                    Buka Pratinjau Dokumen (Pop-Up)
-                                </button>
-                            </div>
-                        </div>
-                    )}
                 </div>
 
                 {/* TABEL 5: EVALUASI RUBRIK PENILAIAN 5 INDIKATOR (JIKA SUDAH DINILAI) */}
@@ -1337,7 +1368,7 @@ export default function AdminModalDetailPage() {
                 </div>
             )}
 
-            {/* Modal Unggah / Ganti Berkas Dokumen Lampiran */}
+            {/* Modal Unggah / Tambah Berkas Dokumen Lampiran */}
             {showUploadLampiranModal && (
                 <div className="bs-modal-backdrop" onClick={() => setShowUploadLampiranModal(false)}>
                     <div
@@ -1348,7 +1379,7 @@ export default function AdminModalDetailPage() {
                             <div className="bs-modal-header">
                                 <h3 className="font-bold text-sm text-[#203880] flex items-center gap-1.5">
                                     <FileUp className="w-4 h-4 text-[#0068b0]" />
-                                    Unggah / Perbarui Dokumen Lampiran
+                                    Unggah Dokumen Lampiran Pengajuan
                                 </h3>
                                 <button
                                     type="button"
@@ -1362,18 +1393,101 @@ export default function AdminModalDetailPage() {
                             <div className="bs-modal-body space-y-3.5 text-xs">
                                 <div>
                                     <label className="bs-form-label font-bold">
-                                        Pilih Berkas Dokumen Lampiran (PDF, JPG, PNG, WEBP — maks. 5MB) <span className="text-rose-500">*</span>
+                                        Mode Penyimpanan Lampiran
+                                    </label>
+                                    <div className="grid grid-cols-2 gap-2 mt-1">
+                                        <button
+                                            type="button"
+                                            onClick={() => setAdminUploadAction('append')}
+                                            className={`p-2.5 rounded border text-left transition-all ${
+                                                adminUploadAction === 'append'
+                                                    ? 'border-[#0068b0] bg-blue-50/50 text-[#203880] font-semibold'
+                                                    : 'border-[#cbd5e1] bg-white text-[#475569]'
+                                            }`}
+                                        >
+                                            <div className="text-xs font-bold">+ Tambah Lampiran Baru</div>
+                                            <div className="text-[10px] text-slate-500 mt-0.5">
+                                                Menambahkan berkas baru tanpa menghapus lampiran sebelumnya
+                                            </div>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setAdminUploadAction('replace')}
+                                            className={`p-2.5 rounded border text-left transition-all ${
+                                                adminUploadAction === 'replace'
+                                                    ? 'border-amber-600 bg-amber-50/50 text-amber-900 font-semibold'
+                                                    : 'border-[#cbd5e1] bg-white text-[#475569]'
+                                            }`}
+                                        >
+                                            <div className="text-xs font-bold">↺ Ganti Seluruh Lampiran</div>
+                                            <div className="text-[10px] text-slate-500 mt-0.5">
+                                                Mengganti semua lampiran lama dengan berkas yang baru dipilih
+                                            </div>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="bs-form-label font-bold">
+                                        Pilih Berkas Lampiran (Dapat memilih lebih dari 1 file — maks. 5MB per file) <span className="text-rose-500">*</span>
                                     </label>
                                     <input
                                         type="file"
-                                        accept=".pdf,.jpg,.jpeg,.png,.webp"
-                                        onChange={(e) => setAdminLampiranFile(e.target.files?.[0] || null)}
+                                        multiple
+                                        accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx"
+                                        onChange={(e) => {
+                                            const newFiles = Array.from(e.target.files || []);
+                                            setAdminLampiranFiles((prev) => [...prev, ...newFiles]);
+                                            e.target.value = '';
+                                        }}
                                         disabled={adminUploading}
                                         className="w-full text-xs text-slate-700 file:mr-2 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#0068b0] file:text-white hover:file:bg-[#203880] cursor-pointer border border-[#cbd5e1] rounded p-1.5 bg-white"
                                     />
-                                    {adminLampiranFile && (
-                                        <div className="text-[11px] text-emerald-700 font-medium mt-1">
-                                            Berkas dipilih: {adminLampiranFile.name} ({(adminLampiranFile.size / 1024).toFixed(0)} KB)
+                                    <p className="text-[11px] text-slate-500 mt-1">
+                                        Format berkas yang didukung: PDF, Gambar (JPG, PNG, WEBP), Word, Excel.
+                                    </p>
+
+                                    {adminLampiranFiles.length > 0 && (
+                                        <div className="mt-2.5 border border-[#e2e8f0] rounded bg-[#f8fafc] p-2 space-y-1.5">
+                                            <div className="text-[11px] font-bold text-[#203880] flex justify-between">
+                                                <span>Berkas yang akan diunggah ({adminLampiranFiles.length}):</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setAdminLampiranFiles([])}
+                                                    className="text-rose-600 hover:underline text-[10px]"
+                                                >
+                                                    Hapus Semua
+                                                </button>
+                                            </div>
+                                            <div className="max-h-36 overflow-y-auto space-y-1 pr-1">
+                                                {adminLampiranFiles.map((file, idx) => (
+                                                    <div
+                                                        key={idx}
+                                                        className="flex items-center justify-between text-xs p-1.5 rounded bg-white border border-[#e2e8f0]"
+                                                    >
+                                                        <div className="flex items-center gap-1.5 truncate">
+                                                            <FileText className="w-3.5 h-3.5 text-[#0068b0] shrink-0" />
+                                                            <span className="truncate text-slate-800 font-medium">
+                                                                {file.name}
+                                                            </span>
+                                                            <span className="text-[10px] text-slate-500 shrink-0">
+                                                                ({(file.size / 1024).toFixed(0)} KB)
+                                                            </span>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                setAdminLampiranFiles((prev) =>
+                                                                    prev.filter((_, i) => i !== idx)
+                                                                )
+                                                            }
+                                                            className="text-slate-400 hover:text-rose-600 p-0.5 ml-1 shrink-0"
+                                                        >
+                                                            <X className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
                                     )}
                                 </div>
@@ -1386,7 +1500,7 @@ export default function AdminModalDetailPage() {
                                         type="text"
                                         value={adminLampiranCatatan}
                                         onChange={(e) => setAdminLampiranCatatan(e.target.value)}
-                                        placeholder="Contoh: Berkas proposal/RAB pengganti yang diserahkan pemohon"
+                                        placeholder="Contoh: Penambahan berkas proposal teknis dan sertifikasi usaha"
                                         disabled={adminUploading}
                                         className="bs-form-control text-xs"
                                     />
@@ -1404,7 +1518,7 @@ export default function AdminModalDetailPage() {
                                 </button>
                                 <button
                                     type="submit"
-                                    disabled={adminUploading || !adminLampiranFile}
+                                    disabled={adminUploading || adminLampiranFiles.length === 0}
                                     className="bs-btn bs-btn-sm bs-btn-primary inline-flex items-center gap-1.5 disabled:opacity-50"
                                 >
                                     {adminUploading ? (
@@ -1415,7 +1529,7 @@ export default function AdminModalDetailPage() {
                                     ) : (
                                         <>
                                             <UploadCloud className="w-3.5 h-3.5" />
-                                            Simpan & Unggah Berkas
+                                            Simpan & Unggah {adminLampiranFiles.length > 0 ? `(${adminLampiranFiles.length}) Berkas` : ''}
                                         </>
                                     )}
                                 </button>
@@ -1435,11 +1549,24 @@ export default function AdminModalDetailPage() {
                 variant="danger"
             />
 
+            <ConfirmModal
+                isOpen={deleteLampiranTarget.isOpen}
+                onClose={() => setDeleteLampiranTarget({ isOpen: false, item: null, index: null })}
+                onConfirm={handleConfirmDeleteLampiran}
+                title="Hapus Dokumen Lampiran"
+                message={`Apakah Anda yakin ingin menghapus dokumen "${deleteLampiranTarget.item?.name || 'Lampiran'}"? Dokumen ini akan dihapus dari daftar lampiran pengajuan.`}
+                confirmText="Ya, Hapus Dokumen"
+                variant="danger"
+            />
+
             <DocumentPreviewModal
                 isOpen={showPreviewModal}
-                onClose={() => setShowPreviewModal(false)}
-                fileUrl={item?.dokumen_lampiran}
-                title={`Dokumen Lampiran Proposal - ${item?.kode || ''}`}
+                onClose={() => {
+                    setShowPreviewModal(false);
+                    setSelectedPreviewDoc(null);
+                }}
+                fileUrl={selectedPreviewDoc?.url || item?.dokumen_lampiran}
+                title={selectedPreviewDoc?.name || `Dokumen Lampiran - ${item?.kode || ''}`}
             />
         </div>
     );

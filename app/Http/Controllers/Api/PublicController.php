@@ -138,58 +138,41 @@ class PublicController extends Controller
             'rencana_deskripsi' => ['required', 'string', 'max:3000'],
             'guru_pendamping' => ['nullable', 'string', 'max:150'],
             'komitmen_pendampingan' => ['nullable', 'boolean'],
-            'dokumen_lampiran' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:5120'],
+            'dokumen_lampiran' => ['nullable'],
+            'dokumen_lampiran.*' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf,doc,docx,xls,xlsx', 'max:5120'],
+            'lampiran_files' => ['nullable'],
+            'lampiran_files.*' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf,doc,docx,xls,xlsx', 'max:5120'],
         ]);
 
-        $lampiranPath = null;
-        if ($request->hasFile('dokumen_lampiran') && $request->file('dokumen_lampiran')->isValid()) {
-            $file = $request->file('dokumen_lampiran');
-            $uploadDir = public_path('uploads/modal');
-            $storageDir = storage_path('app/public/uploads/modal');
-
-            if (! is_dir($uploadDir)) {
-                @mkdir($uploadDir, 0775, true);
+        $files = [];
+        if ($request->hasFile('dokumen_lampiran')) {
+            $inputFiles = $request->file('dokumen_lampiran');
+            if (is_array($inputFiles)) {
+                $files = array_merge($files, $inputFiles);
+            } else {
+                $files[] = $inputFiles;
             }
-            if (! is_dir($storageDir)) {
-                @mkdir($storageDir, 0775, true);
-            }
-
-            $ext = strtolower($file->getClientOriginalExtension());
-            $randomSuffix = strtolower(Str::random(8));
-            $timestamp = now('Asia/Jakarta')->format('YmdHis');
-
-            try {
-                if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
-                    $filename = "lampiran-modal-{$timestamp}-{$randomSuffix}.webp";
-                    $fullPath = $uploadDir.DIRECTORY_SEPARATOR.$filename;
-
-                    $manager = ImageManager::usingDriver(Driver::class);
-                    $image = $manager->decodePath($file->getRealPath());
-                    $image->scaleDown(1200, 1200);
-                    $image->encodeUsingFileExtension('webp', quality: 85)->save($fullPath);
-                    @copy($fullPath, $storageDir.DIRECTORY_SEPARATOR.$filename);
-                    $lampiranPath = '/uploads/modal/'.$filename;
-                } else {
-                    $filename = "proposal-modal-{$timestamp}-{$randomSuffix}.{$ext}";
-                    $file->move($uploadDir, $filename);
-                    @copy($uploadDir.DIRECTORY_SEPARATOR.$filename, $storageDir.DIRECTORY_SEPARATOR.$filename);
-                    $lampiranPath = '/uploads/modal/'.$filename;
-                }
-            } catch (\Throwable $e) {
-                // Fallback: jika pemrosesan WebP/GD gagal, simpan file original langsung
-                try {
-                    $fallbackFilename = "lampiran-modal-{$timestamp}-{$randomSuffix}.{$ext}";
-                    $file->move($uploadDir, $fallbackFilename);
-                    @copy($uploadDir.DIRECTORY_SEPARATOR.$fallbackFilename, $storageDir.DIRECTORY_SEPARATOR.$fallbackFilename);
-                    $lampiranPath = '/uploads/modal/'.$fallbackFilename;
-                } catch (\Throwable $fallbackError) {
-                    \Illuminate\Support\Facades\Log::error('Gagal menyimpan dokumen lampiran modal: '.$fallbackError->getMessage());
-                    $lampiranPath = null;
-                }
+        }
+        if ($request->hasFile('lampiran_files')) {
+            $inputFiles = $request->file('lampiran_files');
+            if (is_array($inputFiles)) {
+                $files = array_merge($files, $inputFiles);
+            } else {
+                $files[] = $inputFiles;
             }
         }
 
-        unset($validated['dokumen_lampiran']);
+        $savedList = [];
+        foreach ($files as $f) {
+            $meta = $this->processUploadedLampiran($f);
+            if ($meta) {
+                $savedList[] = $meta;
+            }
+        }
+
+        $primaryUrl = count($savedList) > 0 ? $savedList[0]['url'] : null;
+
+        unset($validated['dokumen_lampiran'], $validated['lampiran_files']);
 
         $record = ModalApplication::create([
             ...$validated,
@@ -197,9 +180,22 @@ class PublicController extends Controller
             'kode' => ModalApplication::generateKode(),
             'estimasi_biaya' => $validated['estimasi_biaya'] ?? 0,
             'komitmen_pendampingan' => filter_var($request->input('komitmen_pendampingan', true), FILTER_VALIDATE_BOOLEAN),
-            'dokumen_lampiran' => $lampiranPath,
+            'dokumen_lampiran' => $primaryUrl,
             'status_seleksi' => 'Menunggu Seleksi',
         ]);
+
+        // Simpan setiap file ke tabel relasional modal_application_documents
+        foreach ($savedList as $idx => $saved) {
+            $record->documents()->create([
+                'nama_file' => $saved['name'],
+                'file_url' => $saved['url'],
+                'file_path' => $saved['url'],
+                'jenis_dokumen' => $idx === 0 ? 'Proposal Usaha & RAB' : 'Dokumen Pendukung',
+                'ekstensi' => $saved['type'],
+                'ukuran_file' => $saved['size'] ?? null,
+                'uploaded_by' => auth('api')->id(),
+            ]);
+        }
 
         $record->histories()->create([
             'status_seleksi' => 'Menunggu Seleksi',
@@ -210,7 +206,7 @@ class PublicController extends Controller
 
         return response()->json([
             'kode' => $record->kode,
-            'data' => $record->load(['reviewer:id,name', 'histories']),
+            'data' => $record->load(['reviewer:id,name', 'histories', 'documents']),
             'message' => 'Pengajuan Ruang Modal berhasil dikirim. Simpan nomor pengajuan Anda.',
         ], 201);
     }
@@ -218,9 +214,13 @@ class PublicController extends Controller
     public function updateModalLampiran(Request $request, ModalApplication $modal): JsonResponse
     {
         $request->validate([
-            'dokumen_lampiran' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:5120'],
+            'dokumen_lampiran' => ['nullable'],
+            'dokumen_lampiran.*' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf,doc,docx,xls,xlsx', 'max:5120'],
+            'lampiran_files' => ['nullable'],
+            'lampiran_files.*' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf,doc,docx,xls,xlsx', 'max:5120'],
             'email' => ['nullable', 'string', 'email'],
             'catatan' => ['nullable', 'string', 'max:500'],
+            'action' => ['nullable', 'string', 'in:append,replace'],
         ]);
 
         $user = auth('api')->user();
@@ -251,7 +251,190 @@ class PublicController extends Controller
             $actorName = $modal->nama;
         }
 
-        $file = $request->file('dokumen_lampiran');
+        $files = [];
+        if ($request->hasFile('dokumen_lampiran')) {
+            $inputFiles = $request->file('dokumen_lampiran');
+            if (is_array($inputFiles)) {
+                $files = array_merge($files, $inputFiles);
+            } else {
+                $files[] = $inputFiles;
+            }
+        }
+        if ($request->hasFile('lampiran_files')) {
+            $inputFiles = $request->file('lampiran_files');
+            if (is_array($inputFiles)) {
+                $files = array_merge($files, $inputFiles);
+            } else {
+                $files[] = $inputFiles;
+            }
+        }
+
+        if (empty($files)) {
+            return response()->json([
+                'message' => 'Pilih minimal satu berkas dokumen lampiran untuk diunggah.',
+            ], 422);
+        }
+
+        $newSavedList = [];
+        foreach ($files as $f) {
+            $meta = $this->processUploadedLampiran($f);
+            if ($meta) {
+                $newSavedList[] = $meta;
+            }
+        }
+
+        if (empty($newSavedList)) {
+            return response()->json([
+                'message' => 'Gagal mengunggah berkas dokumen lampiran ke server.',
+            ], 500);
+        }
+
+        $action = $request->input('action', 'append');
+        if ($action === 'replace') {
+            $modal->documents()->delete();
+            $historyText = "Dokumen lampiran proposal/RAB diganti oleh {$actorName}.";
+        } else {
+            $countAdded = count($newSavedList);
+            $historyText = "{$countAdded} dokumen lampiran baru ditambahkan oleh {$actorName}.";
+        }
+
+        foreach ($newSavedList as $idx => $saved) {
+            $modal->documents()->create([
+                'nama_file' => $saved['name'],
+                'file_url' => $saved['url'],
+                'file_path' => $saved['url'],
+                'jenis_dokumen' => ($action === 'replace' && $idx === 0) ? 'Proposal Usaha & RAB' : 'Dokumen Pendukung',
+                'ekstensi' => $saved['type'],
+                'ukuran_file' => $saved['size'] ?? null,
+                'uploaded_by' => $user?->id,
+            ]);
+        }
+
+        $firstDoc = $modal->documents()->first();
+        $modal->dokumen_lampiran = $firstDoc?->file_url;
+        $modal->save();
+
+        $catatanTambahan = trim((string) $request->input('catatan', ''));
+        if ($catatanTambahan !== '') {
+            $historyText .= " Catatan: {$catatanTambahan}";
+        }
+
+        $modal->histories()->create([
+            'status_seleksi' => $modal->status_seleksi,
+            'catatan' => $historyText,
+            'actor_type' => $actorType,
+            'actor_name' => $actorName,
+        ]);
+
+        return response()->json([
+            'message' => count($newSavedList) > 1
+                ? count($newSavedList).' dokumen lampiran berhasil diperbarui.'
+                : 'Dokumen lampiran berhasil diperbarui.',
+            'dokumen_lampiran' => $modal->dokumen_lampiran,
+            'lampiran_list' => $modal->lampiran_list,
+            'documents' => $modal->documents,
+            'data' => $modal->fresh(['reviewer:id,name', 'histories', 'documents']),
+        ]);
+    }
+
+    public function deleteModalLampiran(Request $request, ModalApplication $modal): JsonResponse
+    {
+        $request->validate([
+            'document_id' => ['nullable', 'integer'],
+            'id' => ['nullable', 'integer'],
+            'index' => ['nullable', 'integer', 'min:0'],
+            'url' => ['nullable', 'string'],
+            'email' => ['nullable', 'string', 'email'],
+        ]);
+
+        $user = auth('api')->user();
+
+        if ($user) {
+            $isAdmin = $user->hasRole(['admin', 'super-admin']) || $user->can('modal.update');
+            $isOwner = ($modal->user_id && (int) $modal->user_id === (int) $user->id) ||
+                (strtolower(trim((string) $modal->email)) === strtolower(trim((string) $user->email)));
+
+            if (! $isAdmin && ! $isOwner) {
+                return response()->json([
+                    'message' => 'Anda tidak memiliki hak akses untuk menghapus dokumen lampiran ini.',
+                ], 403);
+            }
+
+            $actorName = $user->name;
+            $actorType = $isAdmin && ! $isOwner ? 'admin' : 'pemohon';
+        } else {
+            $providedEmail = strtolower(trim((string) $request->input('email', '')));
+            if (! $providedEmail || $providedEmail !== strtolower(trim((string) $modal->email))) {
+                return response()->json([
+                    'message' => 'Verifikasi email tidak sesuai dengan email pemohon pengajuan ini.',
+                ], 403);
+            }
+
+            $actorName = $modal->nama;
+            $actorType = 'pemohon';
+        }
+
+        $targetDocId = $request->input('document_id', $request->input('id'));
+        $targetIndex = $request->input('index');
+        $targetUrl = $request->input('url');
+
+        $docToDelete = null;
+        if ($targetDocId) {
+            $docToDelete = $modal->documents()->find($targetDocId);
+        } elseif ($targetUrl) {
+            $docToDelete = $modal->documents()->where('file_url', $targetUrl)->first();
+        } elseif ($targetIndex !== null) {
+            $docToDelete = $modal->documents()->skip((int) $targetIndex)->first();
+        }
+
+        if (! $docToDelete) {
+            // Fallback: hapus dari legacy list jika belum bermigrasi
+            $list = $modal->lampiran_list ?? [];
+            if ($targetIndex !== null && isset($list[$targetIndex])) {
+                $docName = $list[$targetIndex]['name'] ?? 'Dokumen';
+                array_splice($list, $targetIndex, 1);
+                $modal->dokumen_lampiran = count($list) > 0 ? json_encode(array_values($list)) : null;
+                $modal->save();
+            } else {
+                return response()->json([
+                    'message' => 'Dokumen lampiran yang dipilih tidak ditemukan.',
+                ], 404);
+            }
+        } else {
+            $docName = $docToDelete->nama_file;
+            $docToDelete->delete();
+
+            $firstDoc = $modal->documents()->first();
+            $modal->dokumen_lampiran = $firstDoc?->file_url;
+            $modal->save();
+        }
+
+        $modal->histories()->create([
+            'status_seleksi' => $modal->status_seleksi,
+            'catatan' => "Dokumen lampiran '{$docName}' dihapus oleh {$actorName}.",
+            'actor_type' => $actorType,
+            'actor_name' => $actorName,
+        ]);
+
+        return response()->json([
+            'message' => "Dokumen lampiran '{$docName}' berhasil dihapus.",
+            'dokumen_lampiran' => $modal->dokumen_lampiran,
+            'lampiran_list' => $modal->lampiran_list,
+            'documents' => $modal->documents,
+            'data' => $modal->fresh(['reviewer:id,name', 'histories', 'documents']),
+        ]);
+    }
+
+    /**
+     * Helper untuk menyimpan berkas lampiran modal dan mengembalikan metadata terstruktur
+     * @return array{url: string, name: string, type: string, size: int, uploaded_at: string}|null
+     */
+    private function processUploadedLampiran($file): ?array
+    {
+        if (! $file || ! $file->isValid()) {
+            return null;
+        }
+
         $uploadDir = public_path('uploads/modal');
         $storageDir = storage_path('app/public/uploads/modal');
 
@@ -262,7 +445,9 @@ class PublicController extends Controller
             @mkdir($storageDir, 0775, true);
         }
 
+        $originalName = $file->getClientOriginalName();
         $ext = strtolower($file->getClientOriginalExtension());
+        $fileSize = $file->getSize() ?: 0;
         $randomSuffix = strtolower(Str::random(8));
         $timestamp = now('Asia/Jakarta')->format('YmdHis');
         $lampiranPath = null;
@@ -286,40 +471,23 @@ class PublicController extends Controller
             }
         } catch (\Throwable $e) {
             try {
-                $fallbackFilename = "lampiran-modal-{$timestamp}-{$randomSuffix}.{$ext}";
+                $fallbackFilename = "proposal-modal-{$timestamp}-{$randomSuffix}.{$ext}";
                 $file->move($uploadDir, $fallbackFilename);
                 @copy($uploadDir.DIRECTORY_SEPARATOR.$fallbackFilename, $storageDir.DIRECTORY_SEPARATOR.$fallbackFilename);
                 $lampiranPath = '/uploads/modal/'.$fallbackFilename;
             } catch (\Throwable $fallbackError) {
                 \Illuminate\Support\Facades\Log::error('Gagal menyimpan dokumen lampiran modal: '.$fallbackError->getMessage());
-
-                return response()->json([
-                    'message' => 'Gagal mengunggah berkas dokumen lampiran ke server.',
-                ], 500);
+                return null;
             }
         }
 
-        $modal->dokumen_lampiran = $lampiranPath;
-        $modal->save();
-
-        $catatanTambahan = trim((string) $request->input('catatan', ''));
-        $historyText = "Dokumen lampiran proposal/RAB diperbarui oleh {$actorName}.";
-        if ($catatanTambahan !== '') {
-            $historyText .= " Catatan: {$catatanTambahan}";
-        }
-
-        $modal->histories()->create([
-            'status_seleksi' => $modal->status_seleksi,
-            'catatan' => $historyText,
-            'actor_type' => $actorType,
-            'actor_name' => $actorName,
-        ]);
-
-        return response()->json([
-            'message' => 'Dokumen lampiran berhasil diperbarui.',
-            'dokumen_lampiran' => $lampiranPath,
-            'data' => $modal->fresh(['reviewer:id,name', 'histories']),
-        ]);
+        return [
+            'url' => $lampiranPath,
+            'name' => $originalName,
+            'type' => $ext,
+            'size' => $fileSize,
+            'uploaded_at' => now('Asia/Jakarta')->format('Y-m-d H:i'),
+        ];
     }
 
     public function tumbuhList(Request $request): JsonResponse

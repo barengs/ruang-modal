@@ -20,6 +20,7 @@ import {
     Mail,
     Phone,
     ShieldCheck,
+    Trash2,
     UploadCloud,
     User,
     X,
@@ -27,6 +28,7 @@ import {
 import { toast } from 'react-toastify';
 import api from '../api/axios';
 import StatusBadge from './StatusBadge';
+import ConfirmModal from './ConfirmModal';
 import DocumentPreviewModal from './DocumentPreviewModal';
 import { formatDateTime, formatRupiah } from '../utils/format';
 import { exportBastPdf } from '../utils/reportExporter';
@@ -50,11 +52,61 @@ export default function ModalApplicationDetailModal({
     // State untuk form edit / upload ulang dokumen lampiran
     const [isEditingLampiran, setIsEditingLampiran] = useState(false);
     const [showPreviewModal, setShowPreviewModal] = useState(false);
-    const [selectedFile, setSelectedFile] = useState(null);
+    const [selectedPreviewDoc, setSelectedPreviewDoc] = useState(null);
+    const [selectedFiles, setSelectedFiles] = useState([]);
     const [catatanRevisi, setCatatanRevisi] = useState('');
     const [emailConfirm, setEmailConfirm] = useState(item.email || '');
     const [uploading, setUploading] = useState(false);
     const [uploadError, setUploadError] = useState(null);
+    const [deleteDocTarget, setDeleteDocTarget] = useState({ isOpen: false, doc: null, index: null });
+
+    const handleConfirmDeleteDoc = async () => {
+        if (!currentItem) return;
+        try {
+            const isAuth = Boolean(localStorage.getItem('dt_jwt_token'));
+            const payload = {};
+            if (deleteDocTarget.doc?.id) {
+                payload.document_id = deleteDocTarget.doc.id;
+            } else if (deleteDocTarget.doc?.url) {
+                payload.url = deleteDocTarget.doc.url;
+            } else if (deleteDocTarget.index !== null) {
+                payload.index = deleteDocTarget.index;
+            }
+            if (!isAuth && currentItem.email) {
+                payload.email = currentItem.email;
+            }
+
+            const { data } = await api.delete(`/public/modal/${currentItem.id}/lampiran`, {
+                data: payload,
+            });
+            toast.success(data.message || 'Dokumen lampiran berhasil dihapus.');
+            setDeleteDocTarget({ isOpen: false, doc: null, index: null });
+            if (data.data) {
+                setCurrentItem(data.data);
+                if (onUpdated) onUpdated(data.data);
+            }
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Gagal menghapus dokumen lampiran.');
+        }
+    };
+
+    const lampiranList = useMemo(() => {
+        if (!currentItem) return [];
+        if (Array.isArray(currentItem.lampiran_list) && currentItem.lampiran_list.length > 0) {
+            return currentItem.lampiran_list;
+        }
+        if (currentItem.dokumen_lampiran) {
+            return [
+                {
+                    url: currentItem.dokumen_lampiran,
+                    name: currentItem.dokumen_lampiran.split('/').pop(),
+                    type: currentItem.dokumen_lampiran.split('.').pop()?.toLowerCase() || 'file',
+                    uploaded_at: currentItem.created_at ? formatDateTime(currentItem.created_at) : 'Tersimpan di server',
+                },
+            ];
+        }
+        return [];
+    }, [currentItem]);
 
     // Build chronological timeline history (fallback to synthesized entry if histories not loaded)
     const timeline = useMemo(() => {
@@ -98,31 +150,10 @@ export default function ModalApplicationDetailModal({
         });
     }, [currentItem, allItems]);
 
-    const handleFileChange = (e) => {
-        const file = e.target.files?.[0];
-        setUploadError(null);
-        if (!file) {
-            setSelectedFile(null);
-            return;
-        }
-        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'application/pdf'];
-        if (!validTypes.includes(file.type)) {
-            setUploadError('Format berkas harus JPG, PNG, WEBP, atau PDF.');
-            setSelectedFile(null);
-            return;
-        }
-        if (file.size > 5 * 1024 * 1024) {
-            setUploadError('Ukuran berkas maksimal 5 MB.');
-            setSelectedFile(null);
-            return;
-        }
-        setSelectedFile(file);
-    };
-
     const handleUploadLampiran = async (e) => {
         e.preventDefault();
-        if (!selectedFile) {
-            setUploadError('Pilih berkas lampiran terlebih dahulu.');
+        if (!selectedFiles || selectedFiles.length === 0) {
+            setUploadError('Pilih minimal satu berkas dokumen lampiran.');
             return;
         }
 
@@ -136,7 +167,10 @@ export default function ModalApplicationDetailModal({
         setUploadError(null);
 
         const formData = new FormData();
-        formData.append('dokumen_lampiran', selectedFile);
+        selectedFiles.forEach((file) => {
+            formData.append('dokumen_lampiran[]', file);
+        });
+        formData.append('action', 'append');
         if (catatanRevisi.trim()) {
             formData.append('catatan', catatanRevisi.trim());
         }
@@ -146,7 +180,7 @@ export default function ModalApplicationDetailModal({
 
         try {
             const { data } = await api.post(`/public/modal/${currentItem.id}/lampiran`, formData);
-            toast.success(data.message || 'Dokumen lampiran berhasil diperbarui!');
+            toast.success(data.message || 'Dokumen lampiran berhasil ditambahkan!');
             if (data.data) {
                 setCurrentItem(data.data);
                 if (onUpdated) {
@@ -160,13 +194,14 @@ export default function ModalApplicationDetailModal({
                 }
             }
             setIsEditingLampiran(false);
-            setSelectedFile(null);
+            setSelectedFiles([]);
             setCatatanRevisi('');
         } catch (err) {
             const msg =
                 err.response?.data?.message ||
+                err.response?.data?.errors?.['dokumen_lampiran.0']?.[0] ||
                 err.response?.data?.errors?.dokumen_lampiran?.[0] ||
-                'Gagal memperbarui dokumen lampiran. Silakan coba lagi.';
+                'Gagal menambahkan dokumen lampiran. Silakan coba lagi.';
             setUploadError(msg);
             toast.error(msg);
         } finally {
@@ -310,163 +345,6 @@ export default function ModalApplicationDetailModal({
                                             <CheckCircle2 className="w-3.5 h-3.5" /> Bersedia Didampingi
                                         </span>
                                     </div>
-
-                                    {/* Dokumen Lampiran & Fitur Edit / Upload Ulang */}
-                                    <div className="pt-2 border-t border-[#e9ecef] space-y-2">
-                                        <div className="flex justify-between items-center flex-wrap gap-2">
-                                            <span className="text-[#6c757d] font-medium">Dokumen Lampiran (Proposal/RAB):</span>
-                                            <div className="flex items-center gap-1.5">
-                                                {currentItem.dokumen_lampiran ? (
-                                                    <>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => setShowPreviewModal(true)}
-                                                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#0068b0] text-white font-bold text-xs hover:bg-[#203880] transition-colors shadow-xs"
-                                                            title="Pratinjau berkas dokumen (Pop-up)"
-                                                        >
-                                                            <Eye className="w-3 h-3" />
-                                                            Pratinjau
-                                                        </button>
-                                                        <a
-                                                            href={currentItem.dokumen_lampiran}
-                                                            target="_blank"
-                                                            rel="noreferrer"
-                                                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#e7f1ff] text-[#0068b0] font-bold text-xs hover:bg-[#d0e3ff] transition-colors"
-                                                            title="Buka berkas di jendela baru"
-                                                        >
-                                                            Tab Baru <ExternalLink className="w-3 h-3" />
-                                                        </a>
-                                                    </>
-                                                ) : (
-                                                    <span className="text-[11px] text-[#856404] bg-[#fff3cd] px-2 py-0.5 rounded font-medium">
-                                                        Tidak Ada Berkas
-                                                    </span>
-                                                )}
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setIsEditingLampiran(!isEditingLampiran)}
-                                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#f1f5f9] hover:bg-[#e2e8f0] text-[#334155] font-semibold text-xs border border-[#cbd5e1] transition-colors"
-                                                    title="Perbarui berkas lampiran proposal/RAB"
-                                                >
-                                                    <FileUp className="w-3 h-3 text-[#0068b0]" />
-                                                    {currentItem.dokumen_lampiran ? 'Ganti / Edit' : 'Unggah Berkas'}
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        {/* Form Edit Lampiran Inline */}
-                                        {isEditingLampiran && (
-                                            <form
-                                                onSubmit={handleUploadLampiran}
-                                                className="p-3 rounded-md bg-[#f8fafc] border border-[#cbd5e1] space-y-2.5 mt-2 text-xs"
-                                            >
-                                                <div className="font-semibold text-[#203880] flex items-center justify-between border-b border-[#e2e8f0] pb-1.5">
-                                                    <span className="flex items-center gap-1.5">
-                                                        <UploadCloud className="w-3.5 h-3.5 text-[#0068b0]" />
-                                                        Unggah Dokumen Lampiran Baru
-                                                    </span>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setIsEditingLampiran(false);
-                                                            setSelectedFile(null);
-                                                            setUploadError(null);
-                                                        }}
-                                                        className="text-[#64748b] hover:text-[#0f172a] text-xs"
-                                                    >
-                                                        ✕
-                                                    </button>
-                                                </div>
-
-                                                <div>
-                                                    <label className="block text-[#475569] font-medium mb-1">
-                                                        Pilih Berkas Pengganti (PDF, JPG, PNG, WEBP — maks. 5MB):
-                                                    </label>
-                                                    <input
-                                                        type="file"
-                                                        accept=".pdf,.jpg,.jpeg,.png,.webp"
-                                                        onChange={handleFileChange}
-                                                        disabled={uploading}
-                                                        className="w-full text-xs text-slate-700 file:mr-2 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#0068b0] file:text-white hover:file:bg-[#203880] cursor-pointer border border-[#cbd5e1] rounded p-1 bg-white"
-                                                    />
-                                                    {selectedFile && (
-                                                        <div className="text-[11px] text-emerald-700 font-medium mt-1 flex items-center gap-1">
-                                                            <Check className="w-3 h-3" /> Berkas dipilih: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(0)} KB)
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {!Boolean(localStorage.getItem('dt_jwt_token')) && (
-                                                    <div>
-                                                        <label className="block text-[#475569] font-medium mb-1">
-                                                            Konfirmasi Email Pemohon:
-                                                        </label>
-                                                        <input
-                                                            type="email"
-                                                            value={emailConfirm}
-                                                            onChange={(e) => setEmailConfirm(e.target.value)}
-                                                            placeholder="Masukkan email pemohon saat mendaftar"
-                                                            disabled={uploading}
-                                                            className="w-full px-2.5 py-1.5 rounded border border-[#cbd5e1] bg-white text-xs text-[#1e293b] focus:outline-none focus:border-[#0068b0]"
-                                                        />
-                                                    </div>
-                                                )}
-
-                                                <div>
-                                                    <label className="block text-[#475569] font-medium mb-1">
-                                                        Catatan Revisi / Keterangan (Opsional):
-                                                    </label>
-                                                    <input
-                                                        type="text"
-                                                        value={catatanRevisi}
-                                                        onChange={(e) => setCatatanRevisi(e.target.value)}
-                                                        placeholder="Contoh: Perbaikan rincian spesifikasi alat dan RAB"
-                                                        disabled={uploading}
-                                                        className="w-full px-2.5 py-1.5 rounded border border-[#cbd5e1] bg-white text-xs text-[#1e293b] focus:outline-none focus:border-[#0068b0]"
-                                                    />
-                                                </div>
-
-                                                {uploadError && (
-                                                    <div className="p-2 rounded bg-rose-50 border border-rose-200 text-rose-700 text-[11px] flex items-center gap-1.5">
-                                                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                                                        <span>{uploadError}</span>
-                                                    </div>
-                                                )}
-
-                                                <div className="flex items-center justify-end gap-2 pt-1 border-t border-[#e2e8f0]">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setIsEditingLampiran(false);
-                                                            setSelectedFile(null);
-                                                            setUploadError(null);
-                                                        }}
-                                                        disabled={uploading}
-                                                        className="px-2.5 py-1 rounded border border-[#cbd5e1] text-[#475569] hover:bg-[#f1f5f9] text-xs font-medium"
-                                                    >
-                                                        Batal
-                                                    </button>
-                                                    <button
-                                                        type="submit"
-                                                        disabled={uploading || !selectedFile}
-                                                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-[#0068b0] hover:bg-[#203880] text-white text-xs font-semibold disabled:opacity-50 transition-colors shadow-xs"
-                                                    >
-                                                        {uploading ? (
-                                                            <>
-                                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                                                Mengunggah...
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <UploadCloud className="w-3.5 h-3.5" />
-                                                                Simpan & Perbarui Berkas
-                                                            </>
-                                                        )}
-                                                    </button>
-                                                </div>
-                                            </form>
-                                        )}
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -530,6 +408,297 @@ export default function ModalApplicationDetailModal({
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    {/* SEKSI DOKUMEN LAMPIRAN (PROPOSAL & RAB) */}
+                    <div className="border border-[#dee2e6] rounded-md p-3.5 space-y-3 bg-white">
+                        <div className="flex items-center justify-between border-b border-[#e9ecef] pb-2 flex-wrap gap-2">
+                            <div className="flex items-center gap-2">
+                                <FileText className="w-4 h-4 text-[#0068b0]" />
+                                <span className="font-semibold text-xs uppercase tracking-wider text-[#203880]">
+                                    Seksi Dokumen Lampiran (Proposal & RAB)
+                                </span>
+                                {lampiranList.length > 0 ? (
+                                    <span className="bs-badge bs-badge-success">{lampiranList.length} Berkas Terlampir</span>
+                                ) : (
+                                    <span className="bs-badge bs-badge-warning">Tidak Ada Berkas</span>
+                                )}
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setIsEditingLampiran(!isEditingLampiran);
+                                    setSelectedFiles([]);
+                                    setUploadError(null);
+                                }}
+                                className="bs-btn bs-btn-sm bs-btn-outline-primary inline-flex items-center gap-1.5"
+                                title="Tambah dokumen lampiran"
+                            >
+                                <FileUp className="w-3.5 h-3.5" />
+                                + Tambah Dokumen Lampiran
+                            </button>
+                        </div>
+
+                        {/* Form Tambah Dokumen Lampiran Baru */}
+                        {isEditingLampiran && (
+                            <form
+                                onSubmit={handleUploadLampiran}
+                                className="p-3.5 rounded-lg bg-[#f8fafc] border border-[#cbd5e1] space-y-3 text-xs"
+                            >
+                                <div className="font-bold text-[#203880] flex items-center justify-between border-b border-[#e2e8f0] pb-2">
+                                    <span className="flex items-center gap-1.5">
+                                        <UploadCloud className="w-4 h-4 text-[#0068b0]" />
+                                        Unggah Dokumen Lampiran Tambahan / Baru
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setIsEditingLampiran(false);
+                                            setSelectedFiles([]);
+                                            setUploadError(null);
+                                        }}
+                                        className="text-[#64748b] hover:text-[#0f172a]"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
+
+                                <div>
+                                    <label className="block text-[#475569] font-bold mb-1">
+                                        Pilih Berkas Lampiran (Bisa memilih lebih dari 1 berkas — PDF, JPG, PNG, WEBP, Word, Excel maks. 5MB per berkas):
+                                    </label>
+                                    <input
+                                        type="file"
+                                        multiple
+                                        accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx"
+                                        onChange={(e) => {
+                                            const newFiles = Array.from(e.target.files || []);
+                                            setSelectedFiles((prev) => [...prev, ...newFiles]);
+                                            setUploadError(null);
+                                            e.target.value = '';
+                                        }}
+                                        disabled={uploading}
+                                        className="w-full text-xs text-slate-700 file:mr-2 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#0068b0] file:text-white hover:file:bg-[#203880] cursor-pointer border border-[#cbd5e1] rounded p-1.5 bg-white"
+                                    />
+                                    {selectedFiles.length > 0 && (
+                                        <div className="mt-2.5 border border-[#e2e8f0] rounded bg-white p-2.5 space-y-1.5">
+                                            <div className="text-[11px] font-bold text-[#203880] flex justify-between">
+                                                <span>Berkas yang dipilih ({selectedFiles.length}):</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setSelectedFiles([])}
+                                                    className="text-rose-600 hover:underline text-[10px]"
+                                                >
+                                                    Hapus Semua
+                                                </button>
+                                            </div>
+                                            <div className="max-h-36 overflow-y-auto space-y-1 pr-1">
+                                                {selectedFiles.map((file, idx) => (
+                                                    <div
+                                                        key={idx}
+                                                        className="flex items-center justify-between text-xs p-1.5 rounded bg-[#f8fafc] border border-[#e2e8f0]"
+                                                    >
+                                                        <div className="flex items-center gap-1.5 truncate">
+                                                            <FileText className="w-3.5 h-3.5 text-[#0068b0] shrink-0" />
+                                                            <span className="truncate text-slate-800 font-medium">
+                                                                {file.name}
+                                                            </span>
+                                                            <span className="text-[10px] text-slate-500 shrink-0">
+                                                                ({(file.size / 1024).toFixed(0)} KB)
+                                                            </span>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                setSelectedFiles((prev) =>
+                                                                    prev.filter((_, i) => i !== idx)
+                                                                )
+                                                            }
+                                                            className="text-slate-400 hover:text-rose-600 p-0.5 ml-1 shrink-0"
+                                                        >
+                                                            <X className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {!Boolean(localStorage.getItem('dt_jwt_token')) && (
+                                    <div>
+                                        <label className="block text-[#475569] font-bold mb-1">
+                                            Konfirmasi Email Pemohon:
+                                        </label>
+                                        <input
+                                            type="email"
+                                            value={emailConfirm}
+                                            onChange={(e) => setEmailConfirm(e.target.value)}
+                                            placeholder="Masukkan email pemohon saat mendaftar"
+                                            disabled={uploading}
+                                            className="w-full px-2.5 py-1.5 rounded border border-[#cbd5e1] bg-white text-xs text-[#1e293b] focus:outline-none focus:border-[#0068b0]"
+                                        />
+                                    </div>
+                                )}
+
+                                <div>
+                                    <label className="block text-[#475569] font-bold mb-1">
+                                        Catatan Revisi / Keterangan (Opsional):
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={catatanRevisi}
+                                        onChange={(e) => setCatatanRevisi(e.target.value)}
+                                        placeholder="Contoh: Lampiran perbaikan proposal & RAB tambahan"
+                                        disabled={uploading}
+                                        className="w-full px-2.5 py-1.5 rounded border border-[#cbd5e1] bg-white text-xs text-[#1e293b] focus:outline-none focus:border-[#0068b0]"
+                                    />
+                                </div>
+
+                                {uploadError && (
+                                    <div className="p-2 rounded bg-rose-50 border border-rose-200 text-rose-700 text-[11px] flex items-center gap-1.5">
+                                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                                        <span>{uploadError}</span>
+                                    </div>
+                                )}
+
+                                <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#e2e8f0]">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setIsEditingLampiran(false);
+                                            setSelectedFiles([]);
+                                            setUploadError(null);
+                                        }}
+                                        disabled={uploading}
+                                        className="px-2.5 py-1 rounded border border-[#cbd5e1] text-[#475569] hover:bg-[#f1f5f9] text-xs font-medium"
+                                    >
+                                        Batal
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={uploading || selectedFiles.length === 0}
+                                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-[#0068b0] hover:bg-[#203880] text-white text-xs font-semibold disabled:opacity-50 transition-colors shadow-xs"
+                                    >
+                                        {uploading ? (
+                                            <>
+                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                Mengunggah...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <UploadCloud className="w-3.5 h-3.5" />
+                                                Simpan & Unggah {selectedFiles.length > 0 ? `(${selectedFiles.length}) Berkas` : ''}
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </form>
+                        )}
+
+                        {/* Tabel Daftar Berkas Lampiran */}
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-xs text-left border-collapse">
+                                <thead>
+                                    <tr className="border-b border-[#e2e8f0] bg-[#f8fafd] text-[#475569]">
+                                        <th className="py-2.5 px-3 font-semibold">Jenis Dokumen</th>
+                                        <th className="py-2.5 px-3 font-semibold">Nama Berkas</th>
+                                        <th className="py-2.5 px-3 font-semibold">Format</th>
+                                        <th className="py-2.5 px-3 font-semibold">Status / Tanggal</th>
+                                        <th className="py-2.5 px-3 font-semibold text-right">Aksi Dokumen</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {lampiranList.length > 0 ? (
+                                        lampiranList.map((doc, idx) => (
+                                            <tr key={idx} className="border-b border-[#f1f5f9] hover:bg-[#fafcff]">
+                                                <td className="py-2.5 px-3 font-medium text-[#203880]">
+                                                    {idx === 0
+                                                        ? 'Proposal Usaha & RAB Utama'
+                                                        : `Dokumen Pendukung #${idx + 1}`}
+                                                </td>
+                                                <td className="py-2.5 px-3 font-mono text-[#334155]">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setSelectedPreviewDoc(doc);
+                                                            setShowPreviewModal(true);
+                                                        }}
+                                                        className="text-[#0068b0] hover:text-[#203880] hover:underline font-mono text-left font-medium inline-flex items-center gap-1.5 max-w-xs truncate"
+                                                        title={`Pratinjau ${doc.name || 'Dokumen'}`}
+                                                    >
+                                                        <FileText className="w-3.5 h-3.5 text-[#0068b0] shrink-0" />
+                                                        <span className="truncate">{doc.name || doc.url?.split('/').pop()}</span>
+                                                    </button>
+                                                </td>
+                                                <td className="py-2.5 px-3 uppercase font-bold text-[#0068b0]">
+                                                    <span className="px-2 py-0.5 rounded bg-blue-50 border border-blue-200 text-[10px]">
+                                                        {doc.type || doc.url?.split('.').pop() || 'FILE'}
+                                                    </span>
+                                                </td>
+                                                <td className="py-2.5 px-3">
+                                                    <span className="text-emerald-700 font-medium text-[11px]">
+                                                        {doc.uploaded_at || 'Tersimpan'}
+                                                    </span>
+                                                    {doc.size && (
+                                                        <span className="text-slate-500 text-[10px] ml-1">
+                                                            ({(doc.size / 1024).toFixed(0)} KB)
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                <td className="py-2.5 px-3 text-right space-x-1">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setSelectedPreviewDoc(doc);
+                                                            setShowPreviewModal(true);
+                                                        }}
+                                                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#0068b0] text-white font-semibold text-xs hover:bg-[#203880] shadow-xs"
+                                                        title="Buka pratinjau pop-up"
+                                                    >
+                                                        <Eye className="w-3 h-3" />
+                                                        Pratinjau
+                                                    </button>
+                                                    <a
+                                                        href={doc.url}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#e7f1ff] text-[#0068b0] font-semibold text-xs hover:bg-[#d0e3ff]"
+                                                        title="Buka di tab baru"
+                                                    >
+                                                        Tab Baru <ExternalLink className="w-3 h-3" />
+                                                    </a>
+                                                    <a
+                                                        href={doc.url}
+                                                        download
+                                                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#f1f5f9] text-[#334155] font-semibold text-xs hover:bg-[#e2e8f0]"
+                                                        title="Unduh berkas"
+                                                    >
+                                                        <Download className="w-3 h-3" />
+                                                    </a>
+                                                    {(isAdmin || ['Menunggu Seleksi', 'Perlu Perbaikan'].includes(currentItem.status_seleksi)) && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setDeleteDocTarget({ isOpen: true, doc, index: idx })}
+                                                            className="inline-flex items-center gap-1 px-2 py-1 rounded bg-rose-50 border border-rose-200 text-rose-600 font-semibold text-xs hover:bg-rose-100"
+                                                            title="Hapus berkas ini"
+                                                        >
+                                                            <Trash2 className="w-3 h-3" />
+                                                        </button>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="5" className="py-4 px-3 text-center text-[#94a3b8] italic">
+                                                Belum ada dokumen lampiran yang diunggah.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
 
@@ -751,11 +920,24 @@ export default function ModalApplicationDetailModal({
                 </div>
             </div>
 
+            <ConfirmModal
+                isOpen={deleteDocTarget.isOpen}
+                onClose={() => setDeleteDocTarget({ isOpen: false, doc: null, index: null })}
+                onConfirm={handleConfirmDeleteDoc}
+                title="Hapus Dokumen Lampiran"
+                message={`Apakah Anda yakin ingin menghapus dokumen "${deleteDocTarget.doc?.name || 'Lampiran'}"? Dokumen ini akan dihapus dari daftar pengajuan.`}
+                confirmText="Ya, Hapus Dokumen"
+                variant="danger"
+            />
+
             <DocumentPreviewModal
                 isOpen={showPreviewModal}
-                onClose={() => setShowPreviewModal(false)}
-                fileUrl={currentItem?.dokumen_lampiran}
-                title={`Dokumen Lampiran Proposal - ${currentItem?.kode || ''}`}
+                onClose={() => {
+                    setShowPreviewModal(false);
+                    setSelectedPreviewDoc(null);
+                }}
+                fileUrl={selectedPreviewDoc?.url || currentItem?.dokumen_lampiran}
+                title={selectedPreviewDoc?.name || `Dokumen Lampiran Proposal - ${currentItem?.kode || ''}`}
             />
         </div>
     );

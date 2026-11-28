@@ -42,6 +42,14 @@ class ModalApplication extends Model
         'reviewed_by',
     ];
 
+    protected $appends = [
+        'lampiran_list',
+    ];
+
+    protected $with = [
+        'documents',
+    ];
+
     protected function casts(): array
     {
         return [
@@ -55,6 +63,96 @@ class ModalApplication extends Model
             'skor_total' => 'float',
             'nominal_disetujui' => 'integer',
             'tanggal_penyaluran' => 'date:Y-m-d',
+        ];
+    }
+
+    /**
+     * Pastikan dokumen_lampiran mengembalikan URL tunggal utama untuk kompatibilitas
+     */
+    public function getDokumenLampiranAttribute($value): ?string
+    {
+        if ($this->relationLoaded('documents') && $this->documents->isNotEmpty()) {
+            return $this->documents->first()->file_url;
+        }
+
+        if (empty($value)) {
+            return null;
+        }
+
+        if (is_string($value) && str_starts_with(trim($value), '[')) {
+            $decoded = json_decode($value, true);
+            if (is_array($decoded) && count($decoded) > 0) {
+                return is_string($decoded[0]) ? $decoded[0] : ($decoded[0]['url'] ?? null);
+            }
+            return null;
+        }
+
+        return $value;
+    }
+
+    /**
+     * Mengambil daftar dokumen lampiran dalam bentuk array terstruktur
+     * @return array<int, array{id: int|null, url: string, name: string, type: string, size: int|null, jenis_dokumen: string|null, uploaded_at: string|null}>
+     */
+    public function getLampiranListAttribute(): array
+    {
+        if ($this->relationLoaded('documents') && $this->documents->isNotEmpty()) {
+            return $this->documents->map(function ($doc) {
+                return [
+                    'id' => $doc->id,
+                    'url' => $doc->file_url,
+                    'name' => $doc->nama_file,
+                    'type' => $doc->ekstensi ?: strtolower(pathinfo($doc->file_url, PATHINFO_EXTENSION)),
+                    'size' => $doc->ukuran_file,
+                    'jenis_dokumen' => $doc->jenis_dokumen,
+                    'uploaded_at' => $doc->created_at?->format('Y-m-d H:i'),
+                ];
+            })->values()->all();
+        }
+
+        $raw = $this->attributes['dokumen_lampiran'] ?? null;
+        if (empty($raw)) {
+            return [];
+        }
+
+        if (is_string($raw) && str_starts_with(trim($raw), '[')) {
+            $decoded = json_decode($raw, true);
+            if (is_array($decoded)) {
+                return array_map(function ($item) {
+                    if (is_string($item)) {
+                        return [
+                            'id' => null,
+                            'url' => $item,
+                            'name' => basename($item),
+                            'type' => strtolower(pathinfo($item, PATHINFO_EXTENSION)),
+                            'size' => null,
+                            'jenis_dokumen' => 'Proposal Usaha & RAB',
+                            'uploaded_at' => $this->updated_at?->format('Y-m-d H:i') ?? $this->created_at?->format('Y-m-d H:i'),
+                        ];
+                    }
+                    return [
+                        'id' => $item['id'] ?? null,
+                        'url' => $item['url'] ?? '',
+                        'name' => $item['name'] ?? basename($item['url'] ?? 'dokumen'),
+                        'type' => $item['type'] ?? strtolower(pathinfo($item['url'] ?? '', PATHINFO_EXTENSION)),
+                        'size' => $item['size'] ?? null,
+                        'jenis_dokumen' => $item['jenis_dokumen'] ?? 'Proposal Usaha & RAB',
+                        'uploaded_at' => $item['uploaded_at'] ?? ($this->updated_at?->format('Y-m-d H:i') ?? $this->created_at?->format('Y-m-d H:i')),
+                    ];
+                }, $decoded);
+            }
+        }
+
+        return [
+            [
+                'id' => null,
+                'url' => $raw,
+                'name' => basename($raw),
+                'type' => strtolower(pathinfo($raw, PATHINFO_EXTENSION)),
+                'size' => null,
+                'jenis_dokumen' => 'Proposal Usaha & RAB',
+                'uploaded_at' => $this->updated_at?->format('Y-m-d H:i') ?? $this->created_at?->format('Y-m-d H:i'),
+            ],
         ];
     }
 
@@ -114,5 +212,10 @@ class ModalApplication extends Model
     public function histories(): HasMany
     {
         return $this->hasMany(ModalApplicationHistory::class)->oldest();
+    }
+
+    public function documents(): HasMany
+    {
+        return $this->hasMany(ModalApplicationDocument::class, 'modal_application_id')->oldest();
     }
 }

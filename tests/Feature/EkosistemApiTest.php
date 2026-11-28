@@ -367,4 +367,89 @@ class EkosistemApiTest extends TestCase
                 'available' => false,
             ]);
     }
+
+    public function test_modal_application_multiple_documents_table_and_crud(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('public');
+
+        $user = \App\Models\User::factory()->create([
+            'email' => 'alumni.dokumen@alumni.sch.id',
+        ]);
+        $user->assignRole('alumni');
+
+        $login = $this->postJson('/api/auth/login', [
+            'email' => 'alumni.dokumen@alumni.sch.id',
+            'password' => 'password',
+        ]);
+        $token = $login->json('access_token');
+
+        // 1. Submit modal with multiple documents
+        $file1 = \Illuminate\Http\UploadedFile::fake()->create('proposal_rencana.pdf', 500, 'application/pdf');
+        $file2 = \Illuminate\Http\UploadedFile::fake()->image('foto_usaha.jpg', 600, 400);
+
+        $submitRes = $this->withHeader('Authorization', "Bearer {$token}")
+            ->post('/api/public/modal', [
+                'nama' => 'Alumni Dokumen Test',
+                'email' => 'alumni.dokumen@alumni.sch.id',
+                'whatsapp' => '081234567800',
+                'sekolah' => 'SMAN 1 Bojonegoro',
+                'tahun_lulus' => '2025',
+                'kompetensi' => 'Multimedia',
+                'jalur' => 'Usaha',
+                'status_aktivitas' => 'Merintis usaha',
+                'jenis_bantuan' => 'Alat Produksi',
+                'estimasi_biaya' => 3000000,
+                'rincian_kebutuhan' => 'Kamera dan tripod',
+                'rencana_deskripsi' => 'Usaha studio foto',
+                'komitmen_pendampingan' => '1',
+                'dokumen_lampiran' => [$file1, $file2],
+            ]);
+
+        $submitRes->assertStatus(201);
+        $modalId = $submitRes->json('data.id');
+
+        $this->assertDatabaseHas('modal_applications', [
+            'id' => $modalId,
+            'email' => 'alumni.dokumen@alumni.sch.id',
+        ]);
+
+        // Verifikasi dokumen tersimpan di tabel modal_application_documents
+        $this->assertDatabaseCount('modal_application_documents', 2);
+        $this->assertDatabaseHas('modal_application_documents', [
+            'modal_application_id' => $modalId,
+            'nama_file' => 'proposal_rencana.pdf',
+        ]);
+
+        // 2. Tambah dokumen baru via updateModalLampiran
+        $file3 = \Illuminate\Http\UploadedFile::fake()->create('rab_detail.pdf', 300, 'application/pdf');
+        $appendRes = $this->withHeader('Authorization', "Bearer {$token}")
+            ->post("/api/public/modal/{$modalId}/lampiran", [
+                'dokumen_lampiran' => [$file3],
+                'action' => 'append',
+                'catatan' => 'Menambahkan file RAB',
+            ]);
+
+        $appendRes->assertOk();
+        $this->assertDatabaseCount('modal_application_documents', 3);
+        $this->assertDatabaseHas('modal_application_documents', [
+            'modal_application_id' => $modalId,
+            'nama_file' => 'rab_detail.pdf',
+        ]);
+
+        // 3. Hapus salah satu dokumen
+        $doc = \App\Models\ModalApplicationDocument::where('modal_application_id', $modalId)
+            ->where('nama_file', 'rab_detail.pdf')
+            ->first();
+
+        $deleteRes = $this->withHeader('Authorization', "Bearer {$token}")
+            ->deleteJson("/api/public/modal/{$modalId}/lampiran", [
+                'document_id' => $doc->id,
+            ]);
+
+        $deleteRes->assertOk();
+        $this->assertDatabaseMissing('modal_application_documents', [
+            'id' => $doc->id,
+        ]);
+        $this->assertDatabaseCount('modal_application_documents', 2);
+    }
 }
