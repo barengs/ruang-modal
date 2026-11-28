@@ -46,10 +46,6 @@ class ModalApplication extends Model
         'lampiran_list',
     ];
 
-    protected $with = [
-        'documents',
-    ];
-
     protected function casts(): array
     {
         return [
@@ -71,8 +67,12 @@ class ModalApplication extends Model
      */
     public function getDokumenLampiranAttribute($value): ?string
     {
-        if ($this->relationLoaded('documents') && $this->documents->isNotEmpty()) {
-            return $this->documents->first()->file_url;
+        try {
+            if ($this->relationLoaded('documents') && $this->documents->isNotEmpty()) {
+                return $this->documents->first()?->file_url;
+            }
+        } catch (\Throwable) {
+            // Abaikan jika tabel relasi belum ada di environment tertentu
         }
 
         if (empty($value)) {

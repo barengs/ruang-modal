@@ -16,76 +16,103 @@ class AlumniController extends Controller
 {
     public function dashboard(): JsonResponse
     {
-        /** @var User $user */
+        /** @var User|null $user */
         $user = auth('api')->user();
 
-        $modal = ModalApplication::with(['reviewer:id,name', 'histories'])
-            ->where(function ($q) use ($user) {
-                $q->where('user_id', $user->id)
-                    ->orWhere('email', $user->email);
-            })
-            ->latest()
-            ->get();
+        if (! $user) {
+            return response()->json([
+                'message' => 'Sesi autentikasi telah berakhir. Silakan login kembali.',
+            ], 401);
+        }
 
-        $tumbuh = TumbuhRequest::with('reviewer:id,name')
-            ->where(function ($q) use ($user) {
-                $q->where('user_id', $user->id)
-                    ->orWhere('email', $user->email);
-            })
-            ->latest()
-            ->get();
+        try {
+            $modal = ModalApplication::with(['reviewer:id,name', 'histories'])
+                ->where(function ($q) use ($user) {
+                    $q->where('user_id', $user->id)
+                        ->orWhere('email', $user->email);
+                })
+                ->latest()
+                ->get();
 
-        $pasar = PasarProduct::with('reviewer:id,name')
-            ->where(function ($q) use ($user) {
-                $q->where('user_id', $user->id)
-                    ->orWhere('email', $user->email);
-            })
-            ->latest()
-            ->get();
+            $tumbuh = TumbuhRequest::with('reviewer:id,name')
+                ->where(function ($q) use ($user) {
+                    $q->where('user_id', $user->id)
+                        ->orWhere('email', $user->email);
+                })
+                ->latest()
+                ->get();
 
-        $refKodes = collect()
-            ->merge($modal->pluck('kode'))
-            ->merge($tumbuh->pluck('kode'))
-            ->merge($pasar->pluck('kode'))
-            ->filter()
-            ->values()
-            ->all();
+            $pasar = PasarProduct::with('reviewer:id,name')
+                ->where(function ($q) use ($user) {
+                    $q->where('user_id', $user->id)
+                        ->orWhere('email', $user->email);
+                })
+                ->latest()
+                ->get();
 
-        $monitorings = Monitoring::with('creator:id,name')
-            ->where(function ($q) use ($user, $refKodes) {
-                $q->where('user_id', $user->id)
-                    ->orWhere('nama_alumni', $user->name);
-                if (! empty($refKodes)) {
-                    $q->orWhereIn('ref_kode', $refKodes);
-                }
-            })
-            ->latest('tanggal_pantau')
-            ->latest()
-            ->get();
+            $refKodes = collect()
+                ->merge($modal->pluck('kode'))
+                ->merge($tumbuh->pluck('kode'))
+                ->merge($pasar->pluck('kode'))
+                ->filter()
+                ->values()
+                ->all();
 
-        $testimonials = Testimonial::where(function ($q) use ($user) {
-            $q->where('user_id', $user->id)
-                ->orWhere('nama', $user->name);
-        })
-            ->latest()
-            ->get();
+            $monitorings = collect();
+            try {
+                $monitorings = Monitoring::with('creator:id,name')
+                    ->where(function ($q) use ($user, $refKodes) {
+                        $q->where('user_id', $user->id)
+                            ->orWhere('nama_alumni', $user->name);
+                        if (! empty($refKodes)) {
+                            $q->orWhereIn('ref_kode', $refKodes);
+                        }
+                    })
+                    ->latest('tanggal_pantau')
+                    ->latest()
+                    ->get();
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Alumni dashboard monitorings fallback: '.$e->getMessage());
+            }
 
-        return response()->json([
-            'summary' => [
-                'modal_total' => $modal->count(),
-                'modal_disetujui' => $modal->where('status_seleksi', 'Disetujui')->count(),
-                'tumbuh_total' => $tumbuh->count(),
-                'pasar_total' => $pasar->count(),
-                'pasar_tayang' => $pasar->where('status_publikasi', 'Tayang')->count(),
-                'monitoring_total' => $monitorings->count(),
-                'latest_omzet' => $monitorings->first()?->pendapatan_nominal ?? 0,
-            ],
-            'modal' => $modal,
-            'tumbuh' => $tumbuh,
-            'pasar' => $pasar,
-            'monitorings' => $monitorings,
-            'testimonials' => $testimonials,
-        ]);
+            $testimonials = collect();
+            try {
+                $testimonials = Testimonial::where(function ($q) use ($user) {
+                    $q->where('user_id', $user->id)
+                        ->orWhere('nama', $user->name);
+                })
+                    ->latest()
+                    ->get();
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Alumni dashboard testimonials fallback: '.$e->getMessage());
+            }
+
+            return response()->json([
+                'summary' => [
+                    'modal_total' => $modal->count(),
+                    'modal_disetujui' => $modal->where('status_seleksi', 'Disetujui')->count(),
+                    'tumbuh_total' => $tumbuh->count(),
+                    'pasar_total' => $pasar->count(),
+                    'pasar_tayang' => $pasar->where('status_publikasi', 'Tayang')->count(),
+                    'monitoring_total' => $monitorings->count(),
+                    'latest_omzet' => $monitorings->first()?->pendapatan_nominal ?? 0,
+                ],
+                'modal' => $modal,
+                'tumbuh' => $tumbuh,
+                'pasar' => $pasar,
+                'monitorings' => $monitorings,
+                'testimonials' => $testimonials,
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Alumni Dashboard Error: '.$e->getMessage(), [
+                'user_id' => $user->id ?? null,
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'message' => 'Terjadi kendala pada server saat memuat dashboard alumni: '.$e->getMessage(),
+            ], 500);
+        }
     }
 
     public function storeMonitoring(Request $request): JsonResponse

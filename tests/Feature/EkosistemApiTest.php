@@ -451,5 +451,11 @@ class EkosistemApiTest extends TestCase
             'id' => $doc->id,
         ]);
         $this->assertDatabaseCount('modal_application_documents', 2);
+
+        // 4. Test Alumni Dashboard endpoint
+        $dashRes = $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson('/api/alumni/dashboard');
+        $dashRes->assertOk()
+            ->assertJsonStructure(['summary', 'modal', 'tumbuh', 'pasar', 'monitorings', 'testimonials']);
     }
 }
